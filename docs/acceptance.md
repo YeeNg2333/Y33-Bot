@@ -595,6 +595,10 @@ f0ddd4e main          run#13  CI  completed  success
 
 即**`origin/main` 的 HEAD（`3c27803`）CI 为 success**，且近期 8 次运行全绿。
 
+> 本节（§7）本身随 commit `51d810e` 入库；该文档提交在 `main` 与
+> `y33-bot/t_c3a76c90-idea.md` 上的 CI 也都是 **success**（run
+> [#22](https://github.com/YeeNg2333/Y33-Bot/actions/runs/38293910730) / [#21](https://github.com/YeeNg2333/Y33-Bot/actions/runs/38293905317)）。
+
 发布物 `v0.1.0` 是 **annotated tag**（`first working release`）→ commit `f0ddd4e`：
 
 ```bash
