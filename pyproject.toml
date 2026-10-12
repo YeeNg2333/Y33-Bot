@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "y33bot"
+version = "0.1.0"
+description = "MC-QQ 消息互通机器人：RCON 注入 + latest.log 监听，独立服务端进程"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "YeeNg", email = "yeeng2333@qq.com" }]
+keywords = ["minecraft", "rcon", "qq-bot", "bidirectional-bridge"]
+classifiers = [
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "qq-botpy==1.2.1",
+  "tomli-w==1.2.0",
+]
+
+[project.scripts]
+y33bot = "y33bot.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+# 关键：ruff ≥0.17 会格式化 Markdown 代码块里的 Python。
+# IDEA.md / PLAN.md 是冻结的需求书与实施计划（PLAN.md 明令不得改动），README 的示例也要人工排版，
+# 所以把 Markdown 整体排除在 ruff 之外——否则 `ruff format .` 会顺手改写评审依据文件。
+extend-exclude = ["*.md", "**/*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.coverage.run]
+branch = true
+source = ["src/y33bot"]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "raise NotImplementedError"]

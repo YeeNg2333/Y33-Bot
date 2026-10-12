@@ -1,0 +1,45 @@
+name: CI
+
+# push 与 PR 都跑：装依赖 → lint → 入口冒烟 → 测试（PLAN.md §2.2 / §6 T1）
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 开发/CI 固定 3.12（A19：包 requires-python 为 >=3.11,<3.14）
+        python-version: ["3.12"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+          python -m pip install -e .
+
+      - name: Lint (ruff check)
+        run: ruff check .
+
+      - name: Format check (ruff format --check)
+        run: ruff format --check .
+
+      - name: Smoke (entry point)
+        run: |
+          python -m y33bot --version
+          y33bot --version
+          python -c "import y33bot, y33bot.cli, y33bot.service; print('import OK', y33bot.__version__)"
+
+      - name: Test (pytest)
+        run: pytest

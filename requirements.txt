@@ -1,0 +1,7 @@
+# 运行时直接依赖（== 锁定）。读 TOML 用标准库 tomllib（Python >= 3.11），故无第三方读依赖。
+# 安装：python -m pip install -r requirements.txt
+#
+# qq-botpy：腾讯官方 QQ 机器人 SDK，自带 WebSocket 网关、token 刷新、心跳与重连。
+qq-botpy==1.2.1
+# tomli-w：仅用于写 data/bindings.toml（纯 Python、无依赖；写 TOML 标准库没有）。
+tomli-w==1.2.0
