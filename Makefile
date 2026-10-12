@@ -21,6 +21,8 @@ endif
 .PHONY: help setup install run check lint fmt test coverage smoke clean
 
 help:  ## 显示可用目标
+	@echo "Y33-Bot make targets:"
+	@echo "  (Windows console: run 'chcp 65001' first if CJK text looks garbled.)"
 	@echo "Y33-Bot make 目标："
 	@echo "  setup    建 .venv + 装依赖 + 生成 config.toml（等价 bash scripts/dev_setup.sh）"
 	@echo "  install  只装依赖（含开发依赖）+ 可编辑安装本包"

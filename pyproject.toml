@@ -55,4 +55,7 @@ branch = true
 source = ["src/y33bot"]
 
 [tool.coverage.report]
-exclude_lines = ["pragma: no cover", "raise NotImplementedError"]
+# 只排除显式标记的行：不排除 ``raise NotImplementedError``，
+# 否则 T9 的覆盖率门槛会被“尚未实现的占位函数”蒙过去（覆盖率应如实反映实现进度）。
+exclude_lines = ["pragma: no cover"]
+
