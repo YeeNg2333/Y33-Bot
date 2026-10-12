@@ -193,6 +193,8 @@ python -m y33bot simulate health --server main --offline --dry-run --config conf
 # [忽略] 状态未变化，不重复提示
 ```
 
+> 提示只在**状态变化**时出现一次：从全新状态（`data/state.json` 里该服还是 `health_online: null`）先跑一次才会看到 `main 离线`，紧接着再跑就是 `[忽略] 状态未变化，不重复提示`；已经被记成离线的服，再跑多少次 `--offline` 都只会是 `[忽略]`。
+
 去掉 `--dry-run` 就是**真的连 RCON 发指令**（本机用一个最小 RCON 服务端实测过，服务端收到的是 `tellraw @a {"text":"[QQ] Steve: 你好"}` 这种原样命令）。
 
 ## 7. 启动服务
@@ -239,6 +241,17 @@ $ python -m y33bot run --config config.toml
 [警告] RCON main 连接失败（服务继续，下次调用自动重连）: 连接 127.0.0.1:34567 失败: [WinError 1225] 远程计算机拒绝网络连接。
 [启动] 日志监听已启动: main
 [错误] 环境变量 QQ_BOT_APP_ID 未设置
+```
+
+凭据写错（AppID / Secret 不对）也是退出码 1，但会先真的连上 QQ 网关再被官方拒绝（实测）：
+
+```text
+[botpy] 登录机器人账号中...
+[botpy] 获取token失败，请检查appid和secret填写是否正确！
+[错误] QQ 网关异常退出: {'code': 10004, 'message': '机器人不存在'}
+[错误] QQ 网关启动失败: QQ 网关启动失败: {'code': 10004, 'message': '机器人不存在'}
+[停止] 正在关闭…
+[停止] 已退出
 ```
 
 单台 MC 连不上只 `[警告]`，不阻塞启动（该服在 `/status` 里显示离线）；`Ctrl+C` / `SIGTERM` 会优雅退出并把状态落盘：
@@ -491,8 +504,13 @@ MC 没开 RCON、端口不对或被防火墙挡了。确认 `server.properties` 
 
 全部服都连不上时回 `[服务器状态] 服务器离线`。
 
-**9）群里发消息为什么偶尔不回 / 长时间不回**
+**9）群里发消息为什么偶尔不回 / `run` 报「QQ 网关启动失败」**
 QQ 官方约束：被动回复只在收到事件后的短窗口内有效（本项目的被动回复都带 `msg_id` + `msg_seq=1`），主动消息（进服退服、离线提示）有频控。按规格本项目**失败不重试**，只记 `[错误]` 日志（主动消息的 `msg_seq` 全局递增并持久化，避免重启后重复发送）。私服场景基本不会触限。
+
+如果是 `run` 启动就失败，看错误本身：
+- `[错误] QQ 网关启动失败: {'code': 10004, 'message': '机器人不存在'}` → AppID / Secret 不对，或者环境变量没注入到**这个进程**里（本项目不读 shell 的 `.env` 文件，`export` 或进程管理器注入才行）。
+- `[错误] QQ 网关异常退出: Cannot connect to host bots.qq.com:443 …` → 进程出不了网（DNS / 代理 / 防火墙）。
+
 
 **10）改了 `config.toml` 为什么不生效**
 没有热重载，改完要重启进程（这是规格里明确的负向项）。
@@ -520,7 +538,7 @@ python -m pytest -q --cov=y33bot --cov-report=term-missing # 带覆盖率
 python -m ruff check . && python -m ruff format --check .  # 静态检查与格式
 ```
 
-全新克隆实测：`214 passed`、覆盖率 `TOTAL 90%`（CI 门槛 `--cov-fail-under=70`）、`ruff` 两项全过。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件。
+在 v0.1.0 这一提交上，全新克隆实测：`214 passed`、覆盖率 `TOTAL 90%`（CI 门槛 `--cov-fail-under=70`）、`ruff check .` 与 `ruff format --check .` 全过（数字会随后续新增测试变大）。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件。
 
 - 逐条手工自测（S1–S4、S6 的真机输出）：[`docs/smoke.md`](docs/smoke.md)
 - 端到端验收记录（每条含命令 / 实际输出 / 结论）：`docs/acceptance.md`
