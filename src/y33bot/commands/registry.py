@@ -70,9 +70,7 @@ class CommandRegistry:
         self._specs: dict[str, CommandSpec] = {}
 
     # ------------------------------------------------------------------ 注册
-    def register(
-        self, name: str, *, aliases: Sequence[str] = (), desc: str = ""
-    ) -> Callable[[Handler], Handler]:
+    def register(self, name: str, *, aliases: Sequence[str] = (), desc: str = "") -> Callable[[Handler], Handler]:
         """装饰器式注册。"""
 
         if not name or not name.strip():

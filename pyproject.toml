@@ -1,21 +1,23 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "y33bot"
 version = "0.1.0"
-description = "MC-QQ 消息互通机器人（QQ 开放平台官方机器人 + Minecraft Java Vanilla）"
+description = "MC-QQ 消息互通机器人：RCON 注入 + latest.log 监听，独立服务端进程"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
-license = { text = "MIT" }
-authors = [{ name = "YeeNg" }]
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "YeeNg", email = "yeeng2333@qq.com" }]
 keywords = ["minecraft", "qq", "rcon", "bot"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Operating System :: OS Independent",
 ]
 dependencies = [
   "qq-botpy==1.2.1",
@@ -32,6 +34,7 @@ package-dir = { "" = "src" }
 where = ["src"]
 
 [tool.pytest.ini_options]
+minversion = "8.0"
 pythonpath = ["src"]
 testpaths = ["tests"]
 asyncio_mode = "auto"

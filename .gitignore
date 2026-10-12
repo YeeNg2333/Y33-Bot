@@ -1,34 +1,45 @@
-# 看板工作树（PLAN.md §3.1 要求，必须忽略）
+# --- 看板工作树（每张卡一个 git worktree，绝不入库）---
 .worktrees/
 
-# Python
+# --- 虚拟环境 ---
 .venv/
 venv/
 env/
+ENV/
+
+# --- 密钥与本地配置（永不入库；.env.example 是模板，必须保留）---
+.env
+.env.*
+!.env.example
+config.toml
+
+# --- 运行时数据：绑定表 / 日志偏移 / 健康状态 ---
+data/
+
+# --- 日志与 Python 缓存 ---
+*.log
+logs/
 __pycache__/
 *.py[cod]
-*.egg-info/
-.eggs/
-dist/
-build/
-
-# 测试与检查缓存
+*.pyo
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
 .coverage
 .coverage.*
-coverage.xml
 htmlcov/
+coverage.xml
 
-# 运行时数据与密钥（绝不入库）
-.env
-config.toml
-data/
-*.log
+# --- 构建产物 ---
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
 
-# 编辑器 / 系统
+# --- 编辑器 / 系统 ---
 .idea/
 .vscode/
 .DS_Store
 Thumbs.db
+desktop.ini

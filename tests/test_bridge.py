@@ -84,7 +84,7 @@ async def test_forward_strips_media_markers(app: App) -> None:
     bound_app(app)
     pool = app.make_pool()
     bridge = make_bridge(app, pool=pool)
-    assert await bridge.handle_group_message(message("#hi <image url=\"x\"/> there")) is None
+    assert await bridge.handle_group_message(message('#hi <image url="x"/> there')) is None
     assert pool._clients["main"].commands == ['tellraw @a {"text":"[QQ] Steve: hi  there"}']
 
 
@@ -92,7 +92,7 @@ async def test_media_only_message_is_not_forwarded(app: App) -> None:
     bound_app(app)
     pool = app.make_pool()
     bridge = make_bridge(app, pool=pool)
-    assert await bridge.handle_group_message(message("#<image url=\"x\"/>")) is None
+    assert await bridge.handle_group_message(message('#<image url="x"/>')) is None
     assert pool._clients["main"].commands == []
 
 
@@ -294,9 +294,7 @@ def test_format_status_multi_mixed() -> None:
         offline=["world2"],
         total_online=3,
     )
-    assert format_status(report) == (
-        "[服务器状态]\nmain: 在线 3/20 玩家: a, b, c\nworld2: 离线\n总计: 3 人在线"
-    )
+    assert format_status(report) == ("[服务器状态]\nmain: 在线 3/20 玩家: a, b, c\nworld2: 离线\n总计: 3 人在线")
 
 
 def test_bridge_format_status_delegates(app: App) -> None:

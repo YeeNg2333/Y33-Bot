@@ -118,9 +118,7 @@ class AsyncRconClient:
         req_id = next(self._ids)
         await self._send(req_id, _TYPE_AUTH, self._password)
         try:
-            pkt_id, _pkt_type, _body = await asyncio.wait_for(
-                self._read_packet(), timeout=self._command_timeout
-            )
+            pkt_id, _pkt_type, _body = await asyncio.wait_for(self._read_packet(), timeout=self._command_timeout)
         except TimeoutError as exc:
             raise RconTimeoutError(f"RCON 鉴权响应超时（{self._command_timeout}s）: {self.endpoint}") from exc
         if pkt_id == -1:
@@ -145,9 +143,7 @@ class AsyncRconClient:
 
         payload_len = len((cmd or "").encode("utf-8"))
         if payload_len > self.MAX_PAYLOAD_BYTES:
-            raise RconError(
-                f"命令超过 {self.MAX_PAYLOAD_BYTES} 字节上限（实际 {payload_len} 字节，RCON 协议硬限）"
-            )
+            raise RconError(f"命令超过 {self.MAX_PAYLOAD_BYTES} 字节上限（实际 {payload_len} 字节，RCON 协议硬限）")
 
         async with self._lock:
             if not self.connected:
@@ -171,9 +167,7 @@ class AsyncRconClient:
                 except TimeoutError as exc:
                     if first:
                         await self._drop()
-                        raise RconTimeoutError(
-                            f"RCON 命令超时（{self._command_timeout}s）: {cmd!r}"
-                        ) from exc
+                        raise RconTimeoutError(f"RCON 命令超时（{self._command_timeout}s）: {cmd!r}") from exc
                     break
                 except RconError as exc:
                     await self._drop()

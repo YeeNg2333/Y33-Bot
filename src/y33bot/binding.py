@@ -105,9 +105,7 @@ class BindingStore:
     def save(self) -> None:
         """原子落盘（临时文件 + os.replace）。"""
 
-        data = {
-            "bindings": [{"qq_openid": openid, "game_id": gid} for openid, gid in sorted(self._bindings.items())]
-        }
+        data = {"bindings": [{"qq_openid": openid, "game_id": gid} for openid, gid in sorted(self._bindings.items())]}
         try:
             text = tomli_w.dumps(data)
         except (TypeError, ValueError) as exc:  # pragma: no cover - 纯防御

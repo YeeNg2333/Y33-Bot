@@ -1,5 +1,6 @@
 name: CI
 
+# push 与 PR 都跑：装依赖 → 无密钥检查 → lint/format → 入口冒烟 → 测试（PLAN.md §2.2 / §6 T1 T8）
 on:
   push:
     branches: ["**"]
@@ -11,20 +12,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # 开发/CI 固定 3.12（A19：requires-python 为 >=3.11,<3.14）
         python-version: ["3.12"]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
 
       - name: 安装依赖
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-          pip install -e .
+          python -m pip install -r requirements-dev.txt
+          python -m pip install -e .
 
       - name: 无密钥检查（源码内不得出现硬编码密钥）
         # 只扫源码与 CI 配置：文档（docs/*.md、*.example）里出现的是占位符，不算硬编码密钥
@@ -34,10 +39,19 @@ jobs:
             echo "::error::检测到硬编码密钥"; exit 1
           fi
 
-      - name: Lint (ruff)
+      - name: Lint (ruff check)
         run: ruff check src tests
 
-      - name: 测试 (pytest)
+      - name: Format check (ruff format)
+        run: ruff format --check src tests
+
+      - name: Smoke (入口与模块导入)
+        run: |
+          python -m y33bot --version
+          y33bot --version
+          python -c "import y33bot, y33bot.cli, y33bot.service; print('import OK', y33bot.__version__)"
+
+      - name: 测试 (pytest + 覆盖率门槛)
         run: pytest -q --cov=y33bot --cov-report=term-missing --cov-fail-under=70
         env:
           # 测试全程离线：不设置任何 QQ / RCON 真实凭据

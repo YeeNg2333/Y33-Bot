@@ -1,4 +1,5 @@
-# 开发/测试依赖（PLAN.md §2.2，== 锁定；版本与本地实装一致）
+# 开发 / CI 依赖（== 锁定）。安装：python -m pip install -r requirements-dev.txt
+# 同时会带上 requirements.txt 的运行时依赖。
 -r requirements.txt
 
 pytest==9.1.1

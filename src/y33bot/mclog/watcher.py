@@ -75,9 +75,7 @@ class LogWatcher:
         rotated = False
 
         if state.log_offset > size:
-            self._logger.warning(
-                "[警告] 日志文件缩小（size=%d < offset=%d），偏移重置为 0", size, state.log_offset
-            )
+            self._logger.warning("[警告] 日志文件缩小（size=%d < offset=%d），偏移重置为 0", size, state.log_offset)
             rotated = True
         elif state.log_inode and inode and state.log_inode != inode:
             self._logger.warning("[警告] 日志文件已轮转（inode %s -> %s），偏移重置为 0", state.log_inode, inode)

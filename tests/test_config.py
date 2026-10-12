@@ -83,7 +83,7 @@ def _base_text(tmp_path: Path) -> str:
         ("health_poll_interval = 5.0", "health_poll_interval = -1", "health_poll_interval 必须 > 0"),
         ('chat_prefix = "#"', 'chat_prefix = "##"', "必须是单字符"),
         ('encoding = "utf-8"', "encoding = 5", "必须是字符串"),
-        ("ignored_chat_prefixes = [\"[QQ]\", \"[→QQ]\"]", "ignored_chat_prefixes = 5", "字符串数组"),
+        ('ignored_chat_prefixes = ["[QQ]", "[→QQ]"]', "ignored_chat_prefixes = 5", "字符串数组"),
     ],
 )
 def test_field_validation(tmp_path: Path, old: str, new: str, match: str) -> None:
