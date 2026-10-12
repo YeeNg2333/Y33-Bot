@@ -171,6 +171,8 @@ python -m y33bot simulate log-event --server main \
 # [RCON main] tellraw @a {"text":"[→QQ] Steve: 大家好"}
 ```
 
+> `--line`（以及 `--content`）后面的文本**一定要用引号包住**：日志行里有空格和 `<>`，不引起来会被 shell 拆成多个参数，argparse 直接报 `unrecognized arguments` 并以退出码 2 结束。
+
 **指令：**
 
 ```bash
