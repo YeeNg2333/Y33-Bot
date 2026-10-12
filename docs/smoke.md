@@ -10,13 +10,13 @@
 
 ```bash
 # 1) 依赖与可执行入口（Python 3.12，仓库内 .venv）
-bash scripts/dev_setup.sh          # 或 make setup
+bash scripts/dev_setup.sh          # 或 make setup：建 .venv + 装依赖 + 可编辑安装 + 生成 config.toml
 .venv/Scripts/python -m pip install -e .
 
 # 2) 配置
-cp config.example.toml config.toml
-#    把 [mc_servers] log_path 改成机器上真实存在（或可以创建）的 latest.log 路径
-#    把 [qq] group_openid 填成目标群（留空则 MC→QQ 方向禁用并告警）
+#    dev_setup.sh 会从 config.example.toml 复制出 config.toml（已存在则不覆盖）
+#    然后按机器实际情况改 [mc_servers] host/port/log_path 与 [qq] group_openid
+#    （group_openid 留空则 MC→QQ 方向禁用并告警）
 
 # 3) 密钥（只走环境变量，仓内不存）
 export QQ_BOT_APP_ID=<AppID>
@@ -235,14 +235,24 @@ $ python -m pytest tests/test_service.py::test_run_polls_log_pushes_and_persists
 ## 7. 全量自测（一条命令）
 
 ```bash
-$ python -m pytest -q                 # 201 passed
-$ python -m pytest -q --cov=y33bot --cov-report=term-missing   # TOTAL 90%（门槛 70%）
-$ ruff check src tests                # All checks passed!
+$ make test                              # 或 .venv/Scripts/python -m pytest -q
+214 passed
+$ make coverage                          # 或 python -m pytest -q --cov=y33bot --cov-report=term-missing
+TOTAL 90%（CI 门槛 --cov-fail-under=70）
+$ make lint                              # ruff check src tests + ruff format --check src tests
+All checks passed!
+37 files already formatted
 ```
 
-覆盖度（2026-10-13 实测）：`bridge` 99%、`mclog.patterns` 97%、`state` 96%、`commands.registry` 99%、
-`binding` 93%、`cli` 90%、`config` 89%、`mclog.watcher` 89%、`qq.gateway` 88%、`rcon.pool` 85%、
-`service` 85%、`rcon.client` 81%。
+> `make` 只是便捷入口（Windows 上不一定装了）；上面每个目标都给出了等价直连命令，
+> CI 里也是直接跑 `ruff` / `pytest`，不依赖 `make`。
+
+测试文件分工：`tests/test_smoke.py`（入口/边界/仓库约定）、逐模块单测（config/binding/state/
+mclog/rcon/commands/bridge/gateway/service/cli）、`tests/e2e/test_acceptance.py`（S1-S4/S6 端到端）。
+
+覆盖度（2026-10-13 实测）：`bridge` 99%、`commands.registry` 99%、`mclog.patterns` 97%、`state` 96%、
+`qq.fakes` 95%、`binding` 93%、`cli` 91%、`commands.builtin` 91%、`config` 89%、`mclog.watcher` 89%、
+`qq.gateway` 88%、`rcon.pool` 86%、`service` 85%、`rcon.client` 81%、`rcon.protocol` 79%。
 
 ---
 
