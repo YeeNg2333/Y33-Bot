@@ -57,6 +57,10 @@ exclude_lines = [
 line-length = 120
 target-version = "py311"
 src = ["src", "tests"]
+# 关键：ruff ≥0.17 会格式化 Markdown 代码块里的 Python。
+# IDEA.md / PLAN.md 是冻结的需求书与实施计划（PLAN.md 明令不得改动），README.md 的示例也要人工排版，
+# 所以把 Markdown 整体排除在 ruff 之外——否则 `ruff format .` 会顺手改写评审依据文件。
+extend-exclude = ["*.md", "**/*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
