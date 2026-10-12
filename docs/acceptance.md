@@ -372,3 +372,300 @@ CI 运行结论（推送后实测，commit `f0e85db`）：
 | S5-1…S5-8 真机流程 | 无真实 QQ 机器人凭据、无真 MC 服（`enable-rcon=true`） | 文档保留步骤与判据，具备环境后回填 §2.5；离线可复现片段与常驻逻辑已由自动化用例覆盖 |
 | `qq/gateway.py` 33-34（缺 `qq-botpy` 兜底） | 本机/CI 都装了 `qq-botpy==1.2.1`，该分支不可达 | 该分支的行为由 `tests/test_gateway.py::test_start_requires_botpy` 用 monkeypatch 强制覆盖 |
 | `make help` 的中文在 Windows 控制台乱码 | mingw32-make 的输出不经 UTF-8 控制台 | 已在 `make help` 首行提示 `chcp 65001`（T1 既有约定，非本卡改动） |
+
+---
+
+## 7. T12 汇总复验（根卡 `t_c3a76c90`，2026-10-13）
+
+本节的复验对象是**已发布的 `origin/main` = `3c27803`**（不是任何分支的工作树内容），并且复验
+**从 `git archive origin/main` 导出的纯净树**开始，避免被本地 `.venv`/`config.toml`/`data/` 干扰。
+与 §2 的差别：§2 用 `--dry-run` + 假端口（完全不发网络包），本节额外**真起了一个 RCON 服务端**，
+逐条核对服务端实际收到的命令，用来证明"去掉 `--dry-run` 就是真的注入"。
+
+### 7.1 复验环境
+
+| 项 | 值 |
+|---|---|
+| 代码版本 | `origin/main` = `3c27803`（`git archive` 导出，无 `.git`、无 `.venv`、无 `data/`） |
+| 解释器 | 全新 `python3 -m venv .venv`（Python 3.12.10），`pip install -r requirements-dev.txt -e .` |
+| 真 RCON 服务端 | 自写 40 行 stdlib 服务端（Valve 二进制协议：`LOGIN(3)` 鉴权、`COMMAND(2)` 应答、逐条落盘收到的命令），监听 `127.0.0.1:25575` |
+| 真日志文件 | `_verify/mcserver/logs/latest.log`（真文件，供 S6 做真截断） |
+| 环境变量 | `QQ_BOT_APP_ID=102000001`／`QQ_BOT_APP_SECRET=fake-secret`（朝 QQ 方向永不联网）／`MC_RCON_PASSWORD_MAIN=s3cret` |
+
+### 7.2 一键测试与静态检查（与 CI 同一条命令）
+
+```bash
+$ mingw32-make test PYTEST_ARGS="-q --cov=y33bot --cov-fail-under=70"
+348 passed in 45.83s
+Required test coverage of 70% reached. Total coverage: 99.30%
+
+$ .venv/Scripts/python.exe -m ruff check .
+All checks passed!
+$ .venv/Scripts/python.exe -m ruff format --check .
+40 files already formatted
+
+$ grep -rnE "pytest\.(skip|xfail)|@pytest\.mark\.(skip|xfail)|skipif" tests/
+（无 skip/xfail/skipif）
+```
+
+结论与 §3 一致：**348 例全过、总覆盖率 99.30%、静态检查全绿、无 skip/xfail**。
+
+### 7.3 S1 环境与配置自检（两个分支都复验）
+
+```bash
+$ $BP -m y33bot check --config config.toml                      # RCON 可达（真服务端）
+[配置] OK config.toml 解析成功，1 个 MC 服
+[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON main] OK /list -> OK: /list
+[日志 main] OK …\mcserver\logs\latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+exit=0
+
+$ $BP -m y33bot check --config config_unreachable.toml          # 不可达端口 34567，超时 1s
+[配置] OK config_unreachable.toml 解析成功，1 个 MC 服
+[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON main] FAIL 无法连接 127.0.0.1:34567: 连接 127.0.0.1:34567 超时（1.0s）
+[日志 main] OK …\mcserver\logs\latest.log 可读，偏移 0 字节
+[绑定] OK 1 条
+FAIL
+exit=1
+
+$ env -u QQ_BOT_APP_SECRET $BP -m y33bot check --config config_unreachable.toml
+[QQ] FAIL 环境变量 QQ_BOT_APP_SECRET 未设置
+…
+FAIL
+exit=1
+```
+
+**结论：通过。** 与 §2.1 逐行一致（含 Windows 上"不可达端口 = 1s 超时"而非 `Connection refused` 的
+平台差异）；`OK` 分支是本轮**真连 RCON** 得到的，不再是推断。
+
+### 7.4 S2 QQ→MC（真注入 + 真换行输入）
+
+```bash
+$ $BP -m y33bot bind set 1A2B3C4D Steve
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings.toml)
+$ $BP -m y33bot bind list
+[绑定] 1A2B3C4D -> Steve
+
+$ $BP -m y33bot simulate group-message --openid 1A2B3C4D --content $'#你好\n世界'   # 真换行
+[RCON main] tellraw @a {"text":"[QQ] Steve: 你好"}
+
+$ $BP -m y33bot simulate group-message --openid 1A2B3C4D --content '/status'       # RCON 可达
+[RCON main] /list
+[群消息] [服务器状态]
+[群消息] 在线: 1/20
+[群消息] 玩家: Steve
+
+$ $BP -m y33bot simulate group-message --openid UNKNOWN --content '#hi'
+[群消息] 请先使用 /bind <游戏ID> 绑定
+$ $BP -m y33bot simulate group-message --openid 1A2B3C4D --content '普通消息'
+[忽略] 非触发前缀
+$ $BP -m y33bot simulate group-message --openid 1A2B3C4D --content '/bind'
+[群消息] 用法: /bind <游戏ID>
+$ $BP -m y33bot simulate group-message --openid 1A2B3C4D --content '/unknowncmd'
+[群消息] 未知指令
+```
+
+真 RCON 服务端**实际收到**的命令（`_verify/rcon_received.log`）：
+
+```text
+AUTH OK from ('127.0.0.1', 14773)
+CMD tellraw @a {"text":"[QQ] Steve: 你好"}
+AUTH OK from ('127.0.0.1', 14783)
+CMD /list
+AUTH OK from ('127.0.0.1', 3401)
+CMD /list
+```
+
+**结论：通过（比 §2.2 更强）。** 三处增量：① 换行输入这次是**真换行**（`$'#你好\n世界'`），
+输出仍是 `[QQ] Steve: 你好` —— A7「只转发第一行」在真输入下成立；② 注入不是打印，而是**服务端
+真的收到了 `tellraw` 原样命令**；③ RCON 可达时 `/status` 渲染的是真实名单
+（`在线: 1/20` / `玩家: Steve`），§2.2 因故意指向不可达端口只能验到 `0/20`、`玩家: 无` 分支。
+
+### 7.5 S3 MC→QQ 聊天转发与回环防护
+
+```bash
+$ $BP -m y33bot simulate log-event --server main --line '[12:00:01] [Async Chat Thread - #0/INFO]: <Steve> #大家好'
+[群消息] Steve: 大家好
+[RCON main] tellraw @a {"text":"[→QQ] Steve: 大家好"}
+（服务端回执：CMD tellraw @a {"text":"[→QQ] Steve: 大家好"}）
+
+$ $BP -m y33bot simulate log-event --server main --line '[12:00:02] [Async Chat Thread - #0/INFO]: <Steve> 普通聊天'
+[忽略] 聊天非 # 开头，不转发
+
+$ $BP -m y33bot simulate log-event --server main --line '[12:00:03] [Async Chat Thread - #0/INFO]: <Steve> [→QQ] Steve: 大家好'
+[忽略] 回环防护：命中 ignored_chat_prefixes
+```
+
+**结论：通过**，与 §2.3 一致，且回显那一步有服务端回执佐证。
+
+### 7.6 S4 进出通知与健康翻转
+
+```bash
+$ $BP -m y33bot simulate log-event --server main --line '[12:00:04] [Server thread/INFO]: Steve joined the game'
+[群消息] Steve进入游戏
+$ $BP -m y33bot simulate log-event --server main --line '[12:00:05] [Server thread/INFO]: Steve left the game'
+[群消息] Steve退出游戏
+$ $BP -m y33bot simulate log-event --server main --kind join --player Steve
+[群消息] Steve进入游戏
+
+$ $BP -m y33bot simulate health --server main --offline      # 第 1 次
+[RCON main] /list
+[警告] RCON main 命令失败: 假 RCON 服务器离线: 127.0.0.1:25575
+[群消息] [服务器状态] main 离线
+$ $BP -m y33bot simulate health --server main --offline      # 第 2 次
+[忽略] 状态未变化，不重复提示
+
+$ $BP -m y33bot simulate health --server main --online       # 真探测，第 1 次
+[RCON main] /list
+[群消息] [服务器状态] main 上线
+$ $BP -m y33bot simulate health --server main --online       # 第 2 次
+[忽略] 状态未变化，不重复提示
+```
+
+`data/state.json` 的 `health_online` 随翻转变化（本轮最后一次为 `true`，`health_changed_at` 同步刷新）。
+
+**结论：通过**，与 §2.4 一致，并补验了线上行的"再来一次也是 `[忽略]`"。
+
+### 7.7 S6 日志轮转（头一次用真文件、真截断复现）
+
+§2.6 的复现走的是 pytest 用例；本轮额外用**生产代码 `LogWatcher` + `StateStore` 直接跑一个真文件**
+（`_verify/s6_rotation_real.py`，无 mock：真目录、真 `latest.log`、用 `"w"` 模式真截断）：
+
+```text
+--- poll#1 初始文件: events=[('join', 'Steve')] offset=56 size=56
+--- poll#2 追加一行: events=[('chat', 'Steve')] offset=118 size=118
+WARNING [警告] 日志文件缩小（size=55 < offset=118），偏移重置为 0
+--- poll#3 清空+新写（轮转）: events=[('join', 'Alex')] offset=55 size=55
+
+PASS poll#1 解析 join/Steve
+PASS poll#2 解析 chat/Steve
+PASS poll#3 轮转后解析新行 join/Alex
+PASS poll#3 偏移重置并推进到新文件大小
+S6_REAL_RESULT=PASS
+```
+
+同时复跑 §2.6 引用的两个用例：
+
+```bash
+$ $BP -m pytest tests/test_mclog_watcher.py::test_rotation_resets_offset tests/e2e/test_acceptance.py::test_s6_log_rotation -q
+2 passed in 0.98s
+```
+
+**结论：通过。**
+
+### 7.8 S5 真实端到端（真 QQ 群 + 真 MC 服）
+
+**仍未执行**，且本轮**没有**新增任何真机证据：本机依然没有真实 QQ 机器人凭据与
+`enable-rcon=true` 的真 MC 服，S5-1…S5-8 的玩家可见现象无法复现，结论维持 **§2.5 的「部分通过」**。
+
+离线可复现片段与自动化等价物**全部复跑通过**：
+
+```bash
+$ env -u QQ_BOT_APP_ID -u QQ_BOT_APP_SECRET $BP -m y33bot run --config config.toml
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: main
+[错误] 环境变量 QQ_BOT_APP_ID 未设置
+exit=1
+
+$ $BP -m pytest tests/test_service.py::test_run_polls_log_pushes_and_persists_offset \
+        tests/e2e/test_entrypoint.py::test_entrypoint_run_fails_fast_without_credentials \
+        tests/test_failures.py::test_service_run_builds_gateway_from_credentials -q
+3 passed
+```
+
+（`test_run_polls_log_pushes_and_persists_offset` 覆盖 S5-7「重启不重复推送」：假网关 + 假 RCON 下
+追加日志 → 群内收到通知 → 退出后 `log_offset` 等于文件大小。）
+
+### 7.9 CI 与发布物
+
+```bash
+$ curl -s "https://api.github.com/repos/YeeNg2333/Y33-Bot/actions/runs?per_page=8"
+3c27803 main          run#20  CI  completed  success   (…/runs/38292082660)
+3c27803 wt/t_7b86eb6b run#19  CI  completed  success   (…/runs/38292077395)
+f0e85db main          run#18  CI  completed  success
+f0e85db wt/t_7b86eb6b run#17  CI  completed  success
+5178e84 wt/t_7b86eb6b run#16  CI  completed  success
+1587081 main          run#15  CI  completed  success
+1587081 wt/t_bcf892eb run#14  CI  completed  success
+f0ddd4e main          run#13  CI  completed  success
+```
+
+即**`origin/main` 的 HEAD（`3c27803`）CI 为 success**，且近期 8 次运行全绿。
+
+发布物 `v0.1.0` 是 **annotated tag**（`first working release`）→ commit `f0ddd4e`：
+
+```bash
+$ git diff --stat v0.1.0 origin/main
+ .github/workflows/ci.yml     |   5 +-
+ Makefile                     |  15 +-
+ README.md                    |   2 +
+ docs/acceptance.md           | 374 +++++++++++++++
+ docs/smoke.md                |  23 +-
+ tests/e2e/test_entrypoint.py | 255 ++++++++++
+ tests/test_boundaries.py     | 543 ++++++++++++++++++
+ tests/test_failures.py       | 1070 +++++++++++++++++++++++++++++++++
+ 8 files changed, 2270 insertions(+), 17 deletions(-)
+```
+
+**关键结论：`v0.1.0` 与 `main` 的差异里 `src/` 一行都没有** —— 产品代码完全同一份，tag 之后新增的
+只有测试、CI/Makefile 机制与文档。因此 T11 遗留的「要不要补 v0.1.1」问题在本轮有明确答案：
+**不需要**（`src/` 无变化，T10 也未发现产品缺陷；补版本号只会让两个 tag 的产物代码完全相同）。
+tag 树本身可独立运行（用 tag 树的 `src` 直接加载）：
+
+```bash
+$ PYTHONPATH=<tag-tree>/src $BP -m y33bot --version
+y33bot 0.1.0
+$ PYTHONPATH=<tag-tree>/src $BP -m y33bot bind list
+[绑定] 无绑定记录          # exit=0
+```
+
+### 7.10 无硬编码密钥与冻结文件
+
+```bash
+$ grep -RInE '(QQ_BOT_APP_SECRET|MC_RCON_PASSWORD)[[:space:]]*=[[:space:]]*[^[:space:]]' \
+      --include='*.py' --include='*.yml' --include='*.toml' src tests .github   # CI 同款
+（无匹配）
+
+# 更宽的扫描（含 *.md/*.sh/*.example/*.json，排除 .venv）只命中占位符：
+README.md:137/383        QQ_BOT_APP_SECRET=你的AppSecret
+docs/smoke.md:23         export QQ_BOT_APP_SECRET=<AppSecret>
+scripts/dev_setup.sh:56  export QQ_BOT_APP_SECRET=你的AppSecret
+（以及代码里的 password=<变量> 关键字参数）
+```
+
+冻结文件（相对初次提交 `489f751`）：
+
+| 文件 | 状态 |
+|---|---|
+| `IDEA.md` | 未改动，blob `4a6620f8f272` |
+| `需求1.txt` | 未改动，blob `a43b6afcda7c` |
+| `PLAN.md` | 只在 T0 卡（`t_19583dfd`）之后按 §3.1 补了一行 `.gitignore` 说明（commit `3d83eb7`「docs: require .worktrees/ in gitignore spec」），此后未再改动 |
+
+### 7.11 T12 结论
+
+| 项 | 结论 |
+|---|---|
+| S1 环境与配置自检 | **通过**（`OK`/`FAIL`/缺密钥三条分支，`OK` 分支为真连 RCON） |
+| S2 QQ→MC 绑定与转发 | **通过**（真换行输入 + 服务端收到原样 `tellraw` + 真实名单渲染） |
+| S3 MC→QQ 聊天转发与回环防护 | **通过** |
+| S4 进出通知与健康翻转 | **通过**（离线/上线各只提示一次） |
+| S5 真实端到端 | **部分通过**（离线片段 + 自动化等价物通过；真机 8 步缺环境，未执行、不作通过声明） |
+| S6 日志轮转 | **通过**（pytest 用例 + 真文件真截断双证据） |
+| 一键测试 | **348 passed / 99.30%**（门槛 70%），无 skip/xfail |
+| 静态检查 | `ruff check` 全过、40 文件已格式化 |
+| CI | `origin/main` HEAD `3c27803` **success**，近期 8 次全绿 |
+| 硬编码密钥 | **无**（CI 同款 grep 无匹配；宽扫描仅占位符） |
+| 冻结文档 | IDEA.md / 需求1.txt 未动；PLAN.md 仅 T0 卡内一处按 §3.1 追加 |
+| 产品缺陷 | **0 条**（本轮未改动 `src/`、`tests/`、`Makefile`、CI 任何一行） |
+
+复验脚本自身出过两次问题，都是**我这边的脚本问题、不是产品缺陷**，记录以免误判：
+① 手写 S6 复现脚本第一次把仓库根目录传成了 MSYS 路径（`/c/…`），Python 当成相对路径 → 改用
+`pwd -W`；② 该脚本一开始直接给 `MCServerConfig` 赋值，撞上 dataclass 不可变 → 改用
+`dataclasses.replace`。两次都在脚本层解决，未触碰仓库代码。
+
+证据留档：`…/cache/scratch/y33bot-root-verify-801/_verify/`（`transcript.txt`、`transcript2.txt`、
+`rcon_received.log`、`s6_rotation_real.py`、`mini_rcon_server.py`、`ci_runs.json`）与
+`…/cache/scratch/y33bot-tag-verify-2348/`（`v0.1.0` 导出树）。
