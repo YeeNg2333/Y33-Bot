@@ -332,7 +332,17 @@ $ mingw32-make test VENV=no-such-venv PY="$(pwd)/.venv/Scripts/python.exe" PYTES
 60 passed in 1.09s
 ```
 
-CI 运行结论：见下方 §4.1（推送后回填真实 run 链接与结论）。
+CI 运行结论（推送后实测，commit `f0e85db`）：
+
+| 分支 | run | 结论 | 测试步骤 |
+|---|---|---|---|
+| `wt/t_7b86eb6b` | [#17](https://github.com/YeeNg2333/Y33-Bot/actions/runs/38291796691) | **success** | 第 9 步「测试（make test：pytest + 覆盖率门槛）」success；同 job 内 checkout／装 Python／装依赖／无密钥检查／Lint／Format check／Smoke 也全部 success |
+| `main`（快进到同一 commit） | [#18](https://github.com/YeeNg2333/Y33-Bot/actions/runs/38291806391) | **success** | 同上 |
+
+即 CI 上跑的确实是本卡改写的那一条一键命令 `make test PYTEST_ARGS="… --cov-fail-under=70"`，
+所以 CI 绿 = 覆盖率门槛在 CI 上生效。逐 step 结论取自 GitHub Actions jobs API
+（`/actions/runs/<id>/jobs`）；该 API 的**日志文本**下载需要鉴权（未登录请求返回 403），
+因此这里只引用 step 级结论，CI 侧的具体数字（用例数/覆盖率）以本地同命令的输出为准（§3）。
 
 ---
 
