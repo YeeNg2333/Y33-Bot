@@ -199,7 +199,7 @@ IDEA.md 未定义或存在歧义之处，本计划采用以下假设。**每条�
 ├── requirements.txt            # 运行时直接依赖（== 锁定）
 ├── requirements-dev.txt        # 测试/检查依赖（== 锁定）
 ├── Makefile                    # setup / run / check / lint / test
-├── .gitignore                  # .venv、data/、__pycache__、.env、*.log
+├── .gitignore                  # .venv、data/、__pycache__、.env、*.log、.worktrees/（看板工作树不得入库）
 ├── .env.example                # 环境变量清单（不含真实值）
 ├── config.example.toml         # 配置样板（可直接复制为 config.toml）
 ├── .github/workflows/ci.yml    # push/PR：装依赖 → ruff → pytest(+覆盖率门槛)
@@ -651,7 +651,7 @@ $ python -m y33bot simulate health --server main --offline --dry-run     # 再�
 
 | T | 任务 | 内容摘要 | 依赖 | 交付物 | 看板卡 |
 |---|---|---|---|---|---|
-| T1 | 骨架与依赖 | 建 §3.1 目录树与空模块（仅签名 + docstring）、`pyproject.toml`、`requirements*.txt`（`qq-botpy==1.2.1`、`tomli-w==1.2.0`）、`.gitignore`、`.env.example`、`config.example.toml`、`scripts/dev_setup.sh`、`Makefile`、`.github/workflows/ci.yml`（3.12：装依赖 → `ruff check` → `pytest`） | — | 可 `pip install -e .` 的空骨架 | `t_8442a7d5` |
+| T1 | 骨架与依赖 | 建 §3.1 目录树与空模块（仅签名 + docstring）、`pyproject.toml`、`requirements*.txt`（`qq-botpy==1.2.1`、`tomli-w==1.2.0`）、`.gitignore`（必须含 `.worktrees/`、`.venv/`、`data/`、`.env`、`*.log`）、`.env.example`、`config.example.toml`、`scripts/dev_setup.sh`、`Makefile`、`.github/workflows/ci.yml`（3.12：装依赖 → `ruff check` → `pytest`） | — | 可 `pip install -e .` 的空骨架 | `t_8442a7d5` |
 | T2 | 配置与模型 | `config.py`、`models.py` 全量实现 + 校验（§4.1 规则、A18 环境变量） | T1 | `test_config.py` 全绿 | `t_68925b93` |
 | T3 | 持久化层 | `binding.py`（TOML 读写、覆盖语义、原子替换）、`state.py`（JSON、版本迁移、偏移/健康/msg_seq） | T2 | `test_binding.py`、`test_state.py` 全绿 | `t_68925b93` |
 | T4 | RCON 层 | `rcon/protocol.py`、`rcon/client.py`（多包/锁/重连/超时/1446 限制）、`rcon/pool.py`（广播、status、`/list` 解析）、`rcon/fakes.py` | T2 | `test_rcon_client.py`（内存假 RCON 服）全绿 | `t_68925b93` |
