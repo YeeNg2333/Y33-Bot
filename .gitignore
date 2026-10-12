@@ -1,0 +1,34 @@
+# 看板工作树（PLAN.md §3.1 要求，必须忽略）
+.worktrees/
+
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# 测试与检查缓存
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# 运行时数据与密钥（绝不入库）
+.env
+config.toml
+data/
+*.log
+
+# 编辑器 / 系统
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

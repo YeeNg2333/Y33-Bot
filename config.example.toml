@@ -1,0 +1,34 @@
+# y33bot 配置样板（PLAN.md §3.5 / §4.1）
+# 复制为 config.toml 后按需修改：cp config.example.toml config.toml
+
+[qq]
+group_openid = "填写目标群的 group_openid"   # MC→QQ 方向的发送目标；留空则该方向禁用并告警
+app_id_env = "QQ_BOT_APP_ID"
+app_secret_env = "QQ_BOT_APP_SECRET"
+command_prefix = "/"
+chat_prefix = "#"
+
+[behavior]
+log_poll_interval = 0.5       # 秒
+health_poll_interval = 30.0   # 秒
+max_line_length = 200         # 单行转发长度上限（字符）
+ignored_chat_prefixes = ["[QQ]", "[→QQ]"]
+
+[paths]
+bindings = "data/bindings.toml"
+state = "data/state.json"
+
+[[mc_servers]]
+name = "main"                           # 唯一，用于日志与状态文件名
+host = "127.0.0.1"
+port = 25575
+password_env = "MC_RCON_PASSWORD_MAIN"  # 变量不存在时回退 MC_RCON_PASSWORD
+log_path = "D:/mc/server/logs/latest.log"
+connect_timeout = 5.0
+command_timeout = 5.0
+
+[log_patterns]
+join = '\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) joined the game'
+quit = '\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) left the game'
+chat = '\[\d{2}:\d{2}:\d{2}\] \[Async Chat Thread - #\d+/INFO\]: <(?P<player>\w+)> (?P<message>.+)'
+encoding = "utf-8"
