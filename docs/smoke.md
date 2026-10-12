@@ -236,23 +236,26 @@ $ python -m pytest tests/test_service.py::test_run_polls_log_pushes_and_persists
 
 ```bash
 $ make test                              # 或 .venv/Scripts/python -m pytest -q
-214 passed
-$ make coverage                          # 或 python -m pytest -q --cov=y33bot --cov-report=term-missing
-TOTAL 90%（CI 门槛 --cov-fail-under=70）
+348 passed
+$ make test PYTEST_ARGS="-q --cov=y33bot --cov-report=term-missing --cov-fail-under=70"
+TOTAL 99%（CI 门槛 --cov-fail-under=70；这条就是 CI 里跑的那一行）
 $ make lint                              # ruff check src tests + ruff format --check src tests
 All checks passed!
-37 files already formatted
+40 files already formatted
 ```
 
-> `make` 只是便捷入口（Windows 上不一定装了）；上面每个目标都给出了等价直连命令，
-> CI 里也是直接跑 `ruff` / `pytest`，不依赖 `make`。
+> `make` 只是便捷入口：Windows 上可能只有 `mingw32-make`，Linux/CI 上就是 `make`；
+> `Makefile` 优先用仓库内 `.venv`，没有 `.venv` 时回退到系统解释器，所以 CI 直接 `make test` 即可。
+> 等价的直连命令是 `.venv/Scripts/python -m pytest`（Windows）/ `.venv/bin/python -m pytest`（Linux）。
 
 测试文件分工：`tests/test_smoke.py`（入口/边界/仓库约定）、逐模块单测（config/binding/state/
-mclog/rcon/commands/bridge/gateway/service/cli）、`tests/e2e/test_acceptance.py`（S1-S4/S6 端到端）。
+mclog/rcon/commands/bridge/gateway/service/cli）、`tests/test_boundaries.py`（各模块边界与类型错误）、
+`tests/test_failures.py`（各模块失败分支）、`tests/e2e/test_acceptance.py`（S1-S4/S6，同进程）、
+`tests/e2e/test_entrypoint.py`（**真子进程**跑 `python -m y33bot`，逐条断言 S1-S4 的 stdout 与退出码）。
 
-覆盖度（2026-10-13 实测）：`bridge` 99%、`commands.registry` 99%、`mclog.patterns` 97%、`state` 96%、
-`qq.fakes` 95%、`binding` 93%、`cli` 91%、`commands.builtin` 91%、`config` 89%、`mclog.watcher` 89%、
-`qq.gateway` 88%、`rcon.pool` 86%、`service` 85%、`rcon.client` 81%、`rcon.protocol` 79%。
+覆盖度（2026-10-13 实测，348 例）：总覆盖 99%，`binding`/`config`/`state`/`mclog`/`commands`/`rcon`/
+`models`/`qq.fakes`/`__main__` 为 100%，`bridge`/`cli`/`rcon.client` 99%，`qq.gateway` 98%、`service` 98%。
+逐条验收记录（命令 + 真实输出 + 结论）见 `docs/acceptance.md`。
 
 ---
 

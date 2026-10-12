@@ -51,8 +51,9 @@ jobs:
           y33bot --version
           python -c "import y33bot, y33bot.cli, y33bot.service; print('import OK', y33bot.__version__)"
 
-      - name: 测试 (pytest + 覆盖率门槛)
-        run: pytest -q --cov=y33bot --cov-report=term-missing --cov-fail-under=70
+      - name: 测试（make test：pytest + 覆盖率门槛）
+        # CI 走的就是开发者本地那一条一键命令：make test（PLAN.md §6 T9 / T10）
+        run: make test PYTEST_ARGS="-q --cov=y33bot --cov-report=term-missing --cov-fail-under=70"
         env:
           # 测试全程离线：不设置任何 QQ / RCON 真实凭据
           PYTHONHASHSEED: "0"
