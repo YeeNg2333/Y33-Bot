@@ -74,7 +74,7 @@ chat_prefix = "#"
 log_poll_interval = 0.5
 health_poll_interval = 30.0
 max_line_length = 200
-ignored_chat_prefixes = ["[QQ]", "[→QQ]"]
+ignored_chat_prefixes = ["[QQ]"]
 
 [paths]
 bindings = "data/bindings.toml"
@@ -318,7 +318,7 @@ def test_subcommands_are_implemented(
         )
         == 0
     )
-    assert capsys.readouterr().out.strip() == "[群消息] Steve进入游戏"
+    assert capsys.readouterr().out.strip() == "[群消息] Steve进入了main"
 
     # 用法错误（既没有 --line 也没有 --kind）由 argparse 处理 → 退出码 2
     with pytest.raises(SystemExit) as excinfo:

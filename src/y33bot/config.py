@@ -78,7 +78,7 @@ class Behavior:
     log_poll_interval: float = 0.5
     health_poll_interval: float = 30.0
     max_line_length: int = 200
-    ignored_chat_prefixes: tuple[str, ...] = ("[QQ]", "[→QQ]")
+    ignored_chat_prefixes: tuple[str, ...] = ("[QQ]",)
 
 
 @dataclass(frozen=True)

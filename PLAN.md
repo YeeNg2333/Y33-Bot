@@ -15,11 +15,11 @@ IDEA.md 未定义或存在歧义之处，本计划采用以下假设。**每条�
 | A1 | `/status` 多服输出：单服时严格按 IDEA §3.5 的三行格式；多服时逐服一行 + `总计: N 人在线`；全部离线时输出 `[服务器状态] 服务器离线` | IDEA §3.5 只给了单服格式，§3.8 又要求多服对一群，需要补齐多服渲染 | `bridge.format_status()`，S5-4 |
 | A2 | `/bind` 缺参数回复 `用法: /bind <游戏ID>`；游戏 ID 不满足 `^[A-Za-z0-9_]{3,16}$` 回复 `游戏ID 不合法` | 规范未定义错误文案；ID 规则取自 MC Java 版用户名规则 | `commands.builtin.cmd_bind()`，S5-5，`test_commands.py` |
 | A3 | 未注册指令的回复文本固定为 `未知指令`（不加标点、不附帮助） | IDEA §3.4 原文「回复"未知指令"」 | `CommandRegistry.dispatch()`，S5-6 |
-| A4 | 进出通知文本固定 `{玩家名}进入游戏` / `{玩家名}退出游戏`，不加服务器名前缀 | `需求1.txt` B7「只需要做"XX进入游戏"」；MC→QQ 不区分来源服（§3.8） | `bridge.handle_log_event()`，S4 |
+| A4 | 进出通知文本为 `{玩家名}进入了{服名}` / `{玩家名}退出了{服名}`，服名取 `[[mc_servers]].name`，不加 `【】` | v0.2 真机反馈（`需求1.txt` 53–55 行）：一群对多服时必须能分辨来源；同时修正 `需求1.txt` B7 的"不加服名"、IDEA §3.3/§3.8（偏离记录见 §7） | `bridge.handle_log_event()`，S4 |
 | A5 | 群消息的 `@机器人` 前缀去掉由官方网关保证；服务内仍做一次防御性剥离（去掉开头的 `<@!...>` 或空白） | IDEA §3.2 注明 content 已去前缀，防御性处理避免网关行为变化导致指令不识别 | `qq.gateway._normalize_content()`，`test_bridge.py` |
 | A6 | 富媒体标记（形如 `<...>`）在转发前剔除；剔除后为空则整条不转发、不回复 | IDEA §4「只提取文字部分，忽略图片/附件」 | `bridge._extract_text()`，S2，`test_bridge.py` |
 | A7 | 换行处理：取第一个 `\n` 之前的部分，再按 `max_line_length`（默认 200 字符）截断，被截断时末尾补 `…`（省略号计入 200） | IDEA §4「换行处截断，仅显示单行」，未给长度上限；RCON 单条命令有 1446 字节硬上限 | `bridge._single_line()`，S2，`test_bridge.py` |
-| A8 | 回环防护有结论：游戏内聊天若以 `[QQ]` 或 `[→QQ]` 开头，直接忽略（配置项 `ignored_chat_prefixes` 可覆盖）；配置默认值即 `["[QQ]", "[→QQ]"]` | IDEA §4「回环过滤：待测试，若触发再处理」——这两个前缀是服务注入标记，注入内容一旦落回日志即构成回环 | `bridge.handle_log_event()`，S3，`test_bridge.py` |
+| A8 | 回环防护：游戏内聊天若以服务注入标记开头则忽略（配置项 `ignored_chat_prefixes` 可覆盖）；v0.2 起服务只注入 `[QQ]` 一个标记，默认值即 `["[QQ]"]`，且该判断先于 `#` 判断 | IDEA §4「回环过滤：待测试，若触发再处理」——注入标记一旦落回日志即构成回环；`[→QQ]` 随游戏内回显一起取消（§7） | `bridge.handle_log_event()`，S3，`test_bridge.py` |
 | A9 | `[log_patterns]` 模板编译时自动补 `^` / `$`（若模板未自带），匹配用 `re.match` | IDEA 原模板无锚点，`re.match` 只能锚定行首，行尾不锚定会误匹配 | `mclog.patterns.compile_patterns()`，`test_mclog_patterns.py` |
 | A10 | 日志轮转只按规范规则处理：`当前大小 < 持久化偏移` → 偏移重置为 0 并重读；同时把 `st_ino`/`st_size` 写入日志便于人工排查，不引入其它策略 | IDEA §3.7 明确「检测文件大小 < 偏移量时重置为 0」 | `mclog.watcher.LogWatcher.poll_new_events()`，S6 |
 | A11 | MC→QQ 主动消息必须有目标群：`[qq] group_openid` 为必填才能启用该方向；缺失时该方向禁用并打印告警，服务仍正常启动 | 官方 `post_group_message` 需要 `group_openid`；IDEA §3.3 未提目标群来源 | `config.load_config()`、`service.Service.run()`，`test_config.py` |
@@ -50,8 +50,8 @@ IDEA.md 未定义或存在歧义之处，本计划采用以下假设。**每条�
 | R7 | §3.2 | 未绑定发送 `#` 消息 → 回复 `请先使用 /bind <游戏ID> 绑定` | `bridge.Bridge.handle_group_message()` | S2 |
 | R8 | §3.2 | 转发格式 `[QQ] Steve: 你好` | `bridge.Bridge._format_to_mc()` | S2 |
 | R9 | §3.2 | 忽略图片/附件、换行截断为单行 | `bridge.Bridge._extract_text()` / `_single_line()` | S2（A6/A7） |
-| R10 | §3.3 | 进服 → 群内 `Steve进入游戏`；退服 → `Steve退出游戏` | `bridge.Bridge.handle_log_event()` | S4 |
-| R11 | §3.3 | 游戏内 `#` 聊天 → 群内 `Steve: 你好`（去 `#`）+ 游戏内 `[→QQ] Steve: 你好` | `bridge.Bridge.handle_log_event()` | S3 |
+| R10 | §3.3 | 进服 → 群内 `Steve进入了main`；退服 → `Steve退出了main`（服名来自 `[[mc_servers]].name`，A4/§7） | `bridge.Bridge.handle_log_event()` | S4 |
+| R11 | §3.3 | 游戏内 `#` 聊天 → 群内 `Steve@main: 你好`（去 `#`，前缀为来源服名）；**不再**往游戏内回显（§7） | `bridge.Bridge.handle_log_event()` | S3 |
 | R12 | §3.3 | 非 `#` 聊天不转发 | `bridge.Bridge.handle_log_event()` | S3 |
 | R13 | §3.4 | 装饰器式指令注册框架（名称/别名/描述） | `commands.registry.CommandRegistry.register()` | `test_commands.py` |
 | R14 | §3.4 | 触发格式 `/status`（无空格） | `commands.registry.CommandRegistry.dispatch()` | S5-4 |
@@ -68,7 +68,7 @@ IDEA.md 未定义或存在歧义之处，本计划采用以下假设。**每条�
 | R25 | §3.7 | 日志轮转：大小 < 偏移 → 重置为 0 重读 | `mclog.watcher.LogWatcher.poll_new_events()` | S6 |
 | R26 | §3.7 | 进程重启加载持久化偏移；文件大小 < 偏移则从 0 开始 | `state.StateStore.load()` + `LogWatcher` | S6 |
 | R27 | §3.7 | 日志格式模板化（TOML 可改，不改代码） | `mclog.patterns.compile_patterns()` + `config.LogPatterns` | `test_mclog_patterns.py` |
-| R28 | §3.8 | MC→QQ 不区分来源服，直接发送 | `bridge.Bridge.handle_log_event()` | S3/S4 |
+| R28 | §3.8 | MC→QQ 都发到同一个群，但消息文案带来源服名以便区分（v0.2：§7 记录了对「不区分来源服」的偏离） | `bridge.Bridge.handle_log_event()` | S3/S4 |
 | R29 | §3.8 | QQ→MC 全局广播到所有 RCON 连接的 MC 服 | `rcon.pool.RconPool.broadcast_tellraw()` | S2 |
 
 ### 1.2 非功能需求（IDEA §4）
@@ -87,7 +87,7 @@ IDEA.md 未定义或存在歧义之处，本计划采用以下假设。**每条�
 | N10 | 仅文字/Emoji | `msg_type=0`；`_extract_text()` 保留 Emoji、剔除 `<...>` 标记 | S2 |
 | N11 | 只提取文字、忽略图片/附件 | A6 | S2 |
 | N12 | 换行截断为单行 | A7 | S2 |
-| N13 | 回环过滤 | A8（有结论：默认忽略 `[QQ]`/`[→QQ]` 前缀聊天） | S3 |
+| N13 | 回环过滤 | A8（默认忽略 `[QQ]` 前缀聊天，`ignored_chat_prefixes` 可覆盖） | S3 |
 | N14 | 后期功能不预留数据结构 | 不引入插件接口、不引入投票/热重载相关字段 | §1.4 |
 
 ### 1.3 技术调研结论落地（IDEA §6）
@@ -341,7 +341,7 @@ class Behavior:
     log_poll_interval: float = 0.5
     health_poll_interval: float = 30.0
     max_line_length: int = 200
-    ignored_chat_prefixes: tuple[str, ...] = ("[QQ]", "[→QQ]")
+    ignored_chat_prefixes: tuple[str, ...] = ("[QQ]",)
 
 @dataclass(frozen=True)
 class AppConfig:
@@ -420,13 +420,14 @@ python -m y33bot --version                     # 打印 y33bot 0.1.0
 python -m y33bot run    --config config.toml   # 常驻服务（QQ 网关 + 日志轮询 + 健康轮询）
 python -m y33bot check  --config config.toml   # 启动自检，退出码 0 通过 / 1 失败
 python -m y33bot bind list | bind set <openid> <game_id> | bind remove <openid>
+python -m y33bot commands --config config.toml   # 打印 QQ 管理端指令面板要配置的「指令名 + 指令介绍」
 python -m y33bot simulate group-message --openid <id> --content '<文本>' [--group-openid <gid>] [--dry-run]
 python -m y33bot simulate log-event --server <name> --line '<一行日志>' [--dry-run]
 python -m y33bot simulate log-event --server <name> --kind join|quit --player <name> [--dry-run]
 python -m y33bot simulate health --server <name> --online|--offline
 ```
 
-- 输出行前缀固定：`[群消息] `（要发到 QQ 群的文本）、`[RCON <server>] `（实际执行的命令）、`[忽略] `（未触发规则的原因）、`[警告] `/`[错误] `。
+- 输出行前缀固定：`[群消息] `（要发到 QQ 群的文本）、`[RCON <server>] `（实际执行的命令）、`[指令] `（`commands` 输出的管理端清单）、`[忽略] `（未触发规则的原因）、`[警告] `/`[错误] `。
 - `simulate` 默认使用**真实 RCON 连接**（验收要看游戏内注入）；`--dry-run` 用 `rcon.fakes.FakeRconTransport`，只打印 `[RCON <server>] <命令>`，不做任何网络 IO（CI 用）。
 - `simulate` 的 QQ 侧统一使用 `qq.fakes.FakeQQGateway`，绝不连 QQ。
 - `check` 输出逐项结果行：`[配置] OK …`、`[QQ] OK …`、`[RCON <name>] OK|FAIL …`、`[日志 <name>] OK|FAIL …`、`[绑定] OK N 条`，最后一行 `OK`（退出码 0）或 `FAIL`（退出码 1）。
@@ -446,7 +447,7 @@ chat_prefix = "#"
 log_poll_interval = 0.5       # 秒
 health_poll_interval = 30.0   # 秒
 max_line_length = 200         # 单行转发长度上限（字符）
-ignored_chat_prefixes = ["[QQ]", "[→QQ]"]
+ignored_chat_prefixes = ["[QQ]"]
 
 [paths]
 bindings = "data/bindings.toml"
@@ -496,7 +497,7 @@ MC_RCON_PASSWORD_MAIN=
 | `behavior.log_poll_interval` | float | 是 | > 0 |
 | `behavior.health_poll_interval` | float | 是 | > 0 |
 | `behavior.max_line_length` | int | 是 | 1..1446 |
-| `behavior.ignored_chat_prefixes` | list[str] | 是 | 可空数组 |
+| `behavior.ignored_chat_prefixes` | list[str] | 是 | 可空数组；样板值为 `["[QQ]"]`（服务只注入这一个标记，§7） |
 | `paths.bindings` / `paths.state` | str | 是 | 相对路径按配置文件所在目录解析 |
 | `mc_servers[].name` | str | 是 | `^[A-Za-z0-9_-]{1,32}$`，同一文件内唯一 |
 | `mc_servers[].host/port` | str/int | 是 | port 1..65535 |
@@ -596,21 +597,21 @@ $ python -m y33bot simulate group-message --openid 1A2B3C4D --content '#你好
 
 ```
 $ python -m y33bot simulate log-event --server main --line '[12:00:01] [Async Chat Thread - #0/INFO]: <Steve> #大家好' --dry-run
-[群消息] Steve: 大家好
-[RCON main] tellraw @a {"text":"[→QQ] Steve: 大家好"}
+[群消息] Steve@main: 大家好
 $ python -m y33bot simulate log-event --server main --line '[12:00:02] [Async Chat Thread - #0/INFO]: <Steve> 普通聊天' --dry-run
 [忽略] 聊天非 # 开头，不转发
-$ python -m y33bot simulate log-event --server main --line '[12:00:03] [Async Chat Thread - #0/INFO]: <Steve> [→QQ] Steve: 大家好' --dry-run
+$ python -m y33bot simulate log-event --server main --line '[12:00:03] [Async Chat Thread - #0/INFO]: <Steve> [QQ] Steve: 大家好' --dry-run
 [忽略] 回环防护：命中 ignored_chat_prefixes
 ```
+（`#` 聊天只在群里出现一行，**没有** `[RCON …]` 回显行；群消息带来源服名 —— §7 的 v0.2 变更）
 
 **S4 进出通知与健康翻转（只提示一次）**
 
 ```
 $ python -m y33bot simulate log-event --server main --line '[12:00:04] [Server thread/INFO]: Steve joined the game' --dry-run
-[群消息] Steve进入游戏
+[群消息] Steve进入了main
 $ python -m y33bot simulate log-event --server main --line '[12:00:05] [Server thread/INFO]: Steve left the game' --dry-run
-[群消息] Steve退出游戏
+[群消息] Steve退出了main
 $ python -m y33bot simulate health --server main --offline --dry-run
 [群消息] [服务器状态] main 离线
 $ python -m y33bot simulate health --server main --offline --dry-run     # 再执行一次
@@ -623,7 +624,7 @@ $ python -m y33bot simulate health --server main --offline --dry-run     # 再�
 
 1. `python -m y33bot run --config config.toml` → 日志出现 `[启动] QQ 网关已连接` 与 `[启动] 日志监听已启动: main`。
 2. 群里 `@机器人 #测试消息` → **期望**：MC 内所有玩家看到 `[QQ] Steve: 测试消息`；群里**不**回消息。
-3. MC 内输入 `#大家好啊` → **期望**：群里出现 `Steve: 大家好啊`；MC 内多出一行 `[→QQ] Steve: 大家好啊`。
+3. MC 内输入 `#大家好啊` → **期望**：群里出现 `Steve@main: 大家好啊`；**MC 内不再多出任何行**（v0.2 起取消游戏内回显，§7）。
 4. 群里 `@机器人 /status` → **期望**：群内回
    ```
    [服务器状态]
@@ -634,14 +635,14 @@ $ python -m y33bot simulate health --server main --offline --dry-run     # 再�
 5. 群里 `@机器人 /bind Alex` → **期望**：群内回 `绑定成功: Alex`；`data/bindings.toml` 新增该条；同一 openid 再 `/bind Notch` 覆盖成功。
 6. 群里 `@机器人 /unknowncmd` → **期望**：群内回 `未知指令`。
 7. `Ctrl+C` → 进程退出；`data/state.json` 的 `log_offset` 等于 `latest.log` 当前大小；重新 `run` 后**不重复**推送历史事件（偏移续读）。
-8. 玩家进服/退服 → 群里出现 `Steve进入游戏` / `Steve退出游戏`；手动停掉 MC 进程 → 30s 内（`health_poll_interval`）群里出现一次 `[服务器状态] main 离线`；恢复后出现一次上线提示。
+8. 玩家进服/退服 → 群里出现 `Steve进入了main` / `Steve退出了main`（带服名，§7 V1）；手动停掉 MC 进程 → 30s 内（`health_poll_interval`）群里出现一次 `[服务器状态] main 离线`；恢复后出现一次上线提示。
 
 **S6 日志轮转**
 
 前置：S5 步骤 7 之后（`log_offset` 非 0）。
 
 1. 手动清空/重命名 `latest.log`，再写入一行进服日志。
-2. `python -m y33bot run --config config.toml` → **期望**：日志出现 `[警告] 日志文件缩小（size=... < offset=...），偏移重置为 0`，且新写入的进服日志被解析为 `Steve进入游戏` 推送到群。
+2. `python -m y33bot run --config config.toml` → **期望**：日志出现 `[警告] 日志文件缩小（size=... < offset=...），偏移重置为 0`，且新写入的进服日志被解析为 `Steve进入了main` 推送到群。
 
 ---
 
@@ -665,3 +666,30 @@ $ python -m y33bot simulate health --server main --offline --dry-run     # 再�
 | T12 | 汇总复验 | 按 `docs/acceptance.md` 与 §5 全量复跑，确认 S1–S6 结论、CI 绿、无硬编码密钥 | T11 | 根卡 `t_c3a76c90` 的完成结论 | `t_c3a76c90` |
 
 并行建议：T2 完成后 T3/T4/T5 可并行；T6 依赖 T3+T4；T7 依赖 T4+T5+T6；T9/T10 不得早于 T8；T11 不得早于 T10。
+
+---
+
+## 7. 变更记录
+
+### 7.1 v0.2（2026-10-13，真机反馈驱动）
+
+来源：`需求1.txt` 第 53–55 行（用户在真机试跑后的三条反馈）。三项均已落地；其中 V1、V2 **偏离了 IDEA.md 的冻结表述**——按本文件开头的效力条款在此登记，IDEA.md 与 `需求1.txt` 按仓库规则不修改。三条反馈与实现的对应关系如下。
+
+> 命名说明：本节用「v0.2」指代**这批变更**；包版本号仍是 `0.1.0`（`pyproject.toml` / `__version__`），
+> 发版时再统一 bump —— 本次没有做发布，所以文档里的 `y33bot 0.1.0` 输出保持原样。
+
+| # | 变更 | 原状（IDEA / 原 PLAN） | 现行为 | 涉及位置 |
+|---|---|---|---|---|
+| V1 | MC→QQ 的消息带来源服名 | 进出通知为 `Steve进入游戏` / `Steve退出游戏`，且明确「不加服务器名前缀」（IDEA §3.3/§3.8、原 A4） | 进出通知 `Steve进入了main` / `Steve退出了main`；游戏内 `#` 聊天转发 `Steve@main: 你好`（`main` 取 `[[mc_servers]].name`，不加 `【】`） | `bridge.py`；PLAN A4 / R10 / R11 / R28 / S3-S6；README；`docs/smoke.md`；`docs/acceptance.md`；5 个测试文件 |
+| V2 | 取消游戏内回显 | 玩家在游戏内发 `#大家好` 后，服务再 RCON 注入一行 `[→QQ] Steve: 大家好`（IDEA §3.3、原 R11/A8），造成游戏内聊天刷屏 | 只在 QQ 群出现一行；游戏内不再注入任何回显（玩家自己那行 `#大家好` 本来就可见） | `bridge.py`；PLAN R11 / A8 / N13 / S3 / S5-3；`config.example.toml` 的 `ignored_chat_prefixes` 收窄为 `["[QQ]"]`；README；`docs/smoke.md`；`docs/acceptance.md`；测试 |
+| V3 | QQ 管理端指令面板配套 | 仓库文档只描述了进程内的装饰器式 `CommandRegistry`，没有说明 C 端「@机器人 输入框 `/` 指令面板」由**管理端手工配置**，也没有面向该面板的清单 | 新增 `y33bot commands` 子命令，打印「指令名（带 `command_prefix`）+ 指令介绍」；`status`/`bind` 的描述压到面板限制内（≤15 中文字符） | `cli.py`；`commands/builtin.py`；PLAN §3.4；README §5.3 / §8；`tests/test_cli.py`；`tests/e2e/test_entrypoint.py` |
+
+平台事实依据（本次现查 QQ 官方文档，非推测）：
+
+- 「介绍与接入指南」§9.1.2 指令配置：群聊/频道/单聊的「/」指令面板条目「**开发者需在管理端配置**」，上限 24 条；每条字段为「指令名（≤8 中文字符或 16 英文字符）」「指令介绍（≤15 中文字符或 30 英文字符）」「权限菜单」「使用场景」；「指令、服务和快捷菜单模块**暂不需要单独提审**」。
+- API v2 文档（API 调用指南 / 消息收发概述）**没有**群聊指令注册接口 —— 所以不存在"代码层主动注册指令"，能做的是「管理端手填 + 代码侧保证指令名与 `dispatch()` 一致 + 把清单沉淀进文档」。
+- 群聊只订阅 `public_messages`（即 `GROUP_AT_MESSAGE_CREATE`）。用户已在真机确认面板发出的是 @消息，因此无需改 intent；若日后出现不带 @ 的面板消息，需要另行申请全量消息 `GROUP_MESSAGE_CREATE`。
+
+回环防护的连带结论（A8）：服务现在只注入 `[QQ] …` 一种标记，故样板 `ignored_chat_prefixes` 收窄为 `["[QQ]"]`；旧配置保留 `[→QQ]` 不影响运行（配置只做前缀匹配）。回环判断在 `#` 判断**之前**执行，并由 `test_bridge.py::test_chat_loop_protection_is_config_driven` 锁住「前缀可配置」这一行为。
+
+明确不做：`/list`（或 `/help`）这类**群内列举指令**不做 —— 可发现性交给 QQ 客户端的指令面板（用户 2026-10-13 决定）。

@@ -34,7 +34,7 @@ def config_text(
     second_log_path: Path | None = None,
     group_openid: str = "GROUP-OPENID-1",
     max_line_length: int = 200,
-    ignored_chat_prefixes: tuple[str, ...] = ("[QQ]", "[→QQ]"),
+    ignored_chat_prefixes: tuple[str, ...] = ("[QQ]",),
     log_poll_interval: float = 0.05,
     health_poll_interval: float = 5.0,
     join: str = JOIN_TEMPLATE,

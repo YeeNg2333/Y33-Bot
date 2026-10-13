@@ -17,7 +17,7 @@ def test_load_example_config(tmp_path: Path) -> None:
     config = load_config(example, DEFAULT_ENV)
     assert [server.name for server in config.servers] == ["main"]
     assert config.behavior.max_line_length == 200
-    assert config.behavior.ignored_chat_prefixes == ("[QQ]", "[→QQ]")
+    assert config.behavior.ignored_chat_prefixes == ("[QQ]",)
     assert config.qq.mc_to_qq_enabled is True
     # 相对路径按配置文件所在目录解析
     assert config.bindings_path == example.resolve().parent / "data" / "bindings.toml"
@@ -83,7 +83,7 @@ def _base_text(tmp_path: Path) -> str:
         ("health_poll_interval = 5.0", "health_poll_interval = -1", "health_poll_interval 必须 > 0"),
         ('chat_prefix = "#"', 'chat_prefix = "##"', "必须是单字符"),
         ('encoding = "utf-8"', "encoding = 5", "必须是字符串"),
-        ('ignored_chat_prefixes = ["[QQ]", "[→QQ]"]', "ignored_chat_prefixes = 5", "字符串数组"),
+        ('ignored_chat_prefixes = ["[QQ]"]', "ignored_chat_prefixes = 5", "字符串数组"),
     ],
 )
 def test_field_validation(tmp_path: Path, old: str, new: str, match: str) -> None:

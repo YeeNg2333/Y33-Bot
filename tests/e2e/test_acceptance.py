@@ -136,7 +136,7 @@ def test_s3_chat_forward_and_loop_guard(acceptance_dir: App, capsys) -> None:
         capsys,
     )
     assert code == 0
-    assert lines == ["[群消息] Steve: 大家好", '[RCON main] tellraw @a {"text":"[→QQ] Steve: 大家好"}']
+    assert lines == ["[群消息] Steve@main: 大家好"]
 
     code, lines = run(
         [
@@ -161,7 +161,7 @@ def test_s3_chat_forward_and_loop_guard(acceptance_dir: App, capsys) -> None:
             "--server",
             "main",
             "--line",
-            "[12:00:03] [Async Chat Thread - #0/INFO]: <Steve> [→QQ] Steve: 大家好",
+            "[12:00:03] [Async Chat Thread - #0/INFO]: <Steve> [QQ] Steve: 大家好",
             "--dry-run",
             "--config",
             CONFIG,
@@ -189,7 +189,7 @@ def test_s4_join_quit_and_health_once(acceptance_dir: App, capsys) -> None:
         ],
         capsys,
     )
-    assert lines == ["[群消息] Steve进入游戏"]
+    assert lines == ["[群消息] Steve进入了main"]
 
     code, lines = run(
         [
@@ -205,7 +205,7 @@ def test_s4_join_quit_and_health_once(acceptance_dir: App, capsys) -> None:
         ],
         capsys,
     )
-    assert lines == ["[群消息] Steve退出游戏"]
+    assert lines == ["[群消息] Steve退出了main"]
 
     args = ["simulate", "health", "--server", "main", "--offline", "--dry-run", "--config", CONFIG]
     code, lines = run(args, capsys)

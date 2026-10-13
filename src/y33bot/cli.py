@@ -1,7 +1,7 @@
-"""命令行入口：run / check / bind / simulate（PLAN.md §3.4 CLI 契约）。
+"""命令行入口：run / check / bind / commands / simulate（PLAN.md §3.4 CLI 契约）。
 
 stdout 文案即验收断言对象，输出行前缀固定：
-`[群消息] `、`[RCON <server>] `、`[忽略] `、`[警告] `、`[错误] `。
+`[群消息] `、`[RCON <server>] `、`[指令] `、`[忽略] `、`[警告] `、`[错误] `。
 """
 
 from __future__ import annotations
@@ -158,6 +158,27 @@ def _cmd_bind(args: argparse.Namespace) -> int:
     if removed:
         store.save()
     print(f"[绑定] {'已移除' if removed else '未找到'} {args.openid.strip()}")
+    return 0
+
+
+# ----------------------------------------------------------------- 子命令：commands
+def _cmd_commands(args: argparse.Namespace) -> int:
+    """打印需要在 QQ 开放平台管理端「指令配置」里逐条填写的指令清单（PLAN.md §7 / README §5.3）。
+
+    管理端没有「注册指令」的接口，指令面板只能在后台手工配置；这里把后台要填的
+    「指令名 + 指令介绍」按当前 `command_prefix` 渲染出来，避免手填的指令名和 `dispatch()` 对不上。
+    """
+
+    _setup_logging(logging.INFO if args.verbose else logging.WARNING, to_stdout=False)
+    config = _load_or_error(args.config)
+    if config is None:
+        return 1
+    registry = build_registry()
+    prefix = config.qq.command_prefix
+    for name in registry.names():
+        spec = registry.get(name)
+        desc = (spec.desc if spec is not None else "") or ""
+        print(f"[指令] {prefix}{name} {desc}".rstrip())
     return 0
 
 
@@ -318,6 +339,11 @@ def _build_parser() -> argparse.ArgumentParser:
     bind_remove.add_argument("openid")
     bind_remove.add_argument("--verbose", action="store_true")
     bind_remove.set_defaults(func=_cmd_bind)
+
+    commands = sub.add_parser("commands", help="打印 QQ 管理端指令面板要配置的指令清单")
+    _add_config_option(commands)
+    commands.add_argument("--verbose", action="store_true")
+    commands.set_defaults(func=_cmd_commands)
 
     simulate = sub.add_parser("simulate", help="离线模拟一条事件（默认 QQ 侧永远离线）")
     sim_sub = simulate.add_subparsers(dest="what", required=True)

@@ -125,15 +125,15 @@ def test_config_ignored_prefixes_must_be_string_array(tmp_path: Path) -> None:
     text = base_config(tmp_path)
     expect_error(
         tmp_path,
-        text.replace('ignored_chat_prefixes = ["[QQ]", "[→QQ]"]', 'ignored_chat_prefixes = "x"'),
+        text.replace('ignored_chat_prefixes = ["[QQ]"]', 'ignored_chat_prefixes = "x"'),
         "必须是字符串数组",
     )
     expect_error(
         tmp_path,
-        text.replace('ignored_chat_prefixes = ["[QQ]", "[→QQ]"]', "ignored_chat_prefixes = [1]"),
+        text.replace('ignored_chat_prefixes = ["[QQ]"]', "ignored_chat_prefixes = [1]"),
         "必须是字符串数组",
     )
-    expect_error(tmp_path, text.replace('ignored_chat_prefixes = ["[QQ]", "[→QQ]"]\n', ""), "缺少必填配置项")
+    expect_error(tmp_path, text.replace('ignored_chat_prefixes = ["[QQ]"]\n', ""), "缺少必填配置项")
 
 
 def test_config_behavior_accepts_empty_ignored_prefixes(tmp_path: Path) -> None:
@@ -141,7 +141,7 @@ def test_config_behavior_accepts_empty_ignored_prefixes(tmp_path: Path) -> None:
 
     cfg = load(
         tmp_path,
-        base_config(tmp_path).replace('ignored_chat_prefixes = ["[QQ]", "[→QQ]"]', "ignored_chat_prefixes = []"),
+        base_config(tmp_path).replace('ignored_chat_prefixes = ["[QQ]"]', "ignored_chat_prefixes = []"),
     )
     assert cfg.behavior.ignored_chat_prefixes == ()
 

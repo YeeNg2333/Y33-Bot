@@ -12,7 +12,7 @@ chat_prefix = "#"
 log_poll_interval = 0.5       # 秒
 health_poll_interval = 30.0   # 秒
 max_line_length = 200         # 单行转发长度上限（字符）
-ignored_chat_prefixes = ["[QQ]", "[→QQ]"]
+ignored_chat_prefixes = ["[QQ]"]   # 回环防护：游戏内聊天以此开头则忽略（服务注入的标记只有 [QQ]）
 
 [paths]
 bindings = "data/bindings.toml"

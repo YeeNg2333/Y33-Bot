@@ -96,6 +96,14 @@ $ python -m y33bot simulate group-message --openid UNKNOWN --content '/status' -
 [群消息] 玩家: 无
 ```
 
+组织「指令面板」要填的清单（**不是群内指令**，是 QQ 管理端「指令配置」里要抄的两列；见 `README.md` §5.3）：
+
+```bash
+$ python -m y33bot commands --config config.toml
+[指令] /bind 绑定游戏ID
+[指令] /status 查询在线状态
+```
+
 真实 MC（去掉 `--dry-run`）：游戏内所有在线玩家看到 `[QQ] Steve: 你好`，日志出现 `[RCON main] tellraw …`。
 多服时命令会广播到每个服（每个服一行 `[RCON <name>] …`）。
 
@@ -108,23 +116,26 @@ $ python -m y33bot simulate group-message --openid UNKNOWN --content '/status' -
 ```bash
 $ python -m y33bot simulate log-event --server main \
     --line '[12:00:01] [Async Chat Thread - #0/INFO]: <Steve> #大家好' --dry-run --config config.toml
-[群消息] Steve: 大家好
-[RCON main] tellraw @a {"text":"[→QQ] Steve: 大家好"}
+[群消息] Steve@main: 大家好
 
 $ python -m y33bot simulate log-event --server main \
     --line '[12:00:02] [Async Chat Thread - #0/INFO]: <Steve> 普通聊天' --dry-run --config config.toml
 [忽略] 聊天非 # 开头，不转发
 
 $ python -m y33bot simulate log-event --server main \
-    --line '[12:00:03] [Async Chat Thread - #0/INFO]: <Steve> [→QQ] Steve: 大家好' --dry-run --config config.toml
+    --line '[12:00:03] [Async Chat Thread - #0/INFO]: <Steve> [QQ] Steve: 大家好' --dry-run --config config.toml
 [忽略] 回环防护：命中 ignored_chat_prefixes
 ```
+
+- **v0.2 起游戏内不再回显**：命中 `#` 只有 `[群消息] Steve@main: 大家好` 一行，不再出现 `[RCON main] tellraw @a {"text":"[→QQ] …"}`。
+- 前缀 `main` 是**来源服名**（`[[mc_servers]].name`）：一群对多服时用它区分是谁在说话。
+- 回环防护现在只针对服务注入的那一个标记 `[QQ]`（`ignored_chat_prefixes` 默认 `["[QQ]"]`，可覆盖）。
 
 `--kind join|quit --player <名字>` 可以不经日志模板直接造事件，用来查通知链路：
 
 ```bash
 $ python -m y33bot simulate log-event --server main --kind join --player Steve --config config.toml
-[群消息] Steve进入游戏
+[群消息] Steve进入了main
 ```
 
 自测：`tests/test_cli.py::test_simulate_log_event_*`、`tests/e2e/test_acceptance.py::test_s3_*`。
@@ -136,11 +147,11 @@ $ python -m y33bot simulate log-event --server main --kind join --player Steve -
 ```bash
 $ python -m y33bot simulate log-event --server main \
     --line '[12:00:04] [Server thread/INFO]: Steve joined the game' --dry-run --config config.toml
-[群消息] Steve进入游戏
+[群消息] Steve进入了main
 
 $ python -m y33bot simulate log-event --server main \
     --line '[12:00:05] [Server thread/INFO]: Steve left the game' --dry-run --config config.toml
-[群消息] Steve退出游戏
+[群消息] Steve退出了main
 
 $ python -m y33bot simulate health --server main --offline --dry-run --config config.toml
 [RCON main] /list
@@ -190,7 +201,7 @@ $ python -m y33bot run --config config.toml        # 先跑起来，等它读完
 $ : > /path/to/logs/latest.log                     # 或 mv latest.log latest.log.1
 $ echo '[12:00:04] [Server thread/INFO]: Steve joined the game' >> /path/to/logs/latest.log
 [警告] 日志文件缩小（size=… < offset=…），偏移重置为 0
-[群消息] Steve进入游戏
+[群消息] Steve进入了main
 ```
 
 ---
@@ -220,7 +231,7 @@ $ echo $?
 $ python -m pytest tests/test_service.py::test_run_polls_log_pushes_and_persists_offset -q
 ```
 
-该用例：启动 `Service.run()` → 往 `latest.log` 追加一行进服日志 → 断言群里收到 `Steve进入游戏`
+该用例：启动 `Service.run()` → 往 `latest.log` 追加一行进服日志 → 断言群里收到 `Steve进入了main`
 → 触发退出信号 → 断言退出码 0、网关已关闭、`data/state.json` 的 `log_offset` 等于日志文件大小（S5-7：重启不重复推送）。
 
 真机跑 S5 的步骤（需要真 QQ 机器人与真 MC 服）见 `PLAN.md` §5；启动成功的判据是日志出现：
@@ -236,7 +247,7 @@ $ python -m pytest tests/test_service.py::test_run_polls_log_pushes_and_persists
 
 ```bash
 $ make test                              # 或 .venv/Scripts/python -m pytest -q
-348 passed
+352 passed
 $ make test PYTEST_ARGS="-q --cov=y33bot --cov-report=term-missing --cov-fail-under=70"
 TOTAL 99%（CI 门槛 --cov-fail-under=70；这条就是 CI 里跑的那一行）
 $ make lint                              # ruff check src tests + ruff format --check src tests
@@ -253,7 +264,7 @@ mclog/rcon/commands/bridge/gateway/service/cli）、`tests/test_boundaries.py`�
 `tests/test_failures.py`（各模块失败分支）、`tests/e2e/test_acceptance.py`（S1-S4/S6，同进程）、
 `tests/e2e/test_entrypoint.py`（**真子进程**跑 `python -m y33bot`，逐条断言 S1-S4 的 stdout 与退出码）。
 
-覆盖度（2026-10-13 实测，348 例）：总覆盖 99%，`binding`/`config`/`state`/`mclog`/`commands`/`rcon`/
+覆盖度（2026-10-13 v0.2 回归实测，352 例）：总覆盖 99%（实测 99.30%），`binding`/`config`/`state`/`mclog`/`commands`/`rcon`/
 `models`/`qq.fakes`/`__main__` 为 100%，`bridge`/`cli`/`rcon.client` 99%，`qq.gateway` 98%、`service` 98%。
 逐条验收记录（命令 + 真实输出 + 结论）见 `docs/acceptance.md`。
 

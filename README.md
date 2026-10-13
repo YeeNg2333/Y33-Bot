@@ -29,12 +29,12 @@
 |---|---|---|
 | QQ → MC | 群内 `@机器人` + `#` 开头 | 按发送者 OpenID 查绑定，`tellraw` 注入游戏内，格式 `[QQ] Steve: 你好`；未绑定回复 `请先使用 /bind <游戏ID> 绑定` |
 | QQ → MC | 群内 `@机器人` + `/` 开头 | 匹配指令表：`/status`、`/bind <游戏ID>`；未注册指令回复 `未知指令` |
-| MC → QQ | 游戏内聊天以 `#` 开头 | 群内发 `Steve: 你好`（去掉 `#`），游戏内回显一行 `[→QQ] Steve: 你好` |
-| MC → QQ | 玩家进服 / 退服 | 群内发 `Steve进入游戏` / `Steve退出游戏` |
+| MC → QQ | 游戏内聊天以 `#` 开头 | 群内发 `Steve@main: 你好`（去掉 `#`，`main` 是来源服名）；**游戏内不再回显**，只有玩家自己那一行 |
+| MC → QQ | 玩家进服 / 退服 | 群内发 `Steve进入了main` / `Steve退出了main`（带来源服名） |
 | MC → QQ | 状态翻转 | 服从在线变离线（或反过来）时提示**一次** `[服务器状态] main 离线` |
 | 其它 | — | 忽略，不互通 |
 
-细节：只转发第一行（换行处截断）、单行超 200 字符截断并补 `…`、自动剔除图片/附件标记（`<...>`）、默认忽略以 `[QQ]` / `[→QQ]` 开头的游戏内聊天（防回环，可用 `ignored_chat_prefixes` 覆盖）。
+细节：只转发第一行（换行处截断）、单行超 200 字符截断并补 `…`、自动剔除图片/附件标记（`<...>`）、默认忽略以 `[QQ]` 开头的游戏内聊天（防回环，可用 `ignored_chat_prefixes` 覆盖）、MC→QQ 的文案一律带来源服名（`[[mc_servers]].name`）。
 
 ## 3. 环境要求
 
@@ -98,7 +98,7 @@ chat_prefix = "#"
 log_poll_interval = 0.5       # 秒，读日志的轮询间隔
 health_poll_interval = 30.0   # 秒，健康探测间隔
 max_line_length = 200         # 单行转发长度上限（字符）
-ignored_chat_prefixes = ["[QQ]", "[→QQ]"]
+ignored_chat_prefixes = ["[QQ]"]
 
 [paths]
 bindings = "data/bindings.toml"
@@ -123,7 +123,7 @@ encoding = "utf-8"
 要点：
 
 - **`paths.*` 与 `mc_servers[].log_path` 的相对路径按 `config.toml` 所在目录解析**，不是按当前工作目录（实测：从父目录用 `--config repo/config.toml` 运行，日志路径仍是 `repo/logs/latest.log`）。绝对路径原样使用。
-- 多台 MC 服就多写一个 `[[mc_servers]]`：QQ→MC 的消息会**广播到所有服**，MC→QQ 的事件**不区分来源服**。
+- 多台 MC 服就多写一个 `[[mc_servers]]`：QQ→MC 的消息会**广播到所有服**；MC→QQ 的事件都发到同一个群，但文案带来源服名（`Steve@main: 你好`），一眼能看出是哪个服。
 - `[log_patterns]` 是为了兼容 MC 版本差异：日志格式变了只改这里，不用改代码（`join`/`quit` 必须有 `player` 命名组，`chat` 必须有 `player` 与 `message`）。
 - `log_poll_interval` 决定事件延迟（默认 0.5 秒）；`health_poll_interval` 决定离线/上线提示的及时性（默认 30 秒）。
 - **没有热重载**：改完配置要重启进程。
@@ -140,6 +140,33 @@ export MC_RCON_PASSWORD_MAIN=你的RCON密码
 
 - 命名：`QQ_BOT_APP_ID`、`QQ_BOT_APP_SECRET`、`MC_RCON_PASSWORD_<服务器名大写>`（未设置时回退 `MC_RCON_PASSWORD`）。清单模板见 [`.env.example`](.env.example)；多服时 `MC_RCON_PASSWORD_SECOND` 之类按同样规则起名。
 - 程序**不解析** `.env` 文件（刻意不引入 `python-dotenv`），变量必须由 shell / 进程管理器注入。
+
+### 5.3 QQ 管理端指令面板（一次性手工配置）
+
+群里 `@机器人` 时输入框会弹出「/」指令面板 —— 这是 **QQ 平台的东西，不是代码注册的**：官方只在开发者管理端提供配置入口（`发布设置 → 功能配置 → 指令配置`），且 API v2 文档里**没有**群聊指令注册接口，所以没有"代码主动注册"这条路。要做的是把下面这份清单抄进管理端，**指令名必须和代码里认得的命令一致**，否则点面板发出去的内容会命中 `未知指令`：
+
+```bash
+python -m y33bot commands --config config.toml
+# [指令] /bind 绑定游戏ID
+# [指令] /status 查询在线状态
+```
+
+管理端每条指令的字段与限制（官方文档「介绍与接入指南」§9.1.2）：
+
+| 字段 | 平台限制 | 本项目填法 |
+|---|---|---|
+| 指令名 | ≤8 个中文字符或 16 个英文字符 | `/status`、`/bind`（**带 `command_prefix`**，与 `dispatch()` 一致） |
+| 指令介绍 | ≤15 个中文字符或 30 个英文字符 | `查询在线状态`、`绑定游戏ID`（就是 `commands` 输出的第二列） |
+| 权限菜单 | 所有用户 / 仅频道主与管理员 | QQ 群场景下只有"所有用户"可选 |
+| 使用场景 | QQ频道 / 频道私信 / QQ群 / 消息列表 | 勾 **QQ群**（本项目只做群聊） |
+
+要点：
+
+- 指令、服务、快捷菜单**不需要单独提审**，随机器人自测报告一起提交；但机器人本身要先上线，或者先把测试群配成**沙箱群**。
+- 面板条目是"快捷输入"入口：点一下相当于在群里发出「@机器人 /status」。本项目只订阅群 @消息（`GROUP_AT_MESSAGE_CREATE`），**不带 @ 的群消息收不到** —— 万一点了面板机器人没反应，先在群里手打一次 `@机器人 /status` 对照，再核对管理端填的指令名有没有带 `/`。
+- 单聊场景的「快捷菜单」与本项目无关（只做群）。
+- 管理端改了**不用改代码**；反过来，代码里新增指令后记得回来补一条面板配置 —— 可发现性全靠它。
+- 面板只影响"能不能被点到"，**不影响触发规则**：`/` 走指令、`#` 走转发这条分流始终由 [`PLAN.md`](PLAN.md) §3.1 决定。
 
 ## 6. 最小可用示例（不需要 MC，也不需要 QQ）
 
@@ -167,9 +194,10 @@ python -m y33bot simulate group-message --openid 1A2B3C4D --content '#你好' --
 ```bash
 python -m y33bot simulate log-event --server main \
   --line '[12:00:01] [Async Chat Thread - #0/INFO]: <Steve> #大家好' --dry-run --config config.toml
-# [群消息] Steve: 大家好
-# [RCON main] tellraw @a {"text":"[→QQ] Steve: 大家好"}
+# [群消息] Steve@main: 大家好
 ```
+
+> 这里只有一行 `[群消息]`：**v0.2 起取消了游戏内的 `[→QQ]` 回显**——玩家自己打的那行 `#大家好` 本来就在游戏里可见，再注入一遍只会刷屏。前缀 `main` 是这条消息的来源服名（`[[mc_servers]].name`），一群对多服时用来区分。
 
 > `--line`（以及 `--content`）后面的文本**一定要用引号包住**：日志行里有空格和 `<>`，不引起来会被 shell 拆成多个参数，argparse 直接报 `unrecognized arguments` 并以退出码 2 结束。
 
@@ -274,12 +302,13 @@ $ python -m y33bot run --config config.toml
 | `python -m y33bot bind list --config config.toml` | 列出绑定 |
 | `python -m y33bot bind set <openid> <游戏ID> --config config.toml` | 写绑定（同 openid 覆盖旧值）；游戏 ID 需匹配 `^[A-Za-z0-9_]{3,16}$` |
 | `python -m y33bot bind remove <openid> --config config.toml` | 删绑定（不在群里做，只有管理员能操作） |
+| `python -m y33bot commands --config config.toml` | 打印 QQ 管理端指令面板要配置的「指令名 + 指令介绍」（见 §5.3） |
 | `python -m y33bot simulate group-message --openid <id> --content '<文本>' [--dry-run] [--group-openid <gid>]` | 模拟一条群消息；`--dry-run` 用假 RCON，不做网络 IO |
 | `python -m y33bot simulate log-event --server <name> --line '<一行日志>' [--dry-run]` | 模拟一行 MC 日志 |
 | `python -m y33bot simulate log-event --server <name> --kind join\|quit --player <名字>` | 直接造一条进服/退服事件 |
 | `python -m y33bot simulate health --server <name> --online\|--offline [--dry-run]` | 模拟一次健康探测 |
 
-输出行前缀是固定契约，方便按行断言：`[群消息] `（要发到 QQ 群的文本）、`[RCON <服名>] `（实际执行的命令）、`[忽略] `（为什么没触发）、`[警告] `/`[错误] `。用法错误由 argparse 处理，退出码 2。
+输出行前缀是固定契约，方便按行断言：`[群消息] `（要发到 QQ 群的文本）、`[RCON <服名>] `（实际执行的命令）、`[指令] `（`commands` 打印的管理端清单）、`[忽略] `（为什么没触发）、`[警告] `/`[错误] `。用法错误由 argparse 处理，退出码 2。
 
 装完包后也可以直接用控制台脚本 `y33bot ...`（等价于 `python -m y33bot ...`）。
 
@@ -483,7 +512,7 @@ MC 没开 RCON、端口不对或被防火墙挡了。确认 `server.properties` 
 - 消息第一行才是被转发的内容（换行处截断）。
 
 **4）游戏里说话群里没反应**
-按顺序排查：① `[qq] group_openid` 是否填了 —— 留空时 MC→QQ 方向被禁用，启动时会打印一次 `[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用`；② 聊天是不是以 `#` 开头（不是的话设计上就不转发）；③ 日志行是否匹配 `[log_patterns]` —— MC 版本不同日志前缀会变，改模板不用改代码；④ 是不是命中回环防护前缀（默认忽略以 `[QQ]`/`[→QQ]` 开头的聊天）。
+按顺序排查：① `[qq] group_openid` 是否填了 —— 留空时 MC→QQ 方向被禁用，启动时会打印一次 `[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用`；② 聊天是不是以 `#` 开头（不是的话设计上就不转发）；③ 日志行是否匹配 `[log_patterns]` —— MC 版本不同日志前缀会变，改模板不用改代码；④ 是不是命中回环防护前缀（默认忽略以 `[QQ]` 开头的聊天）；⑤ 群里那条是不是带了服名（`Steve@main: 你好`）—— 带服名说明转发是成功的，只是你在游戏里找不到 `[→QQ]` 回显，那是 v0.2 故意去掉的。
 
 **5）为什么重新启动后历史消息又被推了一遍**
 `data/state.json` 丢了或被重置（偏移归 0）。按 §12 的顺序处理：先清空/轮转 `latest.log` 再删 `state.json`。
@@ -532,6 +561,10 @@ QQ 官方约束：被动回复只在收到事件后的短窗口内有效（本�
 | `make coverage` | `.venv/bin/python -m pytest --cov=y33bot --cov-report=term-missing` |
 | `make lint` | `.venv/bin/python -m ruff check .` + `.venv/bin/python -m ruff format --check .` |
 
+**13）@机器人时输入框里的「/」指令面板是怎么来的 / 怎么加指令**
+
+那是 QQ 平台的功能，条目在**开发者管理端**手工配置（`发布设置 → 功能配置 → 指令配置`），本项目没有、也无法用代码注册。配置清单与字段限制见 **§5.3**，用 `python -m y33bot commands --config config.toml` 直接打印要填的两列。注意指令名要带 `/`（与 `config.toml` 的 `command_prefix` 一致），且本项目只收群 @消息 —— 面板消息不带 @ 时收不到。
+
 ## 14. 测试、检查与验收记录
 
 ```bash
@@ -540,7 +573,7 @@ python -m pytest -q --cov=y33bot --cov-report=term-missing # 带覆盖率
 python -m ruff check . && python -m ruff format --check .  # 静态检查与格式
 ```
 
-在 v0.1.0 这一提交上，全新克隆实测：`214 passed`、覆盖率 `TOTAL 90%`（CI 门槛 `--cov-fail-under=70`）、`ruff check .` 与 `ruff format --check .` 全过（数字会随后续新增测试变大）。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件。
+在 v0.2 变更（真机反馈三项）后的提交上实测：`352 passed`、覆盖率 `TOTAL 99%`（`--cov-fail-under=70` 门槛通过，实测 `99.30%`）、`ruff check .` 与 `ruff format --check .` 全过。作为对照，v0.1.0 时是 `214 passed` / `TOTAL 90%`——数字随后续新增测试变大。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件。
 
 - 逐条手工自测（S1–S4、S6 的真机输出）：[`docs/smoke.md`](docs/smoke.md)
 - 端到端验收记录（每条含命令 / 实际输出 / 结论）：`docs/acceptance.md`

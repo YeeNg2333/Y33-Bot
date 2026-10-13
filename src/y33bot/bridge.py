@@ -4,7 +4,7 @@
 
 事件流向：
     QQ 群消息 ──(handle_group_message)──► 指令表 或 RCON tellraw
-    MC 日志事件 ─(handle_log_event)────► QQ 群 / RCON 回显
+    MC 日志事件 ─(handle_log_event)────► QQ 群
     健康轮询 ───(poll_health)─────────► 状态翻转时发一次通知
 """
 
@@ -143,8 +143,9 @@ class Bridge:
             if not event.player:
                 self._logger.warning("[警告] %s 事件缺少玩家名，已忽略: %s", event.kind, event.raw)
                 return
-            verb = "进入游戏" if event.kind == "join" else "退出游戏"
-            await self._send_to_group(f"{event.player}{verb}")
+            # 文案带服名：一群对多服时能分清来源（v0.2 真机反馈，PLAN.md §7）
+            verb = "进入了" if event.kind == "join" else "退出了"
+            await self._send_to_group(f"{event.player}{verb}{event.server}")
             return
 
         if event.kind == "chat":
@@ -171,8 +172,9 @@ class Bridge:
             return
 
         player = event.player or "?"
-        await self._send_to_group(f"{player}: {body}")  # R11：发到 QQ 群
-        await self._rcon.broadcast_tellraw(f"[→QQ] {player}: {body}")  # R11：游戏内回显
+        # R11：发到 QQ 群；前缀用服名，一群对多服时能分清来源（v0.2 真机反馈，PLAN.md §7）。
+        # v0.2：不再往游戏内回显 —— 玩家自己那行 `#…` 已经可见，回显只会刷屏、挤掉正常聊天。
+        await self._send_to_group(f"{player}@{event.server}: {body}")
 
     # ------------------------------------------------------------------ 健康
     async def poll_health(self) -> list[tuple[str, bool]]:

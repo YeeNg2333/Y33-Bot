@@ -161,7 +161,7 @@ async def test_join_and_quit_notifications(app: App) -> None:
     bridge = make_bridge(app, gateway=gateway, pool=app.make_pool())
     await bridge.handle_log_event(log_event("join"))
     await bridge.handle_log_event(log_event("quit"))
-    assert gateway.messages() == ["Steve进入游戏", "Steve退出游戏"]
+    assert gateway.messages() == ["Steve进入了main", "Steve退出了main"]
     assert gateway.last().group_openid == "GROUP-OPENID-1"
 
 
@@ -174,13 +174,15 @@ async def test_join_without_player_is_ignored(app: App, caplog: pytest.LogCaptur
     assert any("缺少玩家名" in record.getMessage() for record in caplog.records)
 
 
-async def test_chat_forward_both_directions(app: App) -> None:
+async def test_chat_forward_to_group_without_echo(app: App) -> None:
+    """R11（v0.2）：`#` 聊天只进 QQ 群（带服名）；游戏内不再回显，避免刷屏。"""
+
     gateway = app.make_gateway()
     pool = app.make_pool()
     bridge = make_bridge(app, gateway=gateway, pool=pool)
     await bridge.handle_log_event(chat_event("#大家好"))
-    assert gateway.messages() == ["Steve: 大家好"]
-    assert pool._clients["main"].commands == ['tellraw @a {"text":"[→QQ] Steve: 大家好"}']
+    assert gateway.messages() == ["Steve@main: 大家好"]
+    assert pool._clients["main"].commands == []
 
 
 async def test_chat_without_hash_not_forwarded(app: App, caplog: pytest.LogCaptureFixture) -> None:
@@ -194,15 +196,28 @@ async def test_chat_without_hash_not_forwarded(app: App, caplog: pytest.LogCaptu
     assert any("聊天非 # 开头" in record.getMessage() for record in caplog.records)
 
 
-@pytest.mark.parametrize("prefix", ["[QQ] ", "[→QQ] "])
-async def test_chat_loop_protection(app: App, prefix: str, caplog: pytest.LogCaptureFixture) -> None:
+async def test_chat_loop_protection(app: App, caplog: pytest.LogCaptureFixture) -> None:
+    """默认忽略以服务注入标记 `[QQ]` 开头的游戏内聊天（回环防护，A8）。"""
+
     gateway = app.make_gateway()
     pool = app.make_pool()
     bridge = make_bridge(app, gateway=gateway, pool=pool)
     with caplog.at_level("INFO"):
-        await bridge.handle_log_event(chat_event(f"{prefix}Steve: 大家好"))
+        await bridge.handle_log_event(chat_event("[QQ] Steve: 大家好"))
     assert gateway.sent == []
     assert pool._clients["main"].commands == []
+    assert any("回环防护" in record.getMessage() for record in caplog.records)
+
+
+async def test_chat_loop_protection_is_config_driven(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    """`ignored_chat_prefixes` 可覆盖（A8）：换成自定义前缀后按新前缀拦截。"""
+
+    app = App(tmp_path, ignored_chat_prefixes=("[TEST] ",))
+    gateway = app.make_gateway()
+    bridge = make_bridge(app, gateway=gateway, pool=app.make_pool())
+    with caplog.at_level("INFO"):
+        await bridge.handle_log_event(chat_event("[TEST] #大家好"))
+    assert gateway.sent == []
     assert any("回环防护" in record.getMessage() for record in caplog.records)
 
 

@@ -140,6 +140,14 @@ def test_entrypoint_check_missing_config(deploy_dir: Path) -> None:
     assert lines(result) == ["[配置] FAIL 配置文件不存在: nope.toml", "FAIL"]
 
 
+def test_entrypoint_commands_lists_panel_items(deploy_dir: Path) -> None:
+    """`commands`（真子进程）：打印管理端指令面板要配置的指令清单。"""
+
+    result = run_cli(deploy_dir, "commands", "--config", CONFIG)
+    assert result.returncode == 0
+    assert lines(result) == ["[指令] /bind 绑定游戏ID", "[指令] /status 查询在线状态"]
+
+
 # ------------------------------------------------------------------ S2
 def test_entrypoint_s2_bind_then_forward(deploy_dir: Path) -> None:
     """S2：/bind 落盘（跨进程可见）+ `#` 消息只转发第一行到 MC。"""
@@ -211,7 +219,7 @@ def test_entrypoint_s3_s4_events_and_health_flip(deploy_dir: Path) -> None:
         CONFIG,
     )
     assert result.returncode == 0
-    assert lines(result) == ["[群消息] Steve: 大家好", '[RCON main] tellraw @a {"text":"[→QQ] Steve: 大家好"}']
+    assert lines(result) == ["[群消息] Steve@main: 大家好"]
 
     result = run_cli(
         deploy_dir,
@@ -226,7 +234,7 @@ def test_entrypoint_s3_s4_events_and_health_flip(deploy_dir: Path) -> None:
         CONFIG,
     )
     assert result.returncode == 0
-    assert lines(result) == ["[群消息] Steve进入游戏"]
+    assert lines(result) == ["[群消息] Steve进入了main"]
 
     health = ("simulate", "health", "--server", "main", "--offline", "--dry-run", "--config", CONFIG)
     first = run_cli(deploy_dir, *health)

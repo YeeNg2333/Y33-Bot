@@ -107,7 +107,7 @@ async def test_run_polls_log_pushes_and_persists_offset(app: App) -> None:
             if gateway.messages():
                 break
             await asyncio.sleep(0.05)
-        assert gateway.messages() == ["Steve进入游戏"]
+        assert gateway.messages() == ["Steve进入了main"]
     finally:
         service._signal_flag.set()
         code = await asyncio.wait_for(task, timeout=10)

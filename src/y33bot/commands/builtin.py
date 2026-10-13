@@ -48,6 +48,8 @@ def build_registry(registry: CommandRegistry | None = None) -> CommandRegistry:
     """构造内置指令表；`/status` 与 `/bind` 按 PLAN.md §3.4 的签名注册。"""
 
     reg = registry if registry is not None else CommandRegistry()
-    reg.register("status", desc="查询服务器状态")(cmd_status)
-    reg.register("bind", desc="绑定 OpenID ↔ 游戏ID")(cmd_bind)
+    # desc 同时用于 `y33bot commands` 打印「该往 QQ 管理端指令面板填什么」，
+    # 因此受 QQ 平台限制：指令名 ≤8 中文字符/16 英文字符，指令介绍 ≤15 中文字符/30 英文字符。
+    reg.register("status", desc="查询在线状态")(cmd_status)
+    reg.register("bind", desc="绑定游戏ID")(cmd_bind)
     return reg

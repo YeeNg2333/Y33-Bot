@@ -17,6 +17,7 @@
 | 配置 | `config.example.toml` 复制为 `config.toml` 后只改 4 处：`group_openid = "SIM-GROUP-OPENID"`、`port = 34567`（故意指向不可达端口，用来看 RCON FAIL 分支）、`log_path = "logs/latest.log"`、`connect/command_timeout = 1.0` |
 | 环境变量 | `QQ_BOT_APP_ID`／`QQ_BOT_APP_SECRET`／`MC_RCON_PASSWORD_MAIN` 都是 `SIM-*` 假值：只用于自检分支与 `--dry-run`，**全程不连真 QQ、不连真 MC** |
 | 通用命令 | 下文 `$BP` = `<repo>/.venv/Scripts/python.exe`（Linux 换成 `.venv/bin/python`） |
+| 变更批次 | 2026-10-13 **v0.2**（真机反馈 V1–V3，见 `PLAN.md` §7）：§2.3 / §2.4 的文案已按新契约**重跑并更新**；§7 保留 v0.2 之前的原始记录（可核对历史），v0.2 的完整复验见 **§8** |
 
 验收目录里的实际命令与完整输出留档在：`…/cache/scratch/y33bot-acc2/transcript.txt`（153 行）。
 
@@ -32,8 +33,9 @@
 | S4 进出通知与健康翻转（只提示一次） | **通过** | §2.4 |
 | S5 真实端到端（真 QQ 群 + 真 MC 服） | **部分通过**：离线可复现片段（缺凭据快速失败）**通过**；真机 8 步**未执行**——本机没有可用的 QQ 机器人凭据与 MC 服（前置缺失，见 §6） | §2.5 |
 | S6 日志轮转 | **通过**（离线等价复现：`LogWatcher` 直接跑同一路径；真机手工版见 `docs/smoke.md` §5） | §2.6 |
+| V1–V3 真机反馈变更（MC→QQ 带服名 / 取消游戏内回显 / 指令面板清单） | **通过**（按新契约重跑，无回归） | §8 |
 
-自动化方面（§3）：`make test` 一键 **348 passed、总覆盖率 99.30%**（门槛 70%），`ruff check` +
+自动化方面（§3）：`make test` 一键 **352 passed、总覆盖率 99.30%**（门槛 70%；v0.2 变更前是 348，见 §8），`ruff check` +
 `ruff format --check` 全绿，全仓**无 skip/xfail**，CI 里跑的就是同一条 `make test`。
 
 ---
@@ -129,8 +131,7 @@ exit=0
 ```bash
 $ $BP -m y33bot simulate log-event --server main \
     --line '[12:00:01] [Async Chat Thread - #0/INFO]: <Steve> #大家好' --dry-run --config config.toml
-[群消息] Steve: 大家好
-[RCON main] tellraw @a {"text":"[→QQ] Steve: 大家好"}
+[群消息] Steve@main: 大家好
 exit=0
 
 $ $BP -m y33bot simulate log-event --server main \
@@ -139,12 +140,13 @@ $ $BP -m y33bot simulate log-event --server main \
 exit=0
 
 $ $BP -m y33bot simulate log-event --server main \
-    --line '[12:00:03] [Async Chat Thread - #0/INFO]: <Steve> [→QQ] Steve: 大家好' --dry-run --config config.toml
+    --line '[12:00:03] [Async Chat Thread - #0/INFO]: <Steve> [QQ] Steve: 大家好' --dry-run --config config.toml
 [忽略] 回环防护：命中 ignored_chat_prefixes
 exit=0
 ```
 
-**结论：通过。** 群消息与游戏内回显各一次，回环前缀被拦下，非 `#` 聊天不转发。
+**结论：通过。** 群消息带来源服名（`Steve@main: 大家好`，`main` = `[[mc_servers]].name`）；v0.2 起
+**游戏内不再回显**，所以只剩一行 `[群消息]`、没有 `[RCON …]`；回环前缀被拦下，非 `#` 聊天不转发。
 
 自动化等价物：`tests/e2e/test_entrypoint.py::test_entrypoint_s3_s4_events_and_health_flip`、
 `tests/e2e/test_acceptance.py::test_s3_chat_forward_and_loop_guard`。
@@ -154,16 +156,16 @@ exit=0
 ```bash
 $ $BP -m y33bot simulate log-event --server main \
     --line '[12:00:04] [Server thread/INFO]: Steve joined the game' --dry-run --config config.toml
-[群消息] Steve进入游戏
+[群消息] Steve进入了main
 exit=0
 
 $ $BP -m y33bot simulate log-event --server main \
     --line '[12:00:05] [Server thread/INFO]: Steve left the game' --dry-run --config config.toml
-[群消息] Steve退出游戏
+[群消息] Steve退出了main
 exit=0
 
 $ $BP -m y33bot simulate log-event --server main --kind join --player Steve --config config.toml
-[群消息] Steve进入游戏
+[群消息] Steve进入了main
 exit=0
 
 $ $BP -m y33bot simulate health --server main --offline --dry-run --config config.toml      # 第 1 次
@@ -293,7 +295,7 @@ $ grep -rnE "pytest\.(skip|xfail)|@pytest\.mark\.(skip|xfail)|skipif" tests/
 （无 skip/xfail/skipif）
 ```
 
-测试文件分工（348 例）：
+测试文件分工（v0.2 后 352 例）：
 
 | 文件 | 例数 | 说明 |
 |---|---|---|
@@ -382,6 +384,9 @@ CI 运行结论（推送后实测，commit `f0e85db`）：
 与 §2 的差别：§2 用 `--dry-run` + 假端口（完全不发网络包），本节额外**真起了一个 RCON 服务端**，
 逐条核对服务端实际收到的命令，用来证明"去掉 `--dry-run` 就是真的注入"。
 
+> **v0.2 提示**：本节是 v0.2 变更**之前**的原始记录（保留以便核对历史）。§7.5 的游戏内回显、§7.6
+> 的进出文案在 v0.2 中已变更，变更后的复验见 **§8**。
+
 ### 7.1 复验环境
 
 | 项 | 值 |
@@ -408,7 +413,7 @@ $ grep -rnE "pytest\.(skip|xfail)|@pytest\.mark\.(skip|xfail)|skipif" tests/
 （无 skip/xfail/skipif）
 ```
 
-结论与 §3 一致：**348 例全过、总覆盖率 99.30%、静态检查全绿、无 skip/xfail**。
+结论与 §3 一致：**348 例全过（v0.2 后为 352 例，见 §8）、总覆盖率 99.30%、静态检查全绿、无 skip/xfail**。
 
 ### 7.3 S1 环境与配置自检（两个分支都复验）
 
@@ -499,7 +504,8 @@ $ $BP -m y33bot simulate log-event --server main --line '[12:00:03] [Async Chat 
 [忽略] 回环防护：命中 ignored_chat_prefixes
 ```
 
-**结论：通过**，与 §2.3 一致，且回显那一步有服务端回执佐证。
+**结论：通过**，与 §2.3 一致，且回显那一步有服务端回执佐证。（v0.2 起游戏内**不再回显**，此处的
+`[→QQ]` 回执属变更前行为，最新文案见 §8。）
 
 ### 7.6 S4 进出通知与健康翻转
 
@@ -524,6 +530,8 @@ $ $BP -m y33bot simulate health --server main --online       # 真探测，第 1
 $ $BP -m y33bot simulate health --server main --online       # 第 2 次
 [忽略] 状态未变化，不重复提示
 ```
+
+（本节这三行进出文案属 v0.2 变更前的形式；v0.2 后为 `Steve进入了main` / `Steve退出了main`，见 §8.3。）
 
 `data/state.json` 的 `health_online` 随翻转变化（本轮最后一次为 `true`，`health_changed_at` 同步刷新）。
 
@@ -658,7 +666,7 @@ scripts/dev_setup.sh:56  export QQ_BOT_APP_SECRET=你的AppSecret
 | S4 进出通知与健康翻转 | **通过**（离线/上线各只提示一次） |
 | S5 真实端到端 | **部分通过**（离线片段 + 自动化等价物通过；真机 8 步缺环境，未执行、不作通过声明） |
 | S6 日志轮转 | **通过**（pytest 用例 + 真文件真截断双证据） |
-| 一键测试 | **348 passed / 99.30%**（门槛 70%），无 skip/xfail |
+| 一键测试 | **348 passed / 99.30%**（门槛 70%），无 skip/xfail（v0.2 后为 **352 passed**，见 §8） |
 | 静态检查 | `ruff check` 全过、40 文件已格式化 |
 | CI | `origin/main` HEAD `3c27803` **success**，近期 8 次全绿 |
 | 硬编码密钥 | **无**（CI 同款 grep 无匹配；宽扫描仅占位符） |
@@ -673,3 +681,101 @@ scripts/dev_setup.sh:56  export QQ_BOT_APP_SECRET=你的AppSecret
 证据留档：`…/cache/scratch/y33bot-root-verify-801/_verify/`（`transcript.txt`、`transcript2.txt`、
 `rcon_received.log`、`s6_rotation_real.py`、`mini_rcon_server.py`、`ci_runs.json`）与
 `…/cache/scratch/y33bot-tag-verify-2348/`（`v0.1.0` 导出树）。
+
+---
+
+## 8. v0.2 变更复验（2026-10-13，真机反馈 V1–V3）
+
+变更内容与对 IDEA 的偏离登记见 `PLAN.md` §7。本节是变更**之后**的重跑记录，环境与 §0 相同
+（`SIM-*` 假凭据、`--dry-run`、故意不可达的 `127.0.0.1:34567`；验收目录
+`…/cache/scratch/y33bot-v02/`）。§2 里 S3/S4 的文案已按本轮输出更新。
+
+### 8.1 V3 指令面板清单（新增子命令）
+
+```bash
+$ $BP -m y33bot commands --config config.toml
+[指令] /bind 绑定游戏ID
+[指令] /status 查询在线状态
+exit=0
+```
+
+指令名带 `command_prefix`、介绍压到「≤15 中文字符」限制内；管理端没有注册接口，这份清单要手工抄进
+【发布设置 → 功能配置 → 指令配置】，步骤与字段限制见 `README.md` §5.3 与 `PLAN.md` §7 V3。
+
+### 8.2 S3 变更后（V1 带服名 + V2 取消回显）
+
+```bash
+$ $BP -m y33bot simulate log-event --server main \
+    --line '[12:00:01] [Async Chat Thread - #0/INFO]: <Steve> #大家好' --dry-run --config config.toml
+[群消息] Steve@main: 大家好
+
+$ $BP -m y33bot simulate log-event --server main \
+    --line '[12:00:02] [Async Chat Thread - #0/INFO]: <Steve> 普通聊天' --dry-run --config config.toml
+[忽略] 聊天非 # 开头，不转发
+
+$ $BP -m y33bot simulate log-event --server main \
+    --line '[12:00:03] [Async Chat Thread - #0/INFO]: <Steve> [QQ] Steve: 大家好' --dry-run --config config.toml
+[忽略] 回环防护：命中 ignored_chat_prefixes
+
+$ $BP -m y33bot simulate log-event --server main --kind join --player Steve --config config.toml
+[群消息] Steve进入了main
+```
+
+**V2 的判据**：第 1 条只有一行 `[群消息] Steve@main: 大家好`，**没有** `[RCON main] tellraw …`
+—— 游戏内不再被注入任何回显行。**V1 的判据**：前缀 `main` 就是该事件来源服的 `[[mc_servers]].name`。
+
+### 8.3 S4 变更后（V1 带服名）
+
+```bash
+$ $BP -m y33bot simulate log-event --server main \
+    --line '[12:00:04] [Server thread/INFO]: Steve joined the game' --dry-run --config config.toml
+[群消息] Steve进入了main
+
+$ $BP -m y33bot simulate log-event --server main \
+    --line '[12:00:05] [Server thread/INFO]: Steve left the game' --dry-run --config config.toml
+[群消息] Steve退出了main
+
+$ $BP -m y33bot simulate health --server main --offline --dry-run --config config.toml   # 第 1 次
+[RCON main] /list
+[警告] RCON main 命令失败: 假 RCON 服务器离线: 127.0.0.1:34567
+[群消息] [服务器状态] main 离线
+
+$ $BP -m y33bot simulate health --server main --offline --dry-run --config config.toml   # 第 2 次
+[RCON main] /list
+[警告] RCON main 命令失败: 假 RCON 服务器离线: 127.0.0.1:34567
+[忽略] 状态未变化，不重复提示
+
+$ $BP -m y33bot simulate health --server main --online --dry-run --config config.toml
+[RCON main] /list
+[群消息] [服务器状态] main 上线
+```
+
+健康分支的行为**未变**（仍只提示一次），只有进出文案换成带服名的版本。
+
+### 8.4 一键测试与静态检查
+
+```bash
+$ $BP -m pytest -q
+352 passed in 49.30s
+$ $BP -m pytest -q --cov=y33bot --cov-report=term-missing --cov-fail-under=70
+Required test coverage of 70% reached. Total coverage: 99.30%
+$ $BP -m ruff check . && $BP -m ruff format --check .
+All checks passed!
+40 files already formatted
+```
+
+用例数 348 → 352：新增 `test_bridge.py::test_chat_loop_protection_is_config_driven`、
+`tests/test_cli.py::test_commands_*`（3 例）、`tests/e2e/test_entrypoint.py::test_entrypoint_commands_lists_panel_items`，
+并删掉一条已不存在的 `[→QQ]` 参数化用例。
+
+### 8.5 结论
+
+| 项 | 结论 |
+|---|---|
+| V1 MC→QQ 文案带来源服名 | **通过**：`Steve进入了main` / `Steve退出了main` / `Steve@main: 大家好`，服名取 `[[mc_servers]].name` |
+| V2 取消游戏内回显 | **通过**：`#` 聊天只产生一行 `[群消息]`，无任何 `[RCON …]` 注入 |
+| V3 指令面板清单 | **通过**：`y33bot commands` 的输出与 `dispatch()` 认得的指令名一致；管理端配置步骤与平台限制已写入 `README.md` §5.3 |
+| 连带影响 | `ignored_chat_prefixes` 样板收窄为 `["[QQ]"]`（服务只注入这一个标记）；回环判断先于 `#` 判断，且「可配置」已被自动化用例锁住 |
+| 回归 | **无**：S1/S2/S5 离线片段/S6 的文案与退出码未变；352 例全绿、覆盖率 99.30%、ruff 全绿 |
+| S5 真机 8 步 | **仍未执行**，结论维持 §2.5 的「部分通过」；其中「指令面板是否自动带 @」已由用户真机确认（仅 @消息触发），故无需改 intent |
+| 未做 | `/list`（群内列举指令）按用户决定不做，可发现性交给 QQ 客户端指令面板（`PLAN.md` §7 末） |

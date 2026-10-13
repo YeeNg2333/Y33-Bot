@@ -130,6 +130,31 @@ def test_bind_set_invalid_game_id(workdir: App, capsys) -> None:
     assert "游戏ID 不合法" in err
 
 
+# ------------------------------------------------------------------ commands（QQ 管理端指令面板）
+def test_commands_prints_management_panel_list(workdir: App, capsys) -> None:
+    """`commands` 打印管理端要填的清单：指令名带当前前缀 + 面板字数限制内的短描述。"""
+
+    code, lines, _err = run(["commands", "--config", CONFIG], capsys)
+    assert code == 0
+    assert lines == ["[指令] /bind 绑定游戏ID", "[指令] /status 查询在线状态"]
+
+
+def test_commands_follows_config_prefix(workdir: App, capsys) -> None:
+    """指令名用的是配置里的 `command_prefix`：改了前缀，管理端清单跟着变。"""
+
+    text = workdir.config_path.read_text(encoding="utf-8")
+    workdir.config_path.write_text(text.replace('command_prefix = "/"', 'command_prefix = "!"'), encoding="utf-8")
+    code, lines, _err = run(["commands", "--config", CONFIG], capsys)
+    assert code == 0
+    assert lines == ["[指令] !bind 绑定游戏ID", "[指令] !status 查询在线状态"]
+
+
+def test_commands_missing_config(capsys, tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    assert main(["commands", "--config", "nope.toml"]) == 1
+    assert "配置文件不存在" in capsys.readouterr().err
+
+
 # ------------------------------------------------------------------ simulate（S2）
 def test_simulate_forward_to_mc(workdir: App, capsys) -> None:
     run(["bind", "set", "1A2B3C4D", "Steve", "--config", CONFIG], capsys)
@@ -217,10 +242,7 @@ def test_simulate_log_event_chat(workdir: App, capsys) -> None:
         capsys,
     )
     assert code == 0
-    assert lines == [
-        "[群消息] Steve: 大家好",
-        '[RCON main] tellraw @a {"text":"[→QQ] Steve: 大家好"}',
-    ]
+    assert lines == ["[群消息] Steve@main: 大家好"]  # v0.2：只在群里出现，游戏内不再回显
 
 
 def test_simulate_log_event_plain_chat(workdir: App, capsys) -> None:
@@ -250,7 +272,7 @@ def test_simulate_log_event_loop_protection(workdir: App, capsys) -> None:
             "--server",
             "main",
             "--line",
-            "[12:00:03] [Async Chat Thread - #0/INFO]: <Steve> [→QQ] Steve: 大家好",
+            "[12:00:03] [Async Chat Thread - #0/INFO]: <Steve> [QQ] Steve: 大家好",
             "--dry-run",
             "--config",
             CONFIG,
@@ -277,14 +299,14 @@ def test_simulate_log_event_join_quit(workdir: App, capsys) -> None:
         capsys,
     )
     assert code == 0
-    assert lines == ["[群消息] Steve进入游戏"]
+    assert lines == ["[群消息] Steve进入了main"]
 
     code, lines, _err = run(
         ["simulate", "log-event", "--server", "main", "--kind", "quit", "--player", "Steve", "--config", CONFIG],
         capsys,
     )
     assert code == 0
-    assert lines == ["[群消息] Steve退出游戏"]
+    assert lines == ["[群消息] Steve退出了main"]
 
 
 def test_simulate_log_event_unmatched_line(workdir: App, capsys) -> None:
