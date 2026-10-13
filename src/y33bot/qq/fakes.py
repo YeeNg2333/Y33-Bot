@@ -1,36 +1,42 @@
-"""QQ 离线替身：``FakeQQGateway``（PLAN.md §3.4；CLI ``simulate`` 与 CI 专用）。
+"""QQ 离线替身（PLAN.md §3.2 / §3.4）。
 
-契约：**绝不连 QQ**。发送内容按 ``[群消息] <文本>`` 打印并存入 ``sent`` 列表，
-供 ``simulate`` 的 stdout 与单测断言使用（PLAN.md §3.4）。
+`simulate` 与单元测试用它替代 `BotpyGateway`：绝不连 QQ，只把消息记在内存里，
+并按 CLI 契约打印 `[群消息] ` 行。
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
+import logging
 
-from y33bot.models import OutgoingGroupMessage
+from ..models import OutgoingGroupMessage
+
+__all__ = ["FakeQQGateway"]
 
 
 class FakeQQGateway:
-    """实现 ``qq.gateway.QQGateway`` 的替身。"""
+    """与 `QQGateway` 同签名的假实现。"""
 
-    def __init__(self, *, printer: Callable[[str], None] | None = None) -> None:
-        """``printer`` 缺省用 ``print``；测试可注入收集器。"""
-        raise NotImplementedError("T7：见 PLAN.md §3.4")
-
-    @property
-    def sent(self) -> list[OutgoingGroupMessage]:
-        """已“发送”的消息（按发生顺序）。"""
-        raise NotImplementedError("T7")
+    def __init__(self, *, logger: logging.Logger | None = None) -> None:
+        self.sent: list[OutgoingGroupMessage] = []
+        self.started = False
+        self._logger = logger or logging.getLogger("y33bot.qq.fakes")
 
     async def start(self) -> None:
-        """空实现（替身不需要连接）。"""
-        raise NotImplementedError("T7")
+        self.started = True
 
     async def send_group_message(self, message: OutgoingGroupMessage) -> None:
-        """打印 ``[群消息] <text>`` 并记录到 ``sent``。"""
-        raise NotImplementedError("T7")
+        self.sent.append(message)
+        self._logger.info("[群消息] %s", message.text)
 
     async def close(self) -> None:
-        """空实现（幂等）。"""
-        raise NotImplementedError("T7")
+        self.started = False
+
+    # ------------------------------------------------------------ 测试辅助
+    def messages(self) -> list[str]:
+        return [item.text for item in self.sent]
+
+    def last(self) -> OutgoingGroupMessage | None:
+        return self.sent[-1] if self.sent else None
+
+    def clear(self) -> None:
+        self.sent.clear()

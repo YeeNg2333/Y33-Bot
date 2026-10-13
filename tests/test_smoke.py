@@ -1,14 +1,22 @@
-"""T1 骨架冒烟测试：入口可运行、自检契约成立、仓库无硬编码密钥。
+"""冒烟测试：入口可运行、自检契约成立、仓库无硬编码密钥。
 
-这一层只锁 T1 的交付边界（PLAN.md §6 T1）；各业务模块的单元测试与覆盖率门槛由 T9/T10 补齐。
-所有用例完全离线（最多在本机 loopback 上开一个监听端口），CI 与本地一致。
+本文件由 T1（骨架任务 t_8442a7d5）建立，当时锁的是「骨架阶段」行为：未实现子命令返回退出码 3、
+日志模板可任意简化。T2–T8 补齐实现后按 `PLAN.md` 的**最终契约**重写：
+
+- 未实现子命令 → 现行契约是 `bind list` 正常工作、用法错误退出码 2（PLAN.md §3.4）；
+- 日志模板 → 现行契约要求命名组（PLAN.md §4.1 / A9），简化模板会加载失败；
+- `run` → 现行契约是常驻服务，缺 QQ 凭据启动即失败（退出码 1），不再是「打印健康状态后退出 0」。
+
+原有意图（入口可运行 / 边界明确 / 仓库无密钥 / 依赖锁定）保持不变，且全部用例仍然完全离线。
 """
 
 from __future__ import annotations
 
+import asyncio
 import importlib
 import re
 import socket
+import struct
 import tomllib
 from pathlib import Path
 
@@ -40,16 +48,21 @@ PLAN_MODULES = [
     "y33bot.commands.builtin",
 ]
 
+#: Vanilla `/list` 应答（用于让 `check` 走通一次真实 RCON 往返）
+LIST_RESPONSE = "There are 0 of a max of 20 players online:"
+
 
 def _free_port() -> int:
     """取一个当前没人监听的端口（用于构造“RCON 连不上”的场景）。"""
+
     with socket.socket() as probe:
         probe.bind(("127.0.0.1", 0))
         return int(probe.getsockname()[1])
 
 
 def _write_config(tmp_path: Path, *, port: int, log_path: Path) -> Path:
-    """按 PLAN.md §3.5 的结构生成一份临时 config.toml。"""
+    """按 PLAN.md §3.5 的结构生成一份临时 config.toml（模板带命名组，符合 §4.1）。"""
+
     config = f"""[qq]
 group_openid = "TEST-GROUP-OPENID"
 app_id_env = "QQ_BOT_APP_ID"
@@ -73,11 +86,13 @@ host = "127.0.0.1"
 port = {port}
 password_env = "MC_RCON_PASSWORD_MAIN"
 log_path = "{log_path.as_posix()}"
+connect_timeout = 1.0
+command_timeout = 1.0
 
 [log_patterns]
-join = 'joined the game'
-quit = 'left the game'
-chat = 'chat'
+join = '\\[\\d{{2}}:\\d{{2}}:\\d{{2}}\\] \\[Server thread/INFO\\]: (?P<player>\\w+) joined the game'
+quit = '\\[\\d{{2}}:\\d{{2}}:\\d{{2}}\\] \\[Server thread/INFO\\]: (?P<player>\\w+) left the game'
+chat = '\\[\\d{{2}}:\\d{{2}}:\\d{{2}}\\] \\[Async Chat Thread - #\\d+/INFO\\]: <(?P<player>\\w+)> (?P<message>.+)'
 encoding = "utf-8"
 """
     path = tmp_path / "config.toml"
@@ -88,13 +103,70 @@ encoding = "utf-8"
 @pytest.fixture()
 def ready_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """注入“已配置好”的密钥环境（值都是假值，不涉密）。"""
+
     monkeypatch.setenv("QQ_BOT_APP_ID", "test-app-id")
     monkeypatch.setenv("QQ_BOT_APP_SECRET", "test-app-secret")
     monkeypatch.setenv("MC_RCON_PASSWORD_MAIN", "test-rcon-password")
 
 
+class MiniRconServer:
+    """最小 RCON 服务端：鉴权 + 对任意命令回一句 `/list` 应答，只为让 `check` 真连一次。"""
+
+    def __init__(self, password: str = "test-rcon-password", response: str = LIST_RESPONSE) -> None:
+        self._password = password
+        self._response = response
+        self._server: asyncio.AbstractServer | None = None
+        self.port = 0
+        self.commands: list[str] = []
+
+    async def __aenter__(self) -> MiniRconServer:
+        self._server = await asyncio.start_server(self._handle, "127.0.0.1", 0)
+        self.port = int(self._server.sockets[0].getsockname()[1])
+        return self
+
+    async def __aexit__(self, *_exc) -> None:
+        assert self._server is not None
+        self._server.close()
+        await self._server.wait_closed()
+
+    @staticmethod
+    def _write(writer: asyncio.StreamWriter, req_id: int, pkt_type: int, body: str) -> None:
+        packet = struct.pack("<ii", req_id, pkt_type) + body.encode() + b"\x00\x00"
+        writer.write(struct.pack("<i", len(packet)) + packet)
+
+    async def _handle(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+        try:
+            while True:
+                header = await reader.readexactly(4)
+                (size,) = struct.unpack("<i", header)
+                data = await reader.readexactly(size)
+                req_id, pkt_type = struct.unpack("<ii", data[:8])
+                body = data[8:-2].decode(errors="replace")
+                if pkt_type == 3:  # AUTH
+                    if body == self._password:
+                        self._write(writer, req_id, 2, "")
+                    else:
+                        self._write(writer, -1, 2, "")
+                elif pkt_type == 2:  # EXECCOMMAND
+                    self.commands.append(body)
+                    self._write(writer, req_id, 0, self._response)
+                else:  # pragma: no cover - 协议内没有别的类型
+                    continue
+                await writer.drain()
+        except (asyncio.IncompleteReadError, ConnectionResetError, OSError):
+            return
+        finally:
+            try:
+                writer.close()
+                await writer.wait_closed()
+            except (OSError, ConnectionError):  # pragma: no cover - 关闭竞态
+                pass
+
+
+# ------------------------------------------------------------------ 入口
 def test_version_prints_plan_contract(capsys: pytest.CaptureFixture[str]) -> None:
     """`python -m y33bot --version` 打印 ``y33bot 0.1.0`` 并以 0 退出（PLAN.md §3.4）。"""
+
     with pytest.raises(SystemExit) as excinfo:
         cli.main(["--version"])
     assert excinfo.value.code == 0
@@ -108,6 +180,7 @@ def test_version_matches_package_and_pyproject() -> None:
 
 def test_all_plan_modules_import_and_document_boundaries() -> None:
     """PLAN.md §3.1 的模块全部可导入，且都带模块级 docstring（说明边界）。"""
+
     for name in PLAN_MODULES:
         module = importlib.import_module(name)
         assert module.__doc__, f"{name} 缺少模块级 docstring"
@@ -115,37 +188,37 @@ def test_all_plan_modules_import_and_document_boundaries() -> None:
 
 def test_missing_subcommand_is_usage_error() -> None:
     """用法错误由 argparse 处理，退出码 2（PLAN.md §3.4）。"""
+
     with pytest.raises(SystemExit) as excinfo:
         cli.main([])
     assert excinfo.value.code == 2
 
 
-def test_check_passes_when_port_reachable_and_env_ready(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], ready_env: None
+# ------------------------------------------------------------------ check
+async def test_check_passes_with_reachable_rcon(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    ready_env: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """干净环境下 `check` 逐项打印健康状态，全通过时末行 OK 且退出码 0。"""
+    """RCON 可达 + 环境就绪时 `check` 逐项 OK、末行 `OK`、退出码 0（PLAN.md §5 S1）。"""
+
+    monkeypatch.chdir(tmp_path)
     log_path = tmp_path / "latest.log"
-    log_path.write_text(
-        "[12:00:00] [Server thread/INFO]: Steve joined the game\n", encoding="utf-8"
-    )
-    listener = socket.socket()
-    listener.bind(("127.0.0.1", 0))
-    listener.listen(1)
-    try:
-        port = int(listener.getsockname()[1])
-        config_path = _write_config(tmp_path, port=port, log_path=log_path)
-        exit_code = cli.main(["check", "--config", str(config_path)])
-    finally:
-        listener.close()
+    log_path.write_text("[12:00:00] [Server thread/INFO]: Steve joined the game\n", encoding="utf-8")
+
+    async with MiniRconServer() as server:
+        config_path = _write_config(tmp_path, port=server.port, log_path=log_path)
+        # cli.main 内部会 asyncio.run()，因此放到线程里跑，避免与测试自己的事件循环冲突
+        exit_code = await asyncio.to_thread(cli.main, ["check", "--config", str(config_path)])
+        assert server.commands == ["/list"]
 
     lines = capsys.readouterr().out.splitlines()
     assert exit_code == 0
-    assert lines[0] == f"[配置] OK {config_path} 解析成功，1 个 MC 服"
-    assert any(line.startswith(f"[RCON main] OK 端口可达 127.0.0.1:{port}") for line in lines)
-    assert any(line.startswith("[日志 main] OK") for line in lines)
-    assert any(line.endswith(f"偏移 {log_path.stat().st_size} 字节") for line in lines), (
-        "日志偏移应等于文件当前字节数"
-    )
+    assert lines[0] == "[配置] OK config.toml 解析成功，1 个 MC 服"
+    assert "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置" in lines
+    assert f"[RCON main] OK /list -> {LIST_RESPONSE}" in lines
+    assert any(line.startswith("[日志 main] OK") and line.endswith("偏移 0 字节") for line in lines)
     assert "[绑定] OK 0 条" in lines
     assert lines[-1] == "OK"
 
@@ -154,7 +227,9 @@ def test_check_fails_without_secrets(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """缺 app_id 时 `[QQ] FAIL`，末行 FAIL 且退出码 1（PLAN.md §5 S1）。"""
+
     monkeypatch.delenv("QQ_BOT_APP_ID", raising=False)
+    monkeypatch.delenv("QQ_BOT_APP_SECRET", raising=False)
     log_path = tmp_path / "latest.log"
     log_path.write_text("", encoding="utf-8")
     config_path = _write_config(tmp_path, port=_free_port(), log_path=log_path)
@@ -165,10 +240,9 @@ def test_check_fails_without_secrets(
     assert lines[-1] == "FAIL"
 
 
-def test_check_reports_unreachable_rcon(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], ready_env: None
-) -> None:
-    """RCON 端口不通时 `[RCON main] FAIL 无法连接 …`，其它项照常检查。"""
+def test_check_reports_unreachable_rcon(tmp_path: Path, capsys: pytest.CaptureFixture[str], ready_env: None) -> None:
+    """RCON 端口不通时 `[RCON main] FAIL 无法连接 …`，其它项照常检查（§3.6：不阻塞启动）。"""
+
     log_path = tmp_path / "latest.log"
     log_path.write_text("", encoding="utf-8")
     port = _free_port()
@@ -177,10 +251,12 @@ def test_check_reports_unreachable_rcon(
     assert cli.main(["check", "--config", str(config_path)]) == 1
     lines = capsys.readouterr().out.splitlines()
     assert any(line.startswith(f"[RCON main] FAIL 无法连接 127.0.0.1:{port}") for line in lines)
+    assert any(line.startswith("[日志 main] OK") for line in lines)
 
 
 def test_check_reports_missing_config(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """配置文件不存在：`[配置] FAIL` + 末行 FAIL（退出码 1）。"""
+
     missing = tmp_path / "missing.toml"
     assert cli.main(["check", "--config", str(missing)]) == 1
     lines = capsys.readouterr().out.splitlines()
@@ -188,34 +264,72 @@ def test_check_reports_missing_config(tmp_path: Path, capsys: pytest.CaptureFixt
     assert lines[-1] == "FAIL"
 
 
-def test_run_prints_health_then_exits_zero(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], ready_env: None
+# ------------------------------------------------------------------ run / 子命令
+def test_run_fails_fast_without_qq_credentials(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """骨架阶段 `run` 打印启动自检与健康状态后退出 0（单服故障不阻塞启动，§3.6）。"""
+    """`run` 缺 QQ 凭据时启动即失败：先打印启动日志，再 `[错误]`，退出码 1（§3.6 / A11）。"""
+
+    monkeypatch.delenv("QQ_BOT_APP_ID", raising=False)
+    monkeypatch.delenv("QQ_BOT_APP_SECRET", raising=False)
+    monkeypatch.setenv("MC_RCON_PASSWORD_MAIN", "test-rcon-password")
     log_path = tmp_path / "latest.log"
     log_path.write_text("", encoding="utf-8")
     config_path = _write_config(tmp_path, port=_free_port(), log_path=log_path)
 
-    assert cli.main(["run", "--config", str(config_path)]) == 0
-    out = capsys.readouterr().out
-    assert out.startswith("[启动] y33bot 0.1.0")
-    assert "[警告] 自检存在失败项" in out
-    assert "[警告] 骨架阶段" in out
+    assert cli.main(["run", "--config", str(config_path)]) == 1
+    out = capsys.readouterr().err  # run 的日志走 stderr（§3.6）
+    assert "[启动] y33bot 0.1.0" in out
+    assert "[启动] 日志监听已启动: main" in out
+    assert "[错误] 环境变量 QQ_BOT_APP_ID 未设置" in out
 
 
-def test_unimplemented_subcommands_return_exit_3(capsys: pytest.CaptureFixture[str]) -> None:
-    """骨架阶段未实现的子命令返回退出码 3，不假装成功。"""
-    assert cli.main(["bind", "list"]) == 3
-    exit_code = cli.main(
-        ["simulate", "log-event", "--server", "main", "--kind", "join", "--player", "Steve"]
+def test_subcommands_are_implemented(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], ready_env: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """骨架期的「未实现 → 退出码 3」已被最终实现取代：bind / simulate 都真的工作（§3.4）。"""
+
+    monkeypatch.chdir(tmp_path)
+    log_path = tmp_path / "latest.log"
+    log_path.write_text("", encoding="utf-8")
+    config_path = _write_config(tmp_path, port=_free_port(), log_path=log_path)
+
+    assert cli.main(["bind", "list", "--config", str(config_path)]) == 0
+    assert capsys.readouterr().out.strip() == "[绑定] 无绑定记录"
+
+    assert cli.main(["bind", "set", "OP-1", "Steve", "--config", str(config_path)]) == 0
+    assert "已写入 OP-1 -> Steve" in capsys.readouterr().out
+
+    assert (
+        cli.main(
+            [
+                "simulate",
+                "log-event",
+                "--server",
+                "main",
+                "--kind",
+                "join",
+                "--player",
+                "Steve",
+                "--dry-run",
+                "--config",
+                str(config_path),
+            ]
+        )
+        == 0
     )
-    assert exit_code == 3
-    out = capsys.readouterr().out
-    assert out.count("[错误]") == 2
+    assert capsys.readouterr().out.strip() == "[群消息] Steve进入游戏"
+
+    # 用法错误（既没有 --line 也没有 --kind）由 argparse 处理 → 退出码 2
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(["simulate", "log-event", "--server", "main", "--config", str(config_path)])
+    assert excinfo.value.code == 2
 
 
+# ------------------------------------------------------------------ 仓库约定
 def test_pyproject_locks_runtime_dependencies() -> None:
     """运行时依赖锁版本、依赖数量保持最少（PLAN.md §2.1/§2.2）。"""
+
     project = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
     assert project["requires-python"] == ">=3.11,<3.14"
     assert project["dependencies"] == ["qq-botpy==1.2.1", "tomli-w==1.2.0"]
@@ -223,6 +337,7 @@ def test_pyproject_locks_runtime_dependencies() -> None:
 
 def test_example_config_covers_plan_keys_and_patterns() -> None:
     """config.example.toml 覆盖 PLAN.md §4.1 的必填键，且三条模板可编译、命名组齐全。"""
+
     data = tomllib.loads((REPO_ROOT / "config.example.toml").read_text(encoding="utf-8"))
     assert {"qq", "behavior", "paths", "mc_servers", "log_patterns"} <= set(data)
     server = data["mc_servers"][0]
@@ -235,6 +350,7 @@ def test_example_config_covers_plan_keys_and_patterns() -> None:
 
 def test_env_example_has_no_values() -> None:
     """`.env.example` 只列变量名，不允许出现值（仓库不得存密钥，PLAN.md §6 T1）。"""
+
     for raw in (REPO_ROOT / ".env.example").read_text(encoding="utf-8").splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):

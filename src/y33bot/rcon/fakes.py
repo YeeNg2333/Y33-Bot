@@ -1,21 +1,25 @@
-"""RCON 离线替身：``FakeRconTransport``（PLAN.md §3.4；CLI ``--dry-run`` 与 CI 专用）。
+"""RCON 离线替身（PLAN.md §3.2 / §3.4）。
 
-行为契约：不做任何网络 IO，``command()`` 只把命令按固定前缀打印出来::
-
-    [RCON main] tellraw @a {"text":"[QQ] Steve: 你好"}
-
-这样 ``simulate --dry-run`` 的 stdout 与真实分支**逐行同构**（只少一次真实注入），
-CI 与单测因此可以完全离线断言 S2–S4 的输出（PLAN.md §3.4、§5）。
+`--dry-run` 与单元测试用它替代 `AsyncRconClient`：只返回内存里的假响应，不做任何网络 IO。
+命令回显由 `RconPool.query()` 统一打印（`[RCON <server>] <命令>`），因此这里不重复打印。
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+import logging
+from collections.abc import Mapping
+
+from ..models import PlayerList
+from .client import AsyncRconClient
+from .protocol import RconConnectError, RconError
+
+__all__ = ["FakeRconTransport", "DEFAULT_LIST_RESPONSE"]
+
+DEFAULT_LIST_RESPONSE = "There are 0 of a max of 20 players online:"
 
 
 class FakeRconTransport:
-    """实现 ``rcon.protocol.RconTransport`` 的替身；记录并打印收到的命令。"""
+    """与 `RconTransport` 同签名的假实现；`online=False` 模拟服务器离线。"""
 
     def __init__(
         self,
@@ -23,32 +27,61 @@ class FakeRconTransport:
         port: int,
         password: str,
         *,
-        server_name: str = "",
-        printer: Callable[[str], None] | None = None,
-        **kwargs: Any,
+        connect_timeout: float = 5.0,
+        command_timeout: float = 5.0,
+        online: bool = True,
+        responses: Mapping[str, str] | None = None,
+        logger: logging.Logger | None = None,
     ) -> None:
-        """``server_name`` 只用于打印前缀；``**kwargs`` 吸收与客户端相同的超时参数。"""
-
-        raise NotImplementedError("T4：见 PLAN.md §3.4")
-
-    async def connect(self) -> None:
-        """总是立即成功（替身不需要真连接）。"""
-        raise NotImplementedError("T4")
-
-    async def command(self, cmd: str) -> str:
-        """记录 ``cmd`` 并按 ``[RCON <server>] <cmd>`` 打印，返回空字符串。"""
-        raise NotImplementedError("T4")
-
-    async def close(self) -> None:
-        """空实现（幂等）。"""
-        raise NotImplementedError("T4")
+        self.host = host
+        self.port = port
+        self.password = password
+        self.connect_timeout = connect_timeout
+        self.command_timeout = command_timeout
+        self.online = online
+        self.responses: dict[str, str] = dict(responses or {})
+        self.commands: list[str] = []
+        self._logger = logger or logging.getLogger("y33bot.rcon.fakes")
+        self._connected = False
 
     @property
     def connected(self) -> bool:
-        """替身始终视为已连接。"""
-        raise NotImplementedError("T4")
+        return self._connected
 
-    @property
-    def commands(self) -> list[str]:
-        """已收到的命令列表（便于断言）。"""
-        raise NotImplementedError("T4")
+    async def connect(self) -> None:
+        if not self.online:
+            raise RconConnectError(f"假 RCON 服务器离线: {self.host}:{self.port}")
+        self._connected = True
+
+    async def command(self, cmd: str) -> str:
+        if not self._connected:
+            await self.connect()
+        payload_len = len((cmd or "").encode("utf-8"))
+        if payload_len > AsyncRconClient.MAX_PAYLOAD_BYTES:
+            raise RconError(f"命令超过 {AsyncRconClient.MAX_PAYLOAD_BYTES} 字节上限（实际 {payload_len} 字节）")
+        self.commands.append(cmd)
+        if cmd in self.responses:
+            return self.responses[cmd]
+        if cmd.strip().lstrip("/").lower() == "list":
+            return DEFAULT_LIST_RESPONSE
+        return ""
+
+    async def close(self) -> None:
+        self._connected = False
+
+    # ------------------------------------------------------------ 测试辅助
+    def set_players(self, players: list[str], max_players: int = 20) -> PlayerList:
+        """把 `/list` 响应设为给定玩家列表，返回期望的解析结果。"""
+
+        listing = "There are {} of a max of {} players online: {}".format(
+            len(players),
+            max_players,
+            ", ".join(players),
+        )
+        self.responses["/list"] = listing
+        return PlayerList(
+            online=len(players),
+            max_players=max_players,
+            players=list(players),
+            raw=listing,
+        )

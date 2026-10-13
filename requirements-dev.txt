@@ -2,7 +2,7 @@
 # 同时会带上 requirements.txt 的运行时依赖。
 -r requirements.txt
 
-pytest==8.4.2
+pytest==9.1.1
 pytest-asyncio==1.4.0
 pytest-cov==7.1.0
 ruff==0.17.0

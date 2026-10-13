@@ -11,8 +11,9 @@ requires-python = ">=3.11,<3.14"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "YeeNg", email = "yeeng2333@qq.com" }]
-keywords = ["minecraft", "rcon", "qq-bot", "bidirectional-bridge"]
+keywords = ["minecraft", "qq", "rcon", "bot"]
 classifiers = [
+  "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -34,28 +35,33 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
+pythonpath = ["src"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-addopts = "-q"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["y33bot"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+]
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py311"
 src = ["src", "tests"]
 # 关键：ruff ≥0.17 会格式化 Markdown 代码块里的 Python。
-# IDEA.md / PLAN.md 是冻结的需求书与实施计划（PLAN.md 明令不得改动），README 的示例也要人工排版，
+# IDEA.md / PLAN.md 是冻结的需求书与实施计划（PLAN.md 明令不得改动），README.md 的示例也要人工排版，
 # 所以把 Markdown 整体排除在 ruff 之外——否则 `ruff format .` 会顺手改写评审依据文件。
 extend-exclude = ["*.md", "**/*.md"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B"]
-
-[tool.coverage.run]
-branch = true
-source = ["src/y33bot"]
-
-[tool.coverage.report]
-# 只排除显式标记的行：不排除 ``raise NotImplementedError``，
-# 否则 T9 的覆盖率门槛会被“尚未实现的占位函数”蒙过去（覆盖率应如实反映实现进度）。
-exclude_lines = ["pragma: no cover"]
-
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["B008"]

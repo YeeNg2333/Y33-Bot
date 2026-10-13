@@ -9,12 +9,17 @@ SHELL := /bin/bash
 PY ?= python3
 VENV ?= .venv
 CONFIG ?= config.toml
+PYTEST_ARGS ?=
 
 ifeq ($(OS),Windows_NT)
-  VENV_PY := $(VENV)/Scripts/python.exe
+  VENV_CANDIDATE := $(VENV)/Scripts/python.exe
 else
-  VENV_PY := $(VENV)/bin/python
+  VENV_CANDIDATE := $(VENV)/bin/python
 endif
+
+# 优先用仓库内的 .venv；没有 .venv 时（例如 CI 里直接用 setup-python 的解释器）回退到 $(PY)，
+# 这样 `make test` 在有/无虚拟环境的干净环境里都能一键跑通。
+VENV_PY := $(if $(wildcard $(VENV_CANDIDATE)),$(VENV_CANDIDATE),$(PY))
 
 .DEFAULT_GOAL := help
 
@@ -31,7 +36,7 @@ help:  ## 显示可用目标
 	@echo "  smoke    入口冒烟：版本号 + 模块可导入"
 	@echo "  lint     ruff check + ruff format --check"
 	@echo "  fmt      ruff format（就地格式化）"
-	@echo "  test     pytest"
+	@echo "  test     pytest（可用 PYTEST_ARGS=\"--cov=y33bot --cov-fail-under=70\" 追加参数；CI 就是这么调的）"
 	@echo "  coverage pytest --cov=y33bot --cov-report=term-missing"
 	@echo "  clean    删除缓存与构建产物（不动 .venv / data）"
 
@@ -59,8 +64,8 @@ lint:  ## 静态检查
 fmt:  ## 格式化
 	$(VENV_PY) -m ruff format .
 
-test:  ## 跑测试
-	$(VENV_PY) -m pytest
+test:  ## 跑测试（PYTEST_ARGS 可追加参数）
+	$(VENV_PY) -m pytest $(PYTEST_ARGS)
 
 coverage:  ## 跑测试 + 覆盖率
 	$(VENV_PY) -m pytest --cov=y33bot --cov-report=term-missing

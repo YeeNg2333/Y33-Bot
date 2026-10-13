@@ -1,65 +1,159 @@
-"""多服 RCON 编排（PLAN.md §2.4、§3.2；需求 R29：QQ→MC 全局广播）。
-
-- ``broadcast_tellraw(text)``：把 ``[QQ] Steve: 你好`` 注入**所有**已连接的 MC 服；
-- ``status()``：逐服 ``/list`` 并聚合成 ``ServerStatusReport``（离线的服进 ``offline``，A1）；
-- 单服故障只让该服的结果 ``ok=False``，不影响其它服（PLAN.md §3.6）。
-
-注入格式：``tellraw @a {"text":"..."}``，JSON 由 ``json.dumps(..., ensure_ascii=False)`` 生成，
-命令整体做 1446 字节上限校验。
-"""
+"""多服 RCON 编排：广播、聚合状态、`/list` 解析（PLAN.md §3.2 / §2.4 / R15 / R29）。"""
 
 from __future__ import annotations
 
+import asyncio
+import json
+import logging
+import re
 from collections.abc import Callable, Mapping, Sequence
 
-from y33bot.config import MCServerConfig
-from y33bot.models import CommandResult, PlayerList, ServerStatusReport
-from y33bot.rcon.client import AsyncRconClient
-from y33bot.rcon.protocol import RconTransport
+from ..models import CommandResult, PlayerList, ServerStatusReport
+from .client import AsyncRconClient
+from .protocol import RconError, RconTransport
+
+__all__ = ["RconPool", "parse_list_response", "LIST_COMMAND"]
+
+#: `/status` 依赖的 Vanilla 命令（A15：不含 TPS）
+LIST_COMMAND = "/list"
+
+_LIST_RE = re.compile(
+    r"There are (?P<online>\d+) of a max of (?P<max>\d+) players online:?(?P<players>.*)",
+    re.IGNORECASE,
+)
+
+
+def parse_list_response(raw: str) -> PlayerList:
+    """解析 Vanilla `/list` 文本，如 `There are 3 of a max of 20 players online: Steve, Alex`。"""
+
+    text = (raw or "").strip()
+    match = _LIST_RE.search(text)
+    if match is None:
+        raise ValueError(f"无法解析 /list 响应: {raw!r}")
+    players = [name.strip() for name in match.group("players").split(",") if name.strip()]
+    return PlayerList(
+        online=int(match.group("online")),
+        max_players=int(match.group("max")),
+        players=players,
+        raw=text,
+    )
 
 
 class RconPool:
-    """按「服务器名 → 一条 RCON 连接」编排的多服池。"""
+    """一组 MC 服的 RCON 客户端；QQ→MC 方向在这里做全局广播（R29）。"""
 
     def __init__(
         self,
-        servers: Sequence[MCServerConfig],
+        servers: Sequence[object],
         passwords: Mapping[str, str],
         *,
         factory: Callable[..., RconTransport] = AsyncRconClient,
+        logger: logging.Logger | None = None,
     ) -> None:
-        """``factory``：把连接实现换成替身（测试 / ``--dry-run``），形参同 ``AsyncRconClient``。"""
-        raise NotImplementedError("T4：见 PLAN.md §2.4")
+        self._logger = logger or logging.getLogger("y33bot.rcon.pool")
+        self._order: list[str] = []
+        self._servers: dict[str, object] = {}
+        self._clients: dict[str, RconTransport] = {}
+        for server in servers:
+            name = server.name
+            if name in self._servers:
+                raise ValueError(f"MC 服名称重复: {name}")
+            if name not in passwords:
+                raise ValueError(f"缺少 MC 服 {name} 的 RCON 密码")
+            self._order.append(name)
+            self._servers[name] = server
+            self._clients[name] = factory(
+                host=server.host,
+                port=server.port,
+                password=passwords[name],
+                connect_timeout=server.connect_timeout,
+                command_timeout=server.command_timeout,
+            )
+
+    # ------------------------------------------------------------------ 生命周期
+    def server_names(self) -> list[str]:
+        return list(self._order)
 
     async def start(self) -> None:
-        """逐服建连；**单服连不上只告警，不阻塞启动**（PLAN.md §3.6）。"""
-        raise NotImplementedError("T4：见 PLAN.md §3.6")
+        """并发连接全部服；单服连不上只告警，不阻塞启动（PLAN.md §3.6）。"""
+
+        await asyncio.gather(*(self._connect(name) for name in self._order))
+
+    async def _connect(self, name: str) -> None:
+        client = self._clients[name]
+        try:
+            await client.connect()
+        except RconError as exc:
+            self._logger.warning("[警告] RCON %s 连接失败（服务继续，下次调用自动重连）: %s", name, exc)
+        else:
+            self._logger.debug("[RCON %s] 已连接", name)
 
     async def close(self) -> None:
-        """关闭全部连接（幂等）。"""
-        raise NotImplementedError("T4：见 PLAN.md §3.6")
+        await asyncio.gather(*(self._safe_close(name) for name in self._order))
+
+    async def _safe_close(self, name: str) -> None:
+        try:
+            await self._clients[name].close()
+        except (RconError, OSError) as exc:  # pragma: no cover - 纯防御
+            self._logger.warning("[警告] RCON %s 关闭异常: %s", name, exc)
+
+    # ------------------------------------------------------------------ 命令
+    async def query(self, server: str, cmd: str) -> CommandResult:
+        """对单条连接执行命令；任何失败都收敛为 `CommandResult(ok=False)`（不抛异常）。"""
+
+        client = self._clients.get(server)
+        if client is None:
+            return CommandResult(server=server, ok=False, response="", error=f"未知服务器: {server}")
+        self._logger.info("[RCON %s] %s", server, cmd)
+        try:
+            response = await client.command(cmd)
+        except RconError as exc:
+            self._logger.warning("[警告] RCON %s 命令失败: %s", server, exc)
+            return CommandResult(server=server, ok=False, response="", error=str(exc))
+        return CommandResult(server=server, ok=True, response=response, error=None)
 
     async def broadcast(self, cmd: str) -> dict[str, CommandResult]:
-        """把同一条命令广播到所有服，返回 ``{server: CommandResult}``。"""
-        raise NotImplementedError("T4：见 PLAN.md §2.4")
+        """把同一条命令广播到全部服（R29）。"""
+
+        results = await asyncio.gather(*(self.query(name, cmd) for name in self._order))
+        return {result.server: result for result in results}
 
     async def broadcast_tellraw(self, text: str) -> dict[str, CommandResult]:
-        """把 ``text`` 用 ``tellraw @a`` 注入所有服（R29）。"""
-        raise NotImplementedError("T4：见 PLAN.md §2.4 / R29")
+        """把一段文本通过 `tellraw @a` 广播到全部在线服。"""
 
-    async def query(self, server: str, cmd: str) -> CommandResult:
-        """在指定服执行一条命令。"""
-        raise NotImplementedError("T4：见 PLAN.md §2.4")
+        return await self.broadcast(self.build_tellraw(text))
 
+    @staticmethod
+    def build_tellraw(text: str) -> str:
+        """构造 `tellraw @a {"text":"..."}`；超 1446 字节时逐字符收缩以保证可发送。"""
+
+        payload = text or ""
+        while True:
+            command = "tellraw @a " + json.dumps({"text": payload}, ensure_ascii=False, separators=(",", ":"))
+            if len(command.encode("utf-8")) <= AsyncRconClient.MAX_PAYLOAD_BYTES or not payload:
+                return command
+            payload = payload[:-1]
+
+    # ------------------------------------------------------------------ 状态
     async def status(self) -> ServerStatusReport:
-        """逐服 ``/list`` 并聚合（A1：离线的服出现在 ``offline`` 中）。"""
-        raise NotImplementedError("T4：见 PLAN.md §2.4 / R15")
+        """并发查 `/list` 并聚合；命令失败或响应不可解析的服记为离线。"""
 
-    def server_names(self) -> list[str]:
-        """按配置顺序返回服务器名。"""
-        raise NotImplementedError("T4：见 PLAN.md §2.4")
-
-
-def parse_list_response(text: str) -> PlayerList:
-    """解析 ``/list`` 响应，如 ``There are 3 of a max of 20 players online: Steve, Alex``。"""
-    raise NotImplementedError("T4：见 PLAN.md §2.4")
+        results = await asyncio.gather(*(self.query(name, LIST_COMMAND) for name in self._order))
+        per_server: dict[str, PlayerList | None] = {}
+        offline: list[str] = []
+        total_online = 0
+        for result in results:
+            if not result.ok:
+                per_server[result.server] = None
+                offline.append(result.server)
+                continue
+            try:
+                listing = parse_list_response(result.response)
+            except ValueError as exc:
+                self._logger.warning("[警告] RCON %s /list 响应无法解析（按离线处理）: %s", result.server, exc)
+                per_server[result.server] = None
+                offline.append(result.server)
+                continue
+            per_server[result.server] = listing
+            total_online += listing.online
+        return ServerStatusReport(per_server=per_server, offline=offline, total_online=total_online)

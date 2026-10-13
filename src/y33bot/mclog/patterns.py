@@ -1,53 +1,110 @@
-"""日志模板编译与单行解析（PLAN.md §2.5、§3.2、§4.1；需求 R27，假设 A9）。
+"""日志模板编译与单行解析（PLAN.md §3.2 / A9 / R27）。
 
-规则：
-
-- 模板来自 ``config.toml`` 的 ``[log_patterns]``：Vanilla 版本升级只改 TOML，不改代码（R27）。
-- 编译时若模板未自带 ``^``/``$`` 则自动补锚点，匹配统一用 ``re.match``（A9）——
-  原模板没有行尾锚点，不补会误匹配到别的行。
-- 命名组校验：``join``/``quit`` 必须含 ``player``；``chat`` 必须含 ``player`` 与 ``message``
-  否则视为配置错误（启动即失败）。
-- ``parse_line()`` 逐个模板尝试，命中即返回；都不命中返回 ``None``。
+设计要点：
+- 模板来自配置（TOML），编译时自动补 `^` / `$` 锚点（A9），使用 `re.match`；
+- 必须含规范要求的命名组（`join`/`quit` → `player`；`chat` → `player` + `message`），
+  否则在配置加载阶段就报 `ConfigError`，把问题挡在启动前；
+- `parse_line()` 的签名固定为 `(compiled, line)`（PLAN.md §3.3），事件里的 `server`
+  由 `LogWatcher` 用 `dataclasses.replace()` 填充。
 """
 
 from __future__ import annotations
 
 import re
+import time
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from y33bot.config import LogPatterns
-from y33bot.models import MCLogEvent
+from ..models import LogEventKind, MCLogEvent
+
+if TYPE_CHECKING:  # 避免 config <-> mclog.patterns 的运行时循环导入
+    from ..config import LogPatterns
+
+__all__ = ["PatternError", "CompiledPatterns", "REQUIRED_GROUPS", "compile_patterns", "parse_line"]
+
+#: 各模板必须提供的命名组
+REQUIRED_GROUPS: dict[str, tuple[str, ...]] = {
+    "join": ("player",),
+    "quit": ("player",),
+    "chat": ("player", "message"),
+}
+
+_KINDS: tuple[LogEventKind, ...] = ("join", "quit", "chat")
+
+
+class PatternError(ValueError):
+    """日志模板不可编译或缺少必需命名组。"""
 
 
 @dataclass(frozen=True)
 class CompiledPatterns:
-    """编译后的三条正则（模板补锚点后的产物）。
-
-    说明：``LogPatterns`` 只给出正则文本，``re.Pattern`` 才是可执行形态，
-    因此这里需要一层编译结果；``parse_line()`` 的参数类型即本类（T5 可细化字段）。
-    """
+    """编译后的三个模板 + 编码；由 `compile_patterns()` 产出。"""
 
     join: re.Pattern[str]
     quit: re.Pattern[str]
     chat: re.Pattern[str]
     encoding: str = "utf-8"
 
+    def pattern(self, kind: str) -> re.Pattern[str]:
+        return getattr(self, kind)
+
+
+def _anchor(template: str) -> str:
+    """模板未自带锚点时补上（A9：行首用 `^`，行尾用 `$`）。"""
+
+    anchored = template
+    if not anchored.startswith("^"):
+        anchored = "^" + anchored
+    if not anchored.endswith("$"):
+        anchored = anchored + "$"
+    return anchored
+
+
+def _compile_one(kind: str, template: str) -> re.Pattern[str]:
+    if not isinstance(template, str) or not template.strip():
+        raise PatternError(f"日志模板 {kind} 不能为空")
+    try:
+        compiled = re.compile(_anchor(template))
+    except re.error as exc:
+        raise PatternError(f"日志模板 {kind} 不是合法正则: {exc}") from exc
+    missing = [group for group in REQUIRED_GROUPS[kind] if group not in compiled.groupindex]
+    if missing:
+        raise PatternError(f"日志模板 {kind} 缺少命名组: {', '.join(missing)}")
+    return compiled
+
 
 def compile_patterns(patterns: LogPatterns) -> CompiledPatterns:
-    """编译并校验三条模板；模板非法或缺命名组时抛 ``ValueError``（启动即失败）。"""
-    raise NotImplementedError("T5：见 PLAN.md §2.5 / A9")
+    """把 `LogPatterns` 编译成 `CompiledPatterns`；失败抛 `PatternError`。"""
+
+    for kind in _KINDS:
+        if not hasattr(patterns, kind):
+            raise PatternError(f"日志模板缺少字段: {kind}")
+    encoding = getattr(patterns, "encoding", "utf-8") or "utf-8"
+    return CompiledPatterns(
+        join=_compile_one("join", patterns.join),
+        quit=_compile_one("quit", patterns.quit),
+        chat=_compile_one("chat", patterns.chat),
+        encoding=encoding,
+    )
 
 
-def parse_line(
-    compiled: CompiledPatterns,
-    line: str,
-    *,
-    server: str = "",
-    occurred_at: float | None = None,
-) -> MCLogEvent | None:
-    """把一行日志解析成 ``MCLogEvent``；不命中任何模板返回 ``None``。
+def parse_line(compiled: CompiledPatterns, line: str) -> MCLogEvent | None:
+    """解析一行日志；命中返回事件（`server` 为空串，待调用方填充），否则返回 None。"""
 
-    ``server`` / ``occurred_at`` 由 ``LogWatcher`` 传入：PLAN.md §3.2 只给了 ``(cp, line)``，
-    而 ``MCLogEvent`` 需要来源服与时间戳，故这两个参数以关键字形式补齐。
-    """
-    raise NotImplementedError("T5：见 PLAN.md §2.5")
+    text = line.lstrip("\ufeff")
+    for kind in _KINDS:
+        match = compiled.pattern(kind).match(text)
+        if match is None:
+            continue
+        groups = match.groupdict()
+        player = groups.get("player")
+        message = groups.get("message") if kind == "chat" else None
+        return MCLogEvent(
+            server="",
+            kind=kind,
+            player=player,
+            message=message,
+            raw=text,
+            occurred_at=time.time(),
+        )
+    return None

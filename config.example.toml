@@ -1,5 +1,5 @@
-# Y33-Bot 配置样板：复制为 config.toml 后按实际环境修改。
-# 结构定义见 PLAN.md §4.1；密钥不写在这里，只写“环境变量名”，值从环境变量读取（A18）。
+# y33bot 配置样板（PLAN.md §3.5 / §4.1）
+# 复制为 config.toml 后按需修改：cp config.example.toml config.toml
 
 [qq]
 group_openid = "填写目标群的 group_openid"   # MC→QQ 方向的发送目标；留空则该方向禁用并告警
