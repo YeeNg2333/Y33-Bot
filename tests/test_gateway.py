@@ -5,6 +5,9 @@ botpy 的真实网关不在这里连：用桩对象替代 `client.api`。
 
 from __future__ import annotations
 
+import asyncio
+import logging
+
 import pytest
 
 from conftest import App
@@ -244,3 +247,116 @@ async def test_close_cancels_running_task(app: App) -> None:
     await gateway.close()
     assert gateway._task is None
     assert client.closed is True
+
+
+# ------------------------------------------------------------------ 网关协程正常返回 = 静默（BUG-001 取证）
+class _FakeSDKClient:
+    """`botpy.Client` 的离线替身：`start(ret_coro=True)` 返回的协程「连上、随后结束」。
+
+    `start()` 只返回协程对象、不 await 它 —— 与 `botpy/client.py:217-223`（`ret_coro=True` 时
+    `return coroutine`）一致；协程体本身等价于 `botpy/connection.py:67` 的
+    `await asyncio.wait(tasks)` 返回、`multi_run()` 结束。
+    """
+
+    instances: list[_FakeSDKClient] = []
+
+    def __init__(self, **_kwargs) -> None:
+        self.start_args: tuple[str, str, bool] | None = None
+        self.closed = False
+        _FakeSDKClient.instances.append(self)
+
+    async def __aenter__(self) -> _FakeSDKClient:
+        return self
+
+    async def __aexit__(self, *_exc) -> None:
+        return None
+
+    async def start(self, app_id: str, secret: str, *, ret_coro: bool = False):
+        self.start_args = (app_id, secret, ret_coro)
+        assert ret_coro is True  # F5：我们固定用 ret_coro=True 起网关
+
+        async def gateway_coroutine() -> None:
+            await asyncio.sleep(0.05)
+
+        return gateway_coroutine()
+
+    async def close(self) -> None:
+        self.closed = True
+
+
+def _install_fake_botpy(monkeypatch: pytest.MonkeyPatch) -> None:
+    _FakeSDKClient.instances.clear()
+    monkeypatch.setattr(
+        gateway_module,
+        "botpy",
+        type("B", (), {"Client": _FakeSDKClient, "Intents": lambda **kwargs: kwargs}),
+    )
+
+
+async def test_gateway_coroutine_end_is_silent(
+    app: App, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """BUG-001 取证 F2 / S7：SDK 网关协程「正常返回」时，`_run_client` 不抛异常、一行日志都不多打。"""
+
+    _install_fake_botpy(monkeypatch)
+    gateway = BotpyGateway(
+        app.config,
+        ("app-id", "app-secret"),
+        StateStore.load(app.config.state_path),
+        handler=lambda message: None,  # type: ignore[arg-type,return-value]
+        startup_timeout=1.0,
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        await gateway.start()
+        fake = _FakeSDKClient.instances[0]
+        assert fake.start_args == ("app-id", "app-secret", True)
+        assert gateway._up_event is not None and gateway._up_event.is_set()
+        assert any("[启动] QQ 网关已连接" in record.getMessage() for record in caplog.records)
+
+        task = gateway._task
+        assert task is not None
+        await asyncio.wait_for(task, timeout=5)  # 网关协程结束
+        assert task.done() is True
+        assert task.exception() is None  # 没有异常 → 走不到 except
+        assert gateway._up_error is None  # 也没有 error 回填
+        await asyncio.sleep(0.05)
+        assert [r for r in caplog.records if r.levelno >= logging.WARNING] == []  # 无 [错误]/[警告]
+
+    await gateway.close()
+    assert fake.closed is True
+
+
+async def test_send_token_refresh_failure_is_logged(
+    app: App, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """BUG-001 取证 S2/S3 + F6：SDK 取 token 失败会冒到我们的 except，留下 `[错误] QQ 发送失败（不重试）`。
+
+    整链用的是真 SDK：`BotAPI.post_group_message`（`botpy/api.py:1423-1424`）
+    → `BotHttp.request`（`botpy/http.py:156`、`177` 处 `await self.check_session()`）
+    → `Token.check_token`（`botpy/robot.py:39-41`）→ `update_access_token`（被替换为抛错）。
+    一条网络请求都没发出去，所以不需要凭据、也不需要网络。
+    """
+
+    from botpy.api import BotAPI  # type: ignore[import-not-found]
+    from botpy.http import BotHttp  # type: ignore[import-not-found]
+    from botpy.robot import Token  # type: ignore[import-not-found]
+
+    async def boom(self) -> None:  # noqa: ANN001 - 与 SDK 方法同签名
+        raise RuntimeError("获取token失败，请检查appid和secret填写是否正确！")
+
+    monkeypatch.setattr(Token, "update_access_token", boom)
+
+    gateway, client = make_gateway(app)
+    http = BotHttp(timeout=5, app_id="app-id", secret="expired-secret")  # access_token 初值为 None
+    client.api = BotAPI(http)  # type: ignore[assignment]
+
+    with caplog.at_level(logging.ERROR):
+        await gateway.send_group_message(
+            OutgoingGroupMessage(group_openid="G-1", text="hi", reply_to_message_id="MSG-9")
+        )
+
+    messages = [record.getMessage() for record in caplog.records]
+    assert any("QQ 发送失败（不重试）" in item for item in messages), messages
+    assert any("获取token失败" in item for item in messages), messages  # SDK 的原因被带上去了
+    await http.close()
