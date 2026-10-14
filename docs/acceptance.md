@@ -35,7 +35,7 @@
 | S6 日志轮转 | **通过**（离线等价复现：`LogWatcher` 直接跑同一路径；真机手工版见 `docs/smoke.md` §5） | §2.6 |
 | V1–V3 真机反馈变更（MC→QQ 带服名 / 取消游戏内回显 / 指令面板清单） | **通过**（按新契约重跑，无回归） | §8 |
 
-自动化方面（§3）：`make test` 一键 **352 passed、总覆盖率 99.30%**（门槛 70%；v0.2 变更前是 348，见 §8），`ruff check` +
+自动化方面（§3）：`make test` 一键 **357 passed、总覆盖率 99.30%**（门槛 70%；v0.2 变更后 352、BUG-001 取证合入后 357，见 §8.6），`ruff check` +
 `ruff format --check` 全绿，全仓**无 skip/xfail**，CI 里跑的就是同一条 `make test`。
 
 ---
@@ -295,7 +295,7 @@ $ grep -rnE "pytest\.(skip|xfail)|@pytest\.mark\.(skip|xfail)|skipif" tests/
 （无 skip/xfail/skipif）
 ```
 
-测试文件分工（v0.2 后 352 例）：
+测试文件分工（下面的例数是 T10 落地时的口径；v0.2 后 352 例、BUG-001 取证合入后 **357 例**）：
 
 | 文件 | 例数 | 说明 |
 |---|---|---|
@@ -303,7 +303,8 @@ $ grep -rnE "pytest\.(skip|xfail)|@pytest\.mark\.(skip|xfail)|skipif" tests/
 | `tests/test_failures.py` | 61 | **本卡新增**：RCON 客户端/池、QQ 网关、常驻服务、CLI 的失败分支（畸形包、id 不匹配、半途断连、写盘/关闭失败、参数不合法） |
 | `tests/e2e/test_entrypoint.py` | 10 | **本卡新增**：**真子进程**跑 `python -m y33bot …`，逐条断言 S1/S2/S3/S4 的 stdout 与退出码（含用法错误退出码 2） |
 | `tests/e2e/test_acceptance.py` | 7 | T8 产出：同进程内按 §5 文案逐条断言（S1–S4、S6） |
-| 其余 13 个逐模块文件 | 207 | T8 产出：常规路径 + 关键分支 |
+| `tests/test_bug001_reconnect.py` | 2 | **BUG-001 取证新增**（卡 `t_6cc56405`）：用真 SDK 的 `ConnectionSession` 复刻「`multi_run` 一次性」与「网关协程返回后 `Service.run()` 仍存活」 |
+| 其余 13 个逐模块文件 | 207（+3） | T8 产出：常规路径 + 关键分支；`+3` 为 BUG-001 取证新增（`test_gateway.py` 2 例、`test_service.py` 1 例） |
 
 设计取舍：新增的失败分支用例都断言**可观测结果**（异常类型与文案、日志、退出码、落盘文件），
 不使用 `pytest.skip`/`xfail` 掩盖任何用例；需要外部资源（真 QQ/真 MC）的场景一律留在文档里，
@@ -779,3 +780,26 @@ All checks passed!
 | 回归 | **无**：S1/S2/S5 离线片段/S6 的文案与退出码未变；352 例全绿、覆盖率 99.30%、ruff 全绿 |
 | S5 真机 8 步 | **仍未执行**，结论维持 §2.5 的「部分通过」；其中「指令面板是否自动带 @」已由用户真机确认（仅 @消息触发），故无需改 intent |
 | 未做 | `/list`（群内列举指令）按用户决定不做，可发现性交给 QQ 客户端指令面板（`PLAN.md` §7 末） |
+
+### 8.6 BUG-001 取证用例合入后的复验（2026-10-15）
+
+BUG-001 的调查卡 `t_6cc56405`（分支 `y33-bot/t_6cc56405-bug-001-qq-token`，提交 `ecf71b2`）已合入 main
+（merge `e5b0782`），带来 5 个取证用例（`tests/test_bug001_reconnect.py` 新增 2 例、`tests/test_gateway.py` +2、
+`tests/test_service.py` +1），**`src/` 一行未改**。合并后在 main 上重跑 CI 同款：
+
+```bash
+$ .venv/Scripts/python.exe -m pytest -q --cov=y33bot --cov-report=term-missing --cov-fail-under=70
+TOTAL                              1766      6    388      9    99%
+Required test coverage of 70% reached. Total coverage: 99.30%
+357 passed in 46.60s
+
+$ .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
+All checks passed!
+41 files already formatted
+```
+
+- 用例数 **352 → 357**，总覆盖率仍 99.30%；每模块覆盖度不变（`bridge`/`cli`/`rcon.client` 99%，
+  `qq.gateway`/`service` 98%，其余 100%）。
+- §8.4 粘贴的输出是 v0.2 那一轮（352 例）的**原始记录，未改写**；本节是本轮合入后的复验。
+  少数「历史记录」按原样保留：§3 的逐文件例数（T10 口径）、§7.2 / §7.11（T12 复验，348 例）。
+- 缺陷结论、影响面与推荐修复方向见 `BUGS.md` 的 BUG-001「回复」（**真缺陷**；真机触发链路 Q1/Q3 **未执行**）。
