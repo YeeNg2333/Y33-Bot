@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import signal
 
 import pytest
@@ -166,3 +167,66 @@ async def test_on_group_message_before_ready(app: App, caplog: pytest.LogCapture
     with caplog.at_level("WARNING"):
         assert await service._on_group_message(None) is None  # type: ignore[arg-type]
     assert any("服务尚未就绪" in record.getMessage() for record in caplog.records)
+
+
+# ------------------------------------------------------------------ 网关死后仍常驻（BUG-001 取证）
+class SilentDeathGateway:
+    """桩网关：`start()` 成功，随后内部任务自己结束（等价于 SDK 网关协程「正常返回」）。"""
+
+    def __init__(self) -> None:
+        self.started = False
+        self.ended = False
+        self.closed = False
+        self.task: asyncio.Task[None] | None = None
+
+    async def start(self) -> None:
+        self.started = True
+
+        async def gateway() -> None:
+            await asyncio.sleep(0.02)
+            self.ended = True
+
+        self.task = asyncio.create_task(gateway())
+
+    async def send_group_message(self, message) -> None:  # pragma: no cover - 本用例不发消息
+        return None
+
+    async def close(self) -> None:
+        self.closed = True
+
+
+async def test_run_ignores_gateway_task_ending(app: App, caplog: pytest.LogCaptureFixture) -> None:
+    """BUG-001 取证 F3：网关启动成功后内部任务结束，`Service.run()` 不退出、也不打任何日志。
+
+    这是「静默失效」的服务侧证据：进程常驻、日志轮询/健康轮询照旧，日志里没有一行提示。
+    """
+
+    gateway = SilentDeathGateway()
+    service = make_service(app, gateway=gateway, pool=app.make_pool())
+    original = {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
+
+    with caplog.at_level(logging.DEBUG):
+        task = asyncio.create_task(service.run())
+        try:
+            for _ in range(50):
+                if gateway.started:
+                    break
+                await asyncio.sleep(0.02)
+            assert gateway.started is True
+
+            assert gateway.task is not None
+            await asyncio.wait_for(gateway.task, timeout=5)
+            assert gateway.ended is True  # 网关内部任务已经结束
+
+            await asyncio.sleep(0.2)  # 留足时间让 Service.run() 有机会反应
+            assert task.done() is False  # 仍在 _wait_for_stop()：不退出、不重启、不告警
+            assert [r for r in caplog.records if r.levelno >= logging.WARNING] == []  # 日志里查不到
+            assert any("日志监听已启动: main" in r.getMessage() for r in caplog.records)  # 其余轮询照旧
+        finally:
+            service._signal_flag.set()
+            code = await asyncio.wait_for(task, timeout=10)
+            for sig, handler in original.items():
+                signal.signal(sig, handler)
+
+    assert code == 0
+    assert gateway.closed is True
