@@ -1,12 +1,15 @@
-"""BUG-001 取证：`ret_coro=True` 下 SDK 自带的重连驱动不执行（S5/S6/S7）。
+"""BUG-001 回归：`ret_coro=True` 下 SDK 自带的重连驱动不执行（S5/S6/S7），我们据此报错退出。
 
 本文件的用例**不连 QQ**，只用假 connect 驱动 `botpy` 自己的 `ConnectionSession.multi_run()`
 （源码 `botpy/connection.py:48-67`），或用假 `botpy.Client` 驱动我们的
-`BotpyGateway._run_client()`（`src/y33bot/qq/gateway.py:123-138`）与 `Service.run()`
-（`src/y33bot/service.py:205-221`）。
+`BotpyGateway._run_client()`（`src/y33bot/qq/gateway.py`）与 `Service.run()`
+（`src/y33bot/service.py`）。
 
-它证明的是「`qq-botpy==1.2.1` 的行为 + 我们对它的用法」；**不**证明真机上 QQ 断线时
-一定走到这条路径（那条只能真机验证，见 `BUGS.md` 疑点 Q1/Q3）。
+背景：SDK 在 `ret_coro=True` 时把重连驱动（`while not self._closed`）交给我们，而它的
+`multi_run()` 是一次性的（会话被回填后没人再启动）。所以「网关协程结束」= 收方向永久失效，
+**不能**默默常驻：修复后 `Service.run()` 必须打 `[错误]` 并以非 0 退出，交给 `systemd`/`nssm` 拉起。
+
+真机上 token 过期是否一定触发这条路径仍未验证（见 `BUGS.md` 疑点 Q1/Q3）。
 """
 
 from __future__ import annotations
@@ -98,10 +101,10 @@ class _FakeSDKClient:
         self.closed = True
 
 
-async def test_service_stays_alive_when_sdk_gateway_coroutine_returns(
+async def test_service_reports_and_exits_when_sdk_gateway_coroutine_returns(
     app: App, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """整链复刻 H1：网关协程正常返回 → `_run_client` 静默结束 → `Service.run()` 仍常驻、无 `[错误]`。"""
+    """整链回归：网关协程正常返回 → `Service.run()` 打 `[错误]`、返回 1（修复前：静默常驻）。"""
 
     _FakeSDKClient.instances.clear()
     monkeypatch.setattr(
@@ -126,23 +129,16 @@ async def test_service_stays_alive_when_sdk_gateway_coroutine_returns(
     )
 
     with caplog.at_level(logging.DEBUG):
-        task = asyncio.create_task(service.run())
-        try:
-            for _ in range(100):
-                if gateway._task is not None and gateway._task.done():
-                    break
-                await asyncio.sleep(0.02)
-            assert gateway._task is not None and gateway._task.done() is True  # 网关协程已返回
-            await asyncio.sleep(0.2)
+        code = await asyncio.wait_for(service.run(), timeout=10)
 
-            assert gateway._up_error is None
-            assert task.done() is False  # 服务仍在 _wait_for_stop()：不退出、不重启、不告警
-            assert [r for r in caplog.records if r.levelno >= logging.WARNING] == []
+    assert code == 1  # 非 0 退出：交给 systemd/nssm 拉起（用户 2026-10-15 拍板的口径）
+    messages = [record.getMessage() for record in caplog.records]
+    assert any(message == "[错误] QQ 网关已断开（收不到群消息），进程退出等待重启" for message in messages)
+    assert any("[停止] 已退出" in message for message in messages)  # 仍然走优雅关闭
 
-            fake = _FakeSDKClient.instances[0]
-            assert len(fake.connect_calls) == 1  # 断线后没有第二次建连尝试
-            assert len(fake._connection._session_list) == 1  # 会话还躺在队列里，永远等不到启动
-            assert any("[启动] QQ 网关已连接" in r.getMessage() for r in caplog.records)
-        finally:
-            service._signal_flag.set()
-            assert await asyncio.wait_for(task, timeout=10) == 0
+    fake = _FakeSDKClient.instances[0]
+    assert len(fake.connect_calls) == 1  # 断线后没有第二次建连：我们不假装能自愈
+    assert len(fake._connection._session_list) == 1  # 会话还躺在队列里，永远等不到启动
+    assert fake.closed is True  # 退出路径走完了 shutdown()，网关被真正关掉
+    assert gateway._task is None and gateway._client is None
+    assert any("[启动] QQ 网关已连接" in message for message in messages)

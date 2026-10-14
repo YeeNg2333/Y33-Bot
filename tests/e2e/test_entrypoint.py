@@ -109,13 +109,18 @@ def test_entrypoint_usage_error_is_exit_code_2(deploy_dir: Path) -> None:
 
 # ------------------------------------------------------------------ S1
 def test_entrypoint_s1_check_reports_each_item(deploy_dir: Path) -> None:
-    """S1：逐项自检 + 末行 FAIL + 退出码 1（RCON 端口故意不可达）。"""
+    """S1：逐项自检 + 末行 FAIL + 退出码 1（RCON 端口故意不可达）。
 
-    result = run_cli(deploy_dir, "check", "--config", CONFIG)
+    `--no-probe`：真子进程里没法替换探活函数，CI 又必须离线；QQ 项的真探活行为
+    由 `tests/test_cli.py::test_check_probes_credentials_by_default` /
+    `test_check_reports_unusable_credentials` 用替身覆盖。
+    """
+
+    result = run_cli(deploy_dir, "check", "--config", CONFIG, "--no-probe")
     assert result.returncode == 1
     out = lines(result)
     assert out[0] == "[配置] OK config.toml 解析成功，1 个 MC 服"
-    assert out[1] == "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置"
+    assert out[1] == "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置"
     assert out[2].startswith(f"[RCON main] FAIL 无法连接 127.0.0.1:{UNREACHABLE_PORT}:")
     assert out[3].endswith("可读，偏移 0 字节") and "[日志 main] OK" in out[3]
     assert out[4] == "[绑定] OK 0 条"

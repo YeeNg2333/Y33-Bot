@@ -106,7 +106,7 @@ def _cmd_check(args: argparse.Namespace) -> int:
         print(f"[配置] FAIL {exc}")
         print("FAIL")
         return 1
-    service = Service(config, env=os.environ, config_path=Path(args.config))
+    service = Service(config, env=os.environ, config_path=Path(args.config), probe_qq=not args.no_probe)
     results = asyncio.run(service.startup_checks())
     passed = True
     for item in results:
@@ -319,6 +319,11 @@ def _build_parser() -> argparse.ArgumentParser:
 
     check = sub.add_parser("check", help="启动自检：退出码 0 通过 / 1 失败")
     _add_config_option(check)
+    check.add_argument(
+        "--no-probe",
+        action="store_true",
+        help="不向平台真取 access_token（离线环境用；默认会探活，失败即 [QQ] FAIL）",
+    )
     check.add_argument("--verbose", action="store_true", help="输出更多日志")
     check.set_defaults(func=_cmd_check)
 

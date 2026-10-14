@@ -40,10 +40,10 @@ def test_s1_check_reports_each_item(acceptance_dir: App, capsys) -> None:
     text = acceptance_dir.config_path.read_text(encoding="utf-8")
     acceptance_dir.config_path.write_text(text.replace("port = 25575", "port = 34567"), encoding="utf-8")
 
-    code, lines = run(["check", "--config", CONFIG], capsys)
+    code, lines = run(["check", "--config", CONFIG, "--no-probe"], capsys)
     assert code == 1
     assert lines[0] == "[配置] OK config.toml 解析成功，1 个 MC 服"
-    assert lines[1] == "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置"
+    assert lines[1] == "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置"
     assert lines[2].startswith("[RCON main] FAIL 无法连接 127.0.0.1:34567:")
     assert lines[3] == f"[日志 main] OK {acceptance_dir.log_path} 可读，偏移 0 字节"
     assert lines[4] == "[绑定] OK 0 条"

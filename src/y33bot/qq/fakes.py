@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from ..models import OutgoingGroupMessage
@@ -19,10 +20,12 @@ class FakeQQGateway:
     def __init__(self, *, logger: logging.Logger | None = None) -> None:
         self.sent: list[OutgoingGroupMessage] = []
         self.started = False
+        self._closed = asyncio.Event()
         self._logger = logger or logging.getLogger("y33bot.qq.fakes")
 
     async def start(self) -> None:
         self.started = True
+        self._closed.clear()
 
     async def send_group_message(self, message: OutgoingGroupMessage) -> None:
         self.sent.append(message)
@@ -30,6 +33,12 @@ class FakeQQGateway:
 
     async def close(self) -> None:
         self.started = False
+        self._closed.set()
+
+    async def wait_closed(self) -> None:
+        """假网关不会自己断线：等到 `close()` 为止（`Service.run()` 用它监视网关）。"""
+
+        await self._closed.wait()
 
     # ------------------------------------------------------------ 测试辅助
     def messages(self) -> list[str]:
