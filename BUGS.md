@@ -13,16 +13,17 @@
 
 | 编号 | 标题 | 状态 | 登记日 | 调查卡 |
 |---|---|---|---|---|
-| [BUG-001](#bug-001-qq-token-过期后运行时静默失效运行期无任何提示) | QQ token 过期后运行时静默失效，运行期无任何提示 | **已复现**（离线复刻，真机未验证） | 2026-10-13 | 看板 `default` 的 `t_6cc56405`（2026-10-15 结案，结论见本条「回复」） |
+| [BUG-001](#bug-001-qq-token-过期后运行时静默失效运行期无任何提示) | QQ token 过期后运行时静默失效，运行期无任何提示 | **已修复**（2026-10-15 落地 R2-lite + R5，见本条「修复记录」；真机触发链路仍未验证） | 2026-10-13 | 看板 `default` 的 `t_6cc56405`（2026-10-15 结案，结论见本条「回复」）；修复卡 `t_80249809` |
 
 ---
 
 ## BUG-001 QQ token 过期后运行时静默失效，运行期无任何提示
 
-**状态**：已复现（2026-10-15 离线复刻「静默失效」整条链条；真机触发链路 Q1/Q3 未执行 —— 见「回复」）
+**状态**：**已修复**（2026-10-15，卡 `t_80249809` 落地 R2-lite + R5，见本条「修复记录」；真机触发链路 Q1/Q3 仍未验证）
 **登记日**：2026-10-13
 **上报**：用户（真机运行观察到，非 CI 用例）
 **调查卡**：看板 `default` 的 `t_6cc56405`（分支 `y33-bot/t_6cc56405-bug-001-qq-token`，2026-10-15 结案）—— 只调查、不改产品代码，结论写本条的「回复」
+**修复卡**：看板 `default` 的 `t_80249809`（分支 `y33-bot/t_80249809-bug-001-0-r2-lite-check-qq-r5`）—— 改产品代码，登记在 `PLAN.md` §7.2，复验在 `docs/acceptance.md` §9
 **涉及方向**：QQ 侧（`src/y33bot/qq/gateway.py`、`src/y33bot/service.py`），依赖 `qq-botpy==1.2.1`
 
 ### 现象
@@ -455,6 +456,87 @@ exit=1
   41 文件合规，`tests/` 无 skip/xfail（原为 352 passed；覆盖率不变）。
   `README.md:576`、`docs/smoke.md:250`、`docs/acceptance.md:38` 记的是 v0.2 轮次的 `352 passed`，**本卡未改**（它们是那一轮的实测记录）：
   若本卡的取证用例合入 `main`，需要一次文档同步 —— 建议由修复卡或后续文档卡一并做。
+
+---
+
+### 修复记录（2026-10-15，卡 `t_80249809`）
+
+> 本小节由**修复卡**填写；上面「回复」小节是调查卡的原文，**未改写**。
+
+#### 改了什么
+
+按「回复」推荐的 **R2 + R5** 落地（用户 2026-10-15 拍板把 R2 收窄为 **R2-lite：不重启、不重试，一次失败就退出**）：
+
+| 项 | 改动 | 位置 |
+|---|---|---|
+| R2-lite | `QQGateway` 协议**新增** `wait_closed()`（网关任务结束的观测点）：`BotpyGateway` 用 done-callback 观测自己的 `_task`；`FakeQQGateway` 等到 `close()` | `src/y33bot/qq/gateway.py`、`src/y33bot/qq/fakes.py` |
+| R2-lite | `Service.run()` 同时等「停止信号」与「网关任务结束」：**网关先结束** → `[错误] QQ 网关已断开（收不到群消息），进程退出等待重启` + 既有 `shutdown()` + 返回 **1**；**收到停止信号** → 返回 **0**、不打 `[错误]`（`_wait_for_stop(gateway_task)` 返回布尔值表达是哪种） | `src/y33bot/service.py` |
+| R5 | 新增 `qq.probe`：向 `POST https://bots.qq.com/app/getAppAccessToken` 取一次 `access_token`（`urllib`，超时 5s），失败一律 `QQProbeError` | `src/y33bot/qq/probe.py`（新文件） |
+| R5 | `check` 的 QQ 项默认**真探活**：成功 `[QQ] OK access_token 获取成功（有效期 Ns），…`；失败 `[QQ] FAIL access_token 获取失败: <原因>`；`--no-probe` 跳过（文案写明「未探活」）；探活函数可注入（`Service(qq_probe=…)`），测试全程离线 | `src/y33bot/service.py`、`src/y33bot/cli.py` |
+| 登记 | `PLAN.md` §7.2 变更记录 + §3.1/§3.2/§3.3/§3.4/§3.6/§5 S1/S5 同步；README §7/§8/§13/§14；`docs/smoke.md` §1/§6/§7 | 见 `PLAN.md` §7.2 |
+
+**没做的**（刻意）：不做退避重启、不做重连驱动（R1/R3 都不上）、不新增配置项。
+
+#### 怎么验的
+
+1. **离线前后对照**（同一脚本、同一份配置；「修复前」= `git archive 757db31 src`）：
+   - 网关启动后结束：修复前 `run()` 3s 看门狗判超时（退出码 99、日志里 0 条 `[错误]`）；修复后打印
+     `[错误] QQ 网关已断开（收不到群消息），进程退出等待重启` 并 `exit=1`。
+   - `check`：修复前同一组假凭据打印 `[QQ] OK app_id 已设置 …`；修复后打印
+     `[QQ] FAIL access_token 获取失败: 平台返回错误: code=10004 message=机器人不存在`（平台真的回了话）。
+2. **自动化**：`pytest -q` **381 passed**；`--cov=y33bot --cov-fail-under=70` **99.33%**；
+   `ruff check .` / `ruff format --check .` 全绿（43 文件）；无 `skip`/`xfail`。
+   新增 `tests/test_qq_probe.py`（10 例）与 `wait_closed`/探活/退出码相关用例，另有 5 例按新契约改写（见下）。
+3. 原始输出与命令见 `docs/acceptance.md` §9。
+
+#### 证据（粘贴）
+
+```
+修复前（757db31 的 src）：
+INFO [启动] y33bot 0.1.0（1 个 MC 服）
+INFO [启动] 日志监听已启动: main
+INFO [停止] 正在关闭…
+INFO [停止] 已退出
+run() 在 3s 内没有返回：网关 started=True，进程仍在常驻（静默）        # 退出码 99
+
+修复后（本卡 src）：
+INFO [启动] y33bot 0.1.0（1 个 MC 服）
+INFO [启动] 日志监听已启动: main
+ERROR [错误] QQ 网关已断开（收不到群消息），进程退出等待重启
+INFO [停止] 正在关闭…
+INFO [停止] 已退出
+exit=1
+
+check（假凭据，修复后默认探活）：
+[QQ] FAIL access_token 获取失败: 平台返回错误: code=10004 message=机器人不存在
+check --no-probe：
+[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置
+```
+
+（时间戳与完整命令见 `docs/acceptance.md` §9.1 / §9.2。）
+
+#### 对「回复」里取证用例的影响（必须说明）
+
+「回复」引用的两个用例原本钉的是**修复前**的事实（「网关死了没人管」），修复后契约相反，因此**改名并翻转断言**，
+不是把失败用例改绿：
+
+| 「回复」里的旧用例 | 现在 | 差异 |
+|---|---|---|
+| `tests/test_service.py:198 test_run_ignores_gateway_task_ending` | `tests/test_service.py::test_run_returns_1_when_gateway_dies_after_start` | 同一场景（网关启动后结束），断言从「run() 不退出、无日志」变成「`[错误]` + 返回 1」 |
+| `tests/test_bug001_reconnect.py:101 test_service_stays_alive_when_sdk_gateway_coroutine_returns` | `tests/test_bug001_reconnect.py::test_service_reports_and_exits_when_sdk_gateway_coroutine_returns` | 同上（整链：真 SDK `multi_run()` + 真 `BotpyGateway` + 真 `Service.run()`） |
+| `tests/test_gateway.py:296 test_gateway_coroutine_end_is_silent` | **保留原名** | 仍然成立：SDK 协程正常返回时**网关层**不打日志，告警改由 `Service` 承担（用例内已注明） |
+| `tests/test_bug001_reconnect.py:51 test_multi_run_starts_each_session_once_and_never_again` | **保留原样** | 这是纯 SDK 行为（`multi_run()` 一次性），修复没有改变它 —— 正因为它成立，才必须由我们退出 |
+
+「回复」小节的原文、行号与结论**按原样保留**（那是修复前的事实，用作历史对照）。
+
+#### 边界与遗留（未执行就写未执行）
+
+- **真机触发链路仍未验证**：Q1（静默那一刻的日志尾部）、Q3（QQ 侧关码）以及 `BUGS.md`「复现步骤 → 真机部分」的三步
+  （断网 10s / 重置 AppSecret / 等 token 过期）**未执行** —— 本机没有真实 QQ 凭据、也没有 `enable-rcon=true` 的真 MC 服。
+  修复后的期望行为已写进 `PLAN.md` §5 S5「新增观察点」，具备环境后按 `docs/smoke.md` 回填。
+- 因此本条的「已修复」指的是：**离线复现的缺陷链条已被消除**（网关任务结束必然被观察到、必然报错并非 0 退出；
+  `check` 的 `[QQ] OK` 不再能只靠「变量填了」骗过），**不是**「真机上 token 过期一定触发并一定被兜住」的验证结论。
+- 发送方向未改：仍是「不重试，但留 `[错误]` 痕迹」（`src/y33bot/qq/gateway.py`）。
 
 ---
 

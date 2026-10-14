@@ -25,11 +25,15 @@ from .config import AppConfig, ConfigError
 from .mclog.watcher import LogWatcher
 from .models import MCGroupMessage
 from .qq.gateway import BotpyGateway, QQGateway, QQGatewayError
+from .qq.probe import probe_access_token
 from .rcon.pool import LIST_COMMAND, RconPool
 from .state import StateStore
 
 if TYPE_CHECKING:  # pragma: no cover - 仅类型标注
-    from collections.abc import Mapping
+    from collections.abc import Awaitable, Callable, Mapping
+
+    #: QQ 凭据探活的可注入签名（`check` 用真探活；测试注入假实现即可完全离线）
+    QQProbe = Callable[[str, str], Awaitable[int]]
 
 __all__ = ["CheckResult", "Service"]
 
@@ -57,6 +61,8 @@ class Service:
         gateway: QQGateway | None = None,
         pool: RconPool | None = None,
         logger: logging.Logger | None = None,
+        qq_probe: QQProbe | None = None,
+        probe_qq: bool = True,
     ) -> None:
         self._config = config
         self._env: dict[str, str] = dict(env if env is not None else os.environ)
@@ -64,6 +70,8 @@ class Service:
         self._logger = logger or logging.getLogger("y33bot.service")
         self._gateway = gateway
         self._pool = pool
+        self._qq_probe: QQProbe = qq_probe if qq_probe is not None else probe_access_token
+        self._probe_qq = probe_qq
 
         self._state: StateStore | None = None
         self._bindings: BindingStore | None = None
@@ -83,14 +91,30 @@ class Service:
         name = self._config_path.name if self._config_path is not None else "config.toml"
         results.append(CheckResult("配置", True, f"{name} 解析成功，{len(config.servers)} 个 MC 服"))
 
-        # ---- QQ 凭据
+        # ---- QQ 凭据：先判存在，再（默认）真探活取一次 access_token（BUG-001 的 R5）
         try:
-            config.app_credentials(self._env)
+            app_id, app_secret = config.app_credentials(self._env)
         except ConfigError as exc:
             results.append(CheckResult("QQ", False, str(exc)))
         else:
             group = "group_openid 已配置" if config.qq.mc_to_qq_enabled else "group_openid 未配置（MC→QQ 方向禁用）"
-            results.append(CheckResult("QQ", True, f"app_id 已设置 (env {config.qq.app_id_env})，{group}"))
+            if not self._probe_qq:
+                no_probe = f"app_id 已设置 (env {config.qq.app_id_env})，未探活（--no-probe），{group}"
+                results.append(CheckResult("QQ", True, no_probe))
+            else:
+                try:
+                    expires_in = await self._qq_probe(app_id, app_secret)
+                except Exception as exc:  # noqa: BLE001 - 自检不抛异常，探活失败一律落成 FAIL 行
+                    results.append(CheckResult("QQ", False, f"access_token 获取失败: {exc}"))
+                else:
+                    results.append(
+                        CheckResult(
+                            "QQ",
+                            True,
+                            f"access_token 获取成功（有效期 {expires_in}s），"
+                            f"app_id 已设置 (env {config.qq.app_id_env})，{group}",
+                        )
+                    )
 
         # ---- RCON（可用则真连一次 /list）
         passwords: dict[str, str] = {}
@@ -211,14 +235,19 @@ class Service:
 
         log_task = asyncio.create_task(self._log_loop(), name="y33bot-log-loop")
         health_task = asyncio.create_task(self._health_loop(), name="y33bot-health-loop")
+        # BUG-001：网关「启动后自己结束」= 运行期失效，必须被发现（见 _wait_for_stop）
+        watch_task = asyncio.create_task(self._gateway.wait_closed(), name="y33bot-qq-gateway-watch")
+        stopped = False
         try:
-            await self._wait_for_stop()
+            stopped = await self._wait_for_stop(watch_task)
+            if not stopped:
+                self._logger.error("[错误] QQ 网关已断开（收不到群消息），进程退出等待重启")
         finally:
-            for task in (log_task, health_task):
+            for task in (log_task, health_task, watch_task):
                 task.cancel()
-            await asyncio.gather(log_task, health_task, return_exceptions=True)
+            await asyncio.gather(log_task, health_task, watch_task, return_exceptions=True)
             await self.shutdown()
-        return 0
+        return 0 if stopped else 1
 
     async def shutdown(self) -> None:
         """优雅退出：停网关 → 关 RCON → 落盘状态。"""
@@ -316,22 +345,31 @@ class Service:
             except RuntimeError:  # pragma: no cover - 跨线程 set 理论上安全，兜一层
                 pass
 
-    async def _wait_for_stop(self) -> None:
-        """等待退出信号；Windows 用 0.5s 轮询兜住「同步信号处理器唤不醒休眠的事件循环」。"""
+    async def _wait_for_stop(self, gateway_task: asyncio.Task[None] | None = None) -> bool:
+        """等待退出信号；返回 `True` = 收到停止信号（都能优雅退出），`False` = 网关任务先结束。
+
+        传入 `gateway_task` 时同时监视它（BUG-001：网关协程结束 = 运行期失效，要报错并非 0 退出）；
+        两者同时就绪时按「我们自己主动关闭」处理（优雅退出不报错）。
+        Windows 用 0.5s 轮询兜住「同步信号处理器唤不醒休眠的事件循环」。
+        """
 
         stop_event = self._stop_event
         assert stop_event is not None
         while True:
-            if self._signal_flag.is_set() or stop_event.is_set():
-                return
+            signalled = self._signal_flag.is_set() or stop_event.is_set()
+            gateway_gone = gateway_task is not None and gateway_task.done()
+            if signalled or gateway_gone:
+                return signalled
+            waiter = asyncio.ensure_future(stop_event.wait())
+            waiters: tuple[asyncio.Future, ...] = (waiter,) if gateway_task is None else (waiter, gateway_task)
             try:
-                await asyncio.wait_for(stop_event.wait(), timeout=0.5)
-                return
-            except TimeoutError:
-                continue
+                await asyncio.wait(waiters, timeout=0.5, return_when=asyncio.FIRST_COMPLETED)
             except KeyboardInterrupt:  # pragma: no cover - 默认 SIGINT 处理器
                 self._logger.info("[停止] 收到 Ctrl+C")
-                return
+                return True
+            finally:
+                if not waiter.done():
+                    waiter.cancel()
 
 
 def monotonic() -> float:  # pragma: no cover - 供调试

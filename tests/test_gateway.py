@@ -296,7 +296,11 @@ def _install_fake_botpy(monkeypatch: pytest.MonkeyPatch) -> None:
 async def test_gateway_coroutine_end_is_silent(
     app: App, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """BUG-001 取证 F2 / S7：SDK 网关协程「正常返回」时，`_run_client` 不抛异常、一行日志都不多打。"""
+    """BUG-001 取证 F2 / S7：SDK 网关协程「正常返回」时，`_run_client` 不抛异常、一行日志都不多打。
+
+    修复后这一层仍然如此 —— 承担告警与退出的是 `Service.run()`（经 `wait_closed()` 观察，
+    见 `tests/test_service.py::test_run_returns_1_when_gateway_dies_after_start`）。
+    """
 
     _install_fake_botpy(monkeypatch)
     gateway = BotpyGateway(
@@ -360,3 +364,60 @@ async def test_send_token_refresh_failure_is_logged(
     assert any("QQ 发送失败（不重试）" in item for item in messages), messages
     assert any("获取token失败" in item for item in messages), messages  # SDK 的原因被带上去了
     await http.close()
+
+
+# ------------------------------------------------------------------ 网关任务结束的观测点（BUG-001 修复）
+async def test_wait_closed_returns_when_gateway_coroutine_ends(app: App, monkeypatch: pytest.MonkeyPatch) -> None:
+    """`wait_closed()` 是「网关任务结束」的观测点：SDK 协程一返回它就返回。"""
+
+    _install_fake_botpy(monkeypatch)
+    gateway = BotpyGateway(
+        app.config,
+        ("app-id", "app-secret"),
+        StateStore.load(app.config.state_path),
+        handler=lambda message: None,  # type: ignore[arg-type,return-value]
+        startup_timeout=1.0,
+    )
+    await gateway.start()
+    await asyncio.wait_for(gateway.wait_closed(), timeout=5)
+
+    assert gateway._task is not None and gateway._task.done() is True
+    await gateway.close()
+    assert _FakeSDKClient.instances[0].closed is True
+
+
+async def test_wait_closed_before_start_returns_immediately(app: App) -> None:
+    """没启动过的网关没有任务可等：直接返回，不会挂住调用方。"""
+
+    gateway = BotpyGateway(
+        app.config,
+        ("app-id", "app-secret"),
+        StateStore.load(app.config.state_path),
+        handler=lambda message: None,  # type: ignore[arg-type,return-value]
+    )
+    await asyncio.wait_for(gateway.wait_closed(), timeout=1)
+
+
+async def test_wait_closed_cancel_does_not_kill_gateway_task(app: App, monkeypatch: pytest.MonkeyPatch) -> None:
+    """优雅退出会 cancel 这个等待：取消不能传导给网关任务本身（否则就变成「网关被我们弄死」）。"""
+
+    _install_fake_botpy(monkeypatch)
+    gateway = BotpyGateway(
+        app.config,
+        ("app-id", "app-secret"),
+        StateStore.load(app.config.state_path),
+        handler=lambda message: None,  # type: ignore[arg-type,return-value]
+        startup_timeout=1.0,
+    )
+    await gateway.start()
+
+    waiter = asyncio.create_task(gateway.wait_closed())
+    await asyncio.sleep(0.01)
+    waiter.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await waiter
+
+    task = gateway._task
+    assert task is not None and task.done() is False  # 网关任务仍然在跑
+    await gateway.close()
+    assert task.cancelled() or task.done()

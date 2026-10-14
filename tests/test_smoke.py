@@ -210,13 +210,14 @@ async def test_check_passes_with_reachable_rcon(
     async with MiniRconServer() as server:
         config_path = _write_config(tmp_path, port=server.port, log_path=log_path)
         # cli.main 内部会 asyncio.run()，因此放到线程里跑，避免与测试自己的事件循环冲突
-        exit_code = await asyncio.to_thread(cli.main, ["check", "--config", str(config_path)])
+        # --no-probe：本用例测的是 RCON 真连；QQ 项的真探活（默认行为）在 test_cli.py 里用替身覆盖
+        exit_code = await asyncio.to_thread(cli.main, ["check", "--config", str(config_path), "--no-probe"])
         assert server.commands == ["/list"]
 
     lines = capsys.readouterr().out.splitlines()
     assert exit_code == 0
     assert lines[0] == "[配置] OK config.toml 解析成功，1 个 MC 服"
-    assert "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置" in lines
+    assert "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置" in lines
     assert f"[RCON main] OK /list -> {LIST_RESPONSE}" in lines
     assert any(line.startswith("[日志 main] OK") and line.endswith("偏移 0 字节") for line in lines)
     assert "[绑定] OK 0 条" in lines
@@ -248,7 +249,7 @@ def test_check_reports_unreachable_rcon(tmp_path: Path, capsys: pytest.CaptureFi
     port = _free_port()
     config_path = _write_config(tmp_path, port=port, log_path=log_path)
 
-    assert cli.main(["check", "--config", str(config_path)]) == 1
+    assert cli.main(["check", "--config", str(config_path), "--no-probe"]) == 1
     lines = capsys.readouterr().out.splitlines()
     assert any(line.startswith(f"[RCON main] FAIL 无法连接 127.0.0.1:{port}") for line in lines)
     assert any(line.startswith("[日志 main] OK") for line in lines)

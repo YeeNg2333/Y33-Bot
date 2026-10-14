@@ -230,6 +230,7 @@ IDEA.md 未定义或存在歧义之处，本计划采用以下假设。**每条�
 │   ├── qq/
 │   │   ├── __init__.py
 │   │   ├── gateway.py          # QQGateway 协议 + BotpyGateway
+│   │   ├── probe.py            # 凭据探活（check 取一次 access_token）
 │   │   └── fakes.py            # FakeQQGateway（模拟/测试）
 │   └── commands/
 │       ├── __init__.py
@@ -263,7 +264,8 @@ IDEA.md 未定义或存在歧义之处，本计划采用以下假设。**每条�
 | `rcon.protocol` | 接口与异常 | `RconTransport`(Protocol)、`RconError/RconAuthError/RconConnectError/RconDisconnectedError/RconTimeoutError` | 无 |
 | `rcon.client` | 单连接 RCON 客户端 | `AsyncRconClient.connect/command/close/connected` | `asyncio` |
 | `rcon.pool` | 多服编排、广播、`/list` 解析 | `RconPool.start/close/broadcast/broadcast_tellraw/query/status`；`parse_list_response()` | `rcon.client` |
-| `qq.gateway` | QQ 接入 | `QQGateway`(Protocol)：`start/send_group_message/close`；`BotpyGateway` | `qq-botpy` |
+| `qq.gateway` | QQ 接入 | `QQGateway`(Protocol)：`start/send_group_message/close/wait_closed`；`BotpyGateway` | `qq-botpy` |
+| `qq.probe` | 凭据探活（`check` 的 QQ 项） | `probe_access_token(app_id, secret, *, timeout) -> int`；`QQProbeError` | 标准库 `urllib` |
 | `commands.registry` | 指令注册与分发 | `CommandRegistry.register/get/names/dispatch`；`CommandContext` | `models` |
 | `commands.builtin` | `/status`、`/bind` | `cmd_status(ctx, args) -> str`、`cmd_bind(ctx, args) -> str`；`build_registry()` | `rcon.pool`、`binding` |
 | `bridge` | 触发规则、文案渲染、健康翻转 | `Bridge.handle_group_message/handle_log_event/poll_health/format_status` | 以上全部 |
@@ -387,6 +389,12 @@ class QQGateway(Protocol):
     async def start(self) -> None: ...
     async def send_group_message(self, message: OutgoingGroupMessage) -> None: ...
     async def close(self) -> None: ...
+    async def wait_closed(self) -> None: ...   # 网关任务自己结束（BUG-001：作为运行期失效信号，§7.2）
+
+# qq/probe.py
+class QQProbeError(RuntimeError): ...
+def parse_token(payload: object) -> int: ...            # 纯函数：取 expires_in 或抛 QQProbeError
+async def probe_access_token(app_id: str, app_secret: str, *, timeout: float = 5.0) -> int: ...  # 真取一次 token
 
 # commands/registry.py
 @dataclass
@@ -418,7 +426,7 @@ class Bridge:
 ```
 python -m y33bot --version                     # 打印 y33bot 0.1.0
 python -m y33bot run    --config config.toml   # 常驻服务（QQ 网关 + 日志轮询 + 健康轮询）
-python -m y33bot check  --config config.toml   # 启动自检，退出码 0 通过 / 1 失败
+python -m y33bot check  --config config.toml [--no-probe]   # 启动自检，退出码 0 通过 / 1 失败
 python -m y33bot bind list | bind set <openid> <game_id> | bind remove <openid>
 python -m y33bot commands --config config.toml   # 打印 QQ 管理端指令面板要配置的「指令名 + 指令介绍」
 python -m y33bot simulate group-message --openid <id> --content '<文本>' [--group-openid <gid>] [--dry-run]
@@ -430,7 +438,13 @@ python -m y33bot simulate health --server <name> --online|--offline
 - 输出行前缀固定：`[群消息] `（要发到 QQ 群的文本）、`[RCON <server>] `（实际执行的命令）、`[指令] `（`commands` 输出的管理端清单）、`[忽略] `（未触发规则的原因）、`[警告] `/`[错误] `。
 - `simulate` 默认使用**真实 RCON 连接**（验收要看游戏内注入）；`--dry-run` 用 `rcon.fakes.FakeRconTransport`，只打印 `[RCON <server>] <命令>`，不做任何网络 IO（CI 用）。
 - `simulate` 的 QQ 侧统一使用 `qq.fakes.FakeQQGateway`，绝不连 QQ。
-- `check` 输出逐项结果行：`[配置] OK …`、`[QQ] OK …`、`[RCON <name>] OK|FAIL …`、`[日志 <name>] OK|FAIL …`、`[绑定] OK N 条`，最后一行 `OK`（退出码 0）或 `FAIL`（退出码 1）。
+- `check` 输出逐项结果行：`[配置] OK …`、`[QQ] OK|FAIL …`、`[RCON <name>] OK|FAIL …`、`[日志 <name>] OK|FAIL …`、`[绑定] OK N 条`，最后一行 `OK`（退出码 0）或 `FAIL`（退出码 1）。
+- `check` 的 **QQ 项默认真探活**（§7.2）：向 `https://bots.qq.com/app/getAppAccessToken` 取一次 `access_token`——
+  - 成功 → `[QQ] OK access_token 获取成功（有效期 <N>s），app_id 已设置 (env <变量名>)，group_openid 已配置`；
+  - 失败（凭据无效 / 平台报错 / 网络不可达）→ `[QQ] FAIL access_token 获取失败: <原因>`，末行随之 `FAIL`；
+  - `--no-probe` 跳过探活（**给离线环境/CI 用**）→ `[QQ] OK app_id 已设置 (env <变量名>)，未探活（--no-probe），group_openid 已配置`；
+  - 凭据**缺失**（变量没设）时与旧行为一致：`[QQ] FAIL 环境变量 <名> 未设置`，不联网。
+  默认探活是刻意的：`[QQ] OK` 的语义必须是「凭据可用」，而不是「变量填了」（BUG-001 的 F4/R5）。
 - 用法错误（缺少子命令/参数）由 `argparse` 处理，退出码 2。
 
 ### 3.5 配置文件示例（`config.example.toml` 内容以此为准）
@@ -481,6 +495,7 @@ MC_RCON_PASSWORD_MAIN=
 
 - 统一 `logging`，logger 名 `y33bot.<模块>`；`run` 默认 `INFO` 到 stderr；`--verbose` 提升为 `DEBUG`。
 - 失败分层：配置/模板错误 → 启动即 `ConfigError` 退出码 1（`check` 打印 `FAIL`）；单服 RCON 故障 → `[警告]` 并继续服务（故障服在 `/status` 显示离线）；QQ 发送失败 → `[错误]` 日志，不重试；日志文件缺失 → `[警告]`，下一轮继续尝试（文件出现后从 0 开始）。
+- 失败分层（QQ 网关，§7.2）：**启动期**失败 → `[错误] QQ 网关启动失败: <原因>` + 退出码 1（原有行为）；**运行期**网关任务结束（长连接断了且 SDK 不会自己重连）→ `[错误] QQ 网关已断开（收不到群消息），进程退出等待重启` + 退出码 1，随后走正常 `shutdown()`。口径：**网关任务结束即视为故障**，一次失败就退出，交给 `systemd`/`nssm` 拉起；**不做退避重启**（用户 2026-10-15 拍板）。收到停止信号时的正常关闭不算故障：退出码仍为 0、不打印 `[错误]`。
 - 所有写盘（bindings/state）用「临时文件 + `os.replace()`」原子替换，避免半截文件。
 
 ---
@@ -568,7 +583,7 @@ game_id = "Alex"
 ```
 $ python -m y33bot check --config config.toml
 [配置] OK config.toml 解析成功，1 个 MC 服
-[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[QQ] OK access_token 获取成功（有效期 7200s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
 [RCON main] FAIL 无法连接 127.0.0.1:25575: ...
 [日志 main] OK D:/mc/.../latest.log 可读，偏移 0 字节
 [绑定] OK 0 条
@@ -577,6 +592,10 @@ $ echo $?
 1
 ```
 把 MC 服起起来（或把 `host/port` 指向可达 RCON）后，`[RCON main] OK /list -> ...` 且末行为 `OK`、退出码 0。缺失 `QQ_BOT_APP_SECRET` 时 `[QQ] FAIL 环境变量 QQ_BOT_APP_SECRET 未设置`。
+
+QQ 项自 §7.2 起默认**真探活**（真取一次 `access_token`，需要能访问 `bots.qq.com`），因此：
+- 凭据无效/网络不通 → `[QQ] FAIL access_token 获取失败: <原因>`，末行 `FAIL`、退出码 1（实测样例见 `docs/acceptance.md` §9.1）；
+- 完全离线的机器（或 CI）用 `--no-probe`：`[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置`，此时 `[QQ] OK` 只代表「变量填了」。
 
 **S2 QQ→MC（指令与转发）**
 
@@ -637,6 +656,17 @@ $ python -m y33bot simulate health --server main --offline --dry-run     # 再�
 7. `Ctrl+C` → 进程退出；`data/state.json` 的 `log_offset` 等于 `latest.log` 当前大小；重新 `run` 后**不重复**推送历史事件（偏移续读）。
 8. 玩家进服/退服 → 群里出现 `Steve进入了main` / `Steve退出了main`（带服名，§7 V1）；手动停掉 MC 进程 → 30s 内（`health_poll_interval`）群里出现一次 `[服务器状态] main 离线`；恢复后出现一次上线提示。
 
+**新增观察点（§7.2，BUG-001 修复后）**：运行期把 QQ 侧弄断（断网 10s / 重置 AppSecret / 踢下线），**期望**日志出现
+
+```
+[错误] QQ 网关已断开（收不到群消息），进程退出等待重启
+[停止] 正在关闭…
+[停止] 已退出
+```
+
+且进程退出码为 1（`systemd`/`nssm` 据此拉起）——**不再**是「进程常驻、群里没反应、日志干净」。
+反向对照：`Ctrl+C`（步骤 7）时不应出现该 `[错误]` 行、退出码仍为 0。
+
 **S6 日志轮转**
 
 前置：S5 步骤 7 之后（`log_offset` 非 0）。
@@ -693,3 +723,28 @@ $ python -m y33bot simulate health --server main --offline --dry-run     # 再�
 回环防护的连带结论（A8）：服务现在只注入 `[QQ] …` 一种标记，故样板 `ignored_chat_prefixes` 收窄为 `["[QQ]"]`；旧配置保留 `[→QQ]` 不影响运行（配置只做前缀匹配）。回环判断在 `#` 判断**之前**执行，并由 `test_bridge.py::test_chat_loop_protection_is_config_driven` 锁住「前缀可配置」这一行为。
 
 明确不做：`/list`（或 `/help`）这类**群内列举指令**不做 —— 可发现性交给 QQ 客户端的指令面板（用户 2026-10-13 决定）。
+
+### 7.2 BUG-001 修复：运行期网关失效报警退出 + `check` 真探活（2026-10-15）
+
+来源：`BUGS.md` 的 **BUG-001「回复」**（调查卡 `t_6cc56405` 离线复刻结论：真缺陷，推荐 R2+R5），
+加上用户 2026-10-15 拍板的口径：
+
+> **网关任务结束即视为故障：打 `[错误]`，并立即以非 0 退出**，交给 `systemd`/`nssm` 拉起。
+> **不做退避重启**（一次失败就退出）；`check` 的 QQ 项改为真实探活。
+
+| # | 变更 | 原状 | 现行为 | 涉及位置 |
+|---|---|---|---|---|
+| B1 | 运行期网关失效 → 报警 + 非 0 退出（R2-lite） | `Service.run()` 在 `start()` 之后只 `await _wait_for_stop()`，**不监视网关任务**；而 `ret_coro=True` 下 SDK 自带的重连驱动不执行（`botpy/client.py:217-223`）→ 会话被回填后没人启动（`botpy/connection.py:57-67`）→ 网关协程**正常返回**（无异常 ⇒ 原实现一行日志都不打）⇒ 进程常驻、群里永久无反应、日志干净 | `QQGateway` 协议**新增**成员 `wait_closed()`（`BotpyGateway` 用 done-callback 观测自己的网关任务；`FakeQQGateway` 等到 `close()`）；`Service.run()` 同时等「停止信号」与「网关任务结束」：**网关先结束** → `[错误] QQ 网关已断开（收不到群消息），进程退出等待重启` + 走既有 `shutdown()` + 返回 **1**；**收到停止信号** → 仍返回 **0**、不打印 `[错误]`（区分「我们主动关」与「网关死了」）。**不重试、不退避重启**（一次失败就退出） | `src/y33bot/qq/gateway.py`、`src/y33bot/qq/fakes.py`、`src/y33bot/service.py`；PLAN §3.2/§3.3/§3.6/§5 S5；README §7/§8/§13；`docs/smoke.md`；`docs/acceptance.md` §9；`BUGS.md`；`tests/test_service.py`、`tests/test_gateway.py`、`tests/test_bug001_reconnect.py`、`tests/test_failures.py` |
+| B2 | `check` 的 QQ 项真探活（R5） | `[QQ] OK app_id 已设置 …` 只证明**环境变量非空**：凭据完全是伪造/过期值也照样 OK（BUGS.md 的 F4，附实测输出） | 默认向 `https://bots.qq.com/app/getAppAccessToken` 取一次 `access_token`：成功 → `[QQ] OK access_token 获取成功（有效期 <N>s），app_id 已设置 (env …)，group_openid 已配置`；失败 → `[QQ] FAIL access_token 获取失败: <原因>`（末行 `FAIL`、退出码 1）。新增 `check --no-probe` 给离线环境/CI：`[QQ] OK app_id 已设置 (env …)，未探活（--no-probe），group_openid 已配置`，文案里明说「未探活」，不再冒充「凭据可用」 | 新增 `src/y33bot/qq/probe.py`；`src/y33bot/service.py`（`startup_checks` + 可注入 `qq_probe`/`probe_qq`）；`src/y33bot/cli.py`（`--no-probe`）；PLAN §3.1/§3.2/§3.3/§3.4/§5 S1；README §8/§13/§14；`docs/smoke.md` S1；`docs/acceptance.md` §9；`tests/test_qq_probe.py`、`tests/test_cli.py`、`tests/test_smoke.py`、`tests/e2e/*` |
+
+**对 IDEA 的偏离**：无。IDEA §4「重试：不重试」只约束**单条消息**，没有约束「发现通道死了要报出来」；
+B1 也**没有**新增重试（明确不重启）。`IDEA.md`、`需求1.txt` 未改。
+
+**签名冻结条款核对**：本次只**新增** `QQGateway.wait_closed()` 与 `qq.probe` 的新函数，
+`PLAN.md` §3.3 里既有签名一行未改。
+
+**验证与边界**：修复落地时做了**离线前后对照**（同一脚本、同一配置，指向 `757db31` 的 `src` 为「修复前」）——
+修复前 `run()` 在网关结束后 3s 内仍不返回（看门狗判超时、无 `[错误]`），修复后同一场景打印
+`[错误] QQ 网关已断开…` 并 `exit=1`；`check` 也在真网络下实测（假凭据 → `[QQ] FAIL access_token 获取失败: 平台返回错误: code=10004 message=机器人不存在`）。
+原始输出见 `docs/acceptance.md` §9。**真机触发链路（Q1 静默时的日志尾部 / Q3 QQ 侧关码）仍未验证** ——
+本机没有真实 QQ 凭据与真 MC 服，按仓库规则「未执行就如实写未执行」，不用推断代替证据。

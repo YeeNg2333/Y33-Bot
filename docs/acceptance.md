@@ -37,6 +37,7 @@
 
 自动化方面（§3）：`make test` 一键 **357 passed、总覆盖率 99.30%**（门槛 70%；v0.2 变更后 352、BUG-001 取证合入后 357，见 §8.6），`ruff check` +
 `ruff format --check` 全绿，全仓**无 skip/xfail**，CI 里跑的就是同一条 `make test`。
+（**后续批次**：BUG-001 修复落地后为 **381 passed / 99.33% / ruff 43 文件**，见 §9。）
 
 ---
 
@@ -76,9 +77,14 @@ exit=1
 `Connection refused`；两者都落在 `[RCON main] FAIL 无法连接 <host>:<port>: …` 同一契约下。
 `check` 的明细日志走 stderr（§3.6），stdout 只有上面 6 行契约文本。
 
+> **注（2026-10-15，BUG-001 修复后）**：本节两份粘贴是**变更前**的原始记录，未改写。
+> 当时 `[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置` 只证明「环境变量非空」——
+> 凭据完全无效也照样 OK（`BUGS.md` 的 F4）。现在 QQ 项默认真探活、新增 `--no-probe`，
+> 本轮复验见 **§9.1**。
+
 自动化等价物：`tests/e2e/test_entrypoint.py::test_entrypoint_s1_check_reports_each_item`（真子进程）、
 `…::test_entrypoint_s1_check_missing_secret`、`…::test_entrypoint_check_missing_config`、
-`tests/test_cli.py::test_check_*`。
+`tests/test_cli.py::test_check_*`（含探活成功/失败两条）、`tests/test_qq_probe.py`。
 
 ### 2.2 S2 QQ→MC 绑定与转发
 
@@ -295,7 +301,7 @@ $ grep -rnE "pytest\.(skip|xfail)|@pytest\.mark\.(skip|xfail)|skipif" tests/
 （无 skip/xfail/skipif）
 ```
 
-测试文件分工（下面的例数是 T10 落地时的口径；v0.2 后 352 例、BUG-001 取证合入后 **357 例**）：
+测试文件分工（下面的例数是 T10 落地时的口径；v0.2 后 352 例、BUG-001 取证合入后 **357 例**、BUG-001 修复后 **381 例**，见 §9）：
 
 | 文件 | 例数 | 说明 |
 |---|---|---|
@@ -803,3 +809,159 @@ All checks passed!
 - §8.4 粘贴的输出是 v0.2 那一轮（352 例）的**原始记录，未改写**；本节是本轮合入后的复验。
   少数「历史记录」按原样保留：§3 的逐文件例数（T10 口径）、§7.2 / §7.11（T12 复验，348 例）。
 - 缺陷结论、影响面与推荐修复方向见 `BUGS.md` 的 BUG-001「回复」（**真缺陷**；真机触发链路 Q1/Q3 **未执行**）。
+
+---
+
+## 9. BUG-001 修复落地后的复验（2026-10-15，看板卡 `t_80249809`）
+
+本卡按 `BUGS.md` 的推荐方向落地 **R2-lite**（运行期网关失效 → `[错误]` + 非 0 退出，不做退避重启）
+与 **R5**（`check` 的 QQ 项真探活），并同步 `PLAN.md` §3.2/§3.3/§3.4/§3.6/§5/§7.2 与 README、`docs/smoke.md`。
+**§7 / §8 的粘贴与 348/352/357 这些数字是历史记录，未改写**；本节是本轮复验。
+
+### 9.0 执行环境与前置
+
+| 项 | 值 |
+|---|---|
+| 日期 | 2026-10-15（03:05–03:09 +0800） |
+| 机器 | Y33NG-LAPTOP（Windows 11 + git-bash／MSYS），Python 3.12.10（仓库内 `.venv`） |
+| 代码版本 | 分支 `y33-bot/t_80249809-bug-001-0-r2-lite-check-qq-r5`；对照基线 = `757db31`（本卡起点，`git archive` 出 `src/`） |
+| 取证目录 | 仓库**之外**：`…/cache/scratch/bug001-fix`（`config.toml`（`port = 34567` 故意不可达、`group_openid = "GROUP-OPENID-1"`）+ `logs/latest.log` + 对照脚本 `verify_gateway_death.py`） |
+| 环境变量 | `QQ_BOT_APP_ID=102000000`、`QQ_BOT_APP_SECRET=this-secret-is-bogus-and-never-issued`（**从未签发的假值**）、`MC_RCON_PASSWORD_MAIN=bogus-rcon` |
+| 未执行 | **真机触发链路**（Q1 静默那一刻的日志尾部、Q3 QQ 侧关码）与 **S5 真机 8 步**：本机没有真实 QQ 机器人凭据、也没有 `enable-rcon=true` 的真 MC 服。本节所有证据都在**离线**（真网络只用到 §9.1 平台的 token 接口） |
+
+### 9.1 R5：`check` 的 QQ 项真探活（同一个假凭据，修复前 vs 修复后）
+
+修复前（`757db31` 的 `src`，`PYTHONPATH` 指过去）：
+
+```bash
+$ PYTHONPATH=<757db31>/src $BP -m y33bot check --config config.toml        # 2026-10-15 03:08:21 +0800
+[配置] OK config.toml 解析成功，1 个 MC 服
+[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置          ← 凭据是完全假的，也照样 OK
+[RCON main] FAIL 无法连接 127.0.0.1:34567: 连接 127.0.0.1:34567 失败: [WinError 1225] 远程计算机拒绝网络连接。
+[日志 main] OK …\bug001-fix\logs\latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+FAIL
+exit=1
+```
+
+修复后（本卡 `src`，默认真探活）：
+
+```bash
+$ PYTHONPATH=<本卡>/src $BP -m y33bot check --config config.toml           # 2026-10-15 03:08:04 +0800
+[警告] RCON main 命令失败: 连接 127.0.0.1:34567 失败: [WinError 1225] 远程计算机拒绝网络连接。
+[配置] OK config.toml 解析成功，1 个 MC 服
+[QQ] FAIL access_token 获取失败: 平台返回错误: code=10004 message=机器人不存在
+[RCON main] FAIL 无法连接 127.0.0.1:34567: 连接 127.0.0.1:34567 失败: [WinError 1225] 远程计算机拒绝网络连接。
+[日志 main] OK …\bug001-fix\logs\latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+FAIL
+exit=1
+```
+
+（`code=10004 message=机器人不存在` 是**平台真的回话**了 —— 探活确实发出了一次 HTTPS 请求，
+而不是本地提前失败。同一台机器上两次 `check` 耗时之差约 0.15s，即那次取 token 的往返。）
+
+修复后（`--no-probe`，离线环境/CI 用）：
+
+```bash
+$ PYTHONPATH=<本卡>/src $BP -m y33bot check --config config.toml --no-probe
+[配置] OK config.toml 解析成功，1 个 MC 服
+[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置
+[RCON main] FAIL 无法连接 127.0.0.1:34567: 连接 127.0.0.1:34567 失败: [WinError 1225] 远程计算机拒绝网络连接。
+[日志 main] OK …\bug001-fix\logs\latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+FAIL
+exit=1
+```
+
+| 分支 | 命令 | 结果 | 结论 |
+|---|---|---|---|
+| 凭据无效（假值） | `check`（默认探活） | `[QQ] FAIL access_token 获取失败: 平台返回错误: code=10004 message=机器人不存在` | **通过**（修复前是 `[QQ] OK`） |
+| 离线跳过 | `check --no-probe` | `[QQ] OK …未探活（--no-probe）…` | **通过**（文案自己说明「未探活」） |
+| 凭据缺失 | `env -u QQ_BOT_APP_SECRET check` | `[QQ] FAIL 环境变量 QQ_BOT_APP_SECRET 未设置` | **通过**（与旧行为一致，且不联网） |
+| 凭据有效 | —— | 预期 `[QQ] OK access_token 获取成功（有效期 <N>s），…` | **未执行**：本机没有真实凭据；单元测试用替身锁住该文案（`tests/test_cli.py::test_check_probes_credentials_by_default`） |
+
+自动化等价物：`tests/test_qq_probe.py`（解析/平台报错/HTTP 错误/非 JSON/网络不可达，全程离线）、
+`tests/test_cli.py::test_check_probes_credentials_by_default`、`…::test_check_reports_unusable_credentials`、
+`tests/test_service.py::test_startup_checks_reports_unusable_credentials`（探活失败 → `CheckResult(ok=False)`）、
+`…::test_startup_checks_without_probe_keeps_offline_path`、`…::test_service_default_probe_is_the_real_one`。
+
+### 9.2 R2-lite：运行期网关失效 → `[错误]` + 非 0 退出（同脚本前后对照）
+
+同一份脚本（`…/bug001-fix/verify_gateway_death.py`：桩网关 `start()` 成功、0.3s 后网关任务结束，
+用 `asyncio.wait_for` 做 3s 看门狗，超时判定为「没有退出」）、同一份 `config.toml`，只换 `PYTHONPATH`：
+
+```bash
+$ PYTHONPATH=<757db31>/src $BP verify_gateway_death.py config.toml 0.3 3      # 2026-10-15 03:07:47 +0800
+修复前 退出码(99=run() 在 3s 内没有返回)=99
+INFO [启动] y33bot 0.1.0（1 个 MC 服）
+INFO [启动] 日志监听已启动: main
+INFO [停止] 正在关闭…                                  ← 只有看门狗的取消才让它走关闭流程
+INFO [停止] 已退出
+run() 在 3s 内没有返回：网关 started=True，进程仍在常驻（静默）
+```
+
+```bash
+$ PYTHONPATH=<本卡>/src $BP verify_gateway_death.py config.toml 0.3 3
+修复后 退出码=1
+INFO [启动] y33bot 0.1.0（1 个 MC 服）
+INFO [启动] 日志监听已启动: main
+ERROR [错误] QQ 网关已断开（收不到群消息），进程退出等待重启
+INFO [停止] 正在关闭…
+INFO [停止] 已退出
+网关 started=True closed=True
+exit=1
+```
+
+（修复前那份日志里**一条 `[错误]` 都没有**，正是 BUG-001 描述的「进程常驻、日志干净」。）
+
+反向对照（不能把「我们自己主动关」也报成故障）：`tests/test_service.py::test_run_returns_0_when_stopped_by_signal`
+断言收到停止信号时退出码 0 且 `[错误]` 记录为空；端到端的整链回归（真 SDK 的 `multi_run()` + 真 `BotpyGateway`
++ 真 `Service.run()`）在 `tests/test_bug001_reconnect.py::test_service_reports_and_exits_when_sdk_gateway_coroutine_returns`。
+
+| 分支 | 结果 | 结论 |
+|---|---|---|
+| 启动后网关任务结束 | `[错误] QQ 网关已断开（收不到群消息），进程退出等待重启` + `exit=1` + 走完 `shutdown()` | **通过**（修复前：3s 看门狗判超时、无 `[错误]`） |
+| 收到停止信号（`Ctrl+C`/`SIGTERM`） | `exit=0`、无 `[错误]` | **通过** |
+| 启动期网关失败 | `[错误] QQ 网关启动失败: …` + `exit=1` | **通过**（原有行为未变） |
+| 真机断线（断网 / 重置 AppSecret / 等 token 过期） | —— | **未执行**（无真实凭据与真 MC 服）；`PLAN.md` §5 S5 已补上「新增观察点」与期望输出 |
+
+### 9.3 一键测试与静态检查
+
+```bash
+$ $BP -m pytest -q
+381 passed in 47.11s
+
+$ $BP -m pytest -q --cov=y33bot --cov-report=term-missing --cov-fail-under=70
+TOTAL                              1839      6    400      9    99%
+Required test coverage of 70% reached. Total coverage: 99.33%
+381 passed in 47.11s
+
+$ $BP -m ruff check . && $BP -m ruff format --check .
+All checks passed!
+43 files already formatted
+```
+
+用例数 357 → 381（+24）：新增 `tests/test_qq_probe.py`（10 例，探活解析与失败文案）、
+`tests/test_gateway.py` +3（`wait_closed` 的三个语义）、`tests/test_service.py` +5
+（探活失败/`--no-probe`/默认真探活/网关死亡退出 1/正常停止退出 0）、
+`tests/test_cli.py` +2（默认探活成功、探活失败）；另有 5 例按新契约**改写**（原本钉「静默失效」的取证用例）：
+`tests/test_service.py::test_run_ignores_gateway_task_ending` → `…::test_run_returns_1_when_gateway_dies_after_start`（同一场景，断言反过来了）、
+`tests/test_bug001_reconnect.py::test_service_stays_alive_when_sdk_gateway_coroutine_returns` → `…::test_service_reports_and_exits_when_sdk_gateway_coroutine_returns`，
+以及 `tests/test_cli.py` / `tests/e2e/*` / `tests/test_smoke.py` 里 `check` 的期望行（补 `--no-probe` 与新文案）。
+`tests/` 仍**无 skip/xfail**；覆盖率 99.30% → 99.33%（`qq.probe` 100%，其余模块覆盖度不变）。
+
+> 说明：上面那句「改写」是**契约变了才改**，不是把失败用例改绿 —— 旧用例钉的是「网关死了没人管」这个当时的事实，
+> 修复后它必须钉相反的行为；`BUGS.md` 的「回复」原文未改，其引用的旧用例名/行号只代表修复前状态，
+> 本轮「修复记录」小节已注明对应关系。
+
+### 9.4 结论
+
+| 项 | 结论 |
+|---|---|
+| R2-lite 运行期网关失效报警退出 | **通过**（离线前后对照 + 整链回归用例；真机触发链路未执行） |
+| R5 `check` 真探活 | **通过**（真网络实测：假凭据 → `[QQ] FAIL access_token 获取失败: 平台返回错误: code=10004`；离线路径 `--no-probe` 可用） |
+| 回归 | **无**：S1–S4/S6 的离线契约（`simulate`、bind、日志轮转）未改；正常退出仍是 `exit=0` 且无 `[错误]`；381 例全绿、覆盖率 99.33%、ruff 43 文件全绿 |
+| 未执行 | 真机断线三连与 Q1/Q3 取证、S5 真机 8 步 —— 原因见 §9.0；`PLAN.md` §5 已补期望输出，具备环境后按 `docs/smoke.md` 回填 |
+| 文档 | `PLAN.md` §7.2 变更登记 + §3.1/§3.2/§3.3/§3.4/§3.6/§5 同步；`README.md` §7/§8/§13/§14；`docs/smoke.md` §1/§6/§7；`BUGS.md` BUG-001 状态「已修复」+「修复记录」 |
+| AGENTS.md | **本次未写入**：「开发进度」那条要加的条目已写好，但运行环境把 `AGENTS.md` 当作**受保护的智能体指令文件**，写入需要交互批准，而本卡是无人值守运行（无用户在场可批准），故未落盘。待补内容（含文件清单、测试数字、真机是否执行、遗留项）原文见看板卡 `t_80249809` 的评论，人工或有批准能力的会话可直接粘贴 |

@@ -10,6 +10,7 @@ import pytest
 
 from conftest import App
 from y33bot.qq.gateway import QQGatewayError
+from y33bot.qq.probe import QQProbeError
 from y33bot.service import Service
 from y33bot.state import StateStore
 
@@ -31,14 +32,32 @@ class BrokenGateway:
     async def close(self) -> None:
         self.closed = True
 
+    async def wait_closed(self) -> None:  # pragma: no cover - 启动就失败，走不到监视阶段
+        return None
 
-def make_service(app: App, *, gateway=None, pool=None, env=None) -> Service:
+
+async def passing_probe(app_id: str, app_secret: str) -> int:
+    """离线探活替身：假装凭据可用（有效期 7200s）。真探活会发 HTTPS，测试一律替换掉。"""
+
+    assert app_id and app_secret
+    return 7200
+
+
+async def failing_probe(_app_id: str, _app_secret: str) -> int:
+    """离线探活替身：模拟「凭据无效 / 平台报错」。"""
+
+    raise QQProbeError("平台返回错误: code=100007 message=appid or secret invalid")
+
+
+def make_service(app: App, *, gateway=None, pool=None, env=None, probe=None, probe_qq: bool = True) -> Service:
     return Service(
         app.config,
         env=app.env if env is None else env,
         config_path=app.config_path,
         gateway=gateway,
         pool=pool,
+        qq_probe=probe if probe is not None else passing_probe,
+        probe_qq=probe_qq,
     )
 
 
@@ -57,10 +76,45 @@ async def test_startup_checks_all_green(app: App) -> None:
 
     assert labels["配置"].detail == f"{app.config_path.name} 解析成功，1 个 MC 服"
     assert labels["QQ"].ok is True
+    assert labels["QQ"].detail == (
+        "access_token 获取成功（有效期 7200s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置"
+    )
     assert labels["RCON main"].detail == "/list -> There are 1 of a max of 20 players online: Steve"
     assert labels["日志 main"].detail == f"{app.log_path} 可读，偏移 0 字节"
     assert labels["绑定"].detail == "1 条"
     assert all(item.ok for item in results)
+
+
+async def test_startup_checks_reports_unusable_credentials(app: App) -> None:
+    """BUG-001 的 R5：凭据「填了但不可用」必须 FAIL（旧行为是照样打印 `[QQ] OK`）。"""
+
+    service = make_service(app, pool=app.make_pool(), probe=failing_probe)
+    results = await service.startup_checks()
+    qq = [item for item in results if item.label == "QQ"][0]
+    assert qq.ok is False
+    assert qq.detail == "access_token 获取失败: 平台返回错误: code=100007 message=appid or secret invalid"
+    assert not all(item.ok for item in results)
+
+
+async def test_startup_checks_without_probe_keeps_offline_path(app: App) -> None:
+    """`--no-probe`（`probe_qq=False`）：完全不碰网络，只报告「变量填了、未探活」。"""
+
+    def explode(*_args, **_kwargs):  # pragma: no cover - 被调用即失败
+        raise AssertionError("--no-probe 不该调用探活函数")
+
+    service = make_service(app, pool=app.make_pool(), probe=explode, probe_qq=False)
+    results = await service.startup_checks()
+    qq = [item for item in results if item.label == "QQ"][0]
+    assert qq.ok is True
+    assert qq.detail == "app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置"
+
+
+async def test_service_default_probe_is_the_real_one(app: App) -> None:
+    """默认装配指向真探活（`check` 不传 `--no-probe` 时才会真的取一次 access_token）。"""
+
+    from y33bot.qq.probe import probe_access_token
+
+    assert Service(app.config, env=app.env)._qq_probe is probe_access_token
 
 
 async def test_startup_checks_reports_broken_bindings(app: App) -> None:
@@ -169,39 +223,84 @@ async def test_on_group_message_before_ready(app: App, caplog: pytest.LogCapture
     assert any("服务尚未就绪" in record.getMessage() for record in caplog.records)
 
 
-# ------------------------------------------------------------------ 网关死后仍常驻（BUG-001 取证）
-class SilentDeathGateway:
-    """桩网关：`start()` 成功，随后内部任务自己结束（等价于 SDK 网关协程「正常返回」）。"""
+async def test_on_group_message_delegates_to_bridge(app: App) -> None:
+    """`run()` 把 `_on_group_message` 当作网关 handler 注入：群消息要真的走到 `Bridge`。"""
 
-    def __init__(self) -> None:
+    from y33bot.models import MCGroupMessage
+
+    service = make_service(app, pool=app.make_pool())
+    service._bridge = app.make_bridge(pool=service._pool)
+
+    reply = await service._on_group_message(
+        MCGroupMessage(
+            group_openid="G-1",
+            member_openid="OP-1",
+            message_id="M-1",
+            content="#你好",
+            received_at=0.0,
+        )
+    )
+    assert reply == "请先使用 /bind <游戏ID> 绑定"  # 未绑定 → 指令/转发都走 Bridge 的既有规则
+
+
+# ------------------------------------------------------------------ 网关启动后失效必须报错退出（BUG-001 修复）
+class DyingGateway:
+    """桩网关：`start()` 成功，随后网关任务自己结束（等价于 SDK 网关协程「正常返回」）。
+
+    `wait_closed()` 返回即代表「网关任务结束」；正常实现见
+    `src/y33bot/qq/gateway.py` 的 `BotpyGateway.wait_closed()`。
+    """
+
+    def __init__(self, *, delay: float = 0.02) -> None:
         self.started = False
         self.ended = False
         self.closed = False
-        self.task: asyncio.Task[None] | None = None
+        self._delay = delay
 
     async def start(self) -> None:
         self.started = True
 
-        async def gateway() -> None:
-            await asyncio.sleep(0.02)
-            self.ended = True
-
-        self.task = asyncio.create_task(gateway())
-
     async def send_group_message(self, message) -> None:  # pragma: no cover - 本用例不发消息
         return None
+
+    async def wait_closed(self) -> None:
+        await asyncio.sleep(self._delay)
+        self.ended = True
 
     async def close(self) -> None:
         self.closed = True
 
 
-async def test_run_ignores_gateway_task_ending(app: App, caplog: pytest.LogCaptureFixture) -> None:
-    """BUG-001 取证 F3：网关启动成功后内部任务结束，`Service.run()` 不退出、也不打任何日志。
+async def test_run_returns_1_when_gateway_dies_after_start(app: App, caplog: pytest.LogCaptureFixture) -> None:
+    """BUG-001 修复：启动成功后网关任务结束 → 打 `[错误]` 并以非 0 退出（交给 systemd/nssm 拉起）。
 
-    这是「静默失效」的服务侧证据：进程常驻、日志轮询/健康轮询照旧，日志里没有一行提示。
+    修复前这里是「静默失效」：`run()` 继续等停止信号、日志里一条 `[错误]` 都没有。
     """
 
-    gateway = SilentDeathGateway()
+    gateway = DyingGateway()
+    service = make_service(app, gateway=gateway, pool=app.make_pool())
+    original = {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
+
+    with caplog.at_level(logging.DEBUG):
+        try:
+            code = await asyncio.wait_for(service.run(), timeout=10)
+        finally:
+            for sig, handler in original.items():
+                signal.signal(sig, handler)
+
+    assert gateway.started is True and gateway.ended is True
+    assert code == 1  # 非 0 退出（与启动失败同一个退出码）
+    messages = [record.getMessage() for record in caplog.records]
+    errors = [record.getMessage() for record in caplog.records if record.levelno >= logging.ERROR]
+    assert errors == ["[错误] QQ 网关已断开（收不到群消息），进程退出等待重启"]
+    assert gateway.closed is True  # 仍然走 shutdown()，不是硬崩
+    assert any("[停止] 已退出" in message for message in messages)
+
+
+async def test_run_returns_0_when_stopped_by_signal(app: App, caplog: pytest.LogCaptureFixture) -> None:
+    """对照：收到停止信号（我们自己主动关闭）仍是退出码 0，且没有任何 `[错误]`。"""
+
+    gateway = app.make_gateway()
     service = make_service(app, gateway=gateway, pool=app.make_pool())
     original = {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
 
@@ -213,20 +312,14 @@ async def test_run_ignores_gateway_task_ending(app: App, caplog: pytest.LogCaptu
                     break
                 await asyncio.sleep(0.02)
             assert gateway.started is True
-
-            assert gateway.task is not None
-            await asyncio.wait_for(gateway.task, timeout=5)
-            assert gateway.ended is True  # 网关内部任务已经结束
-
-            await asyncio.sleep(0.2)  # 留足时间让 Service.run() 有机会反应
-            assert task.done() is False  # 仍在 _wait_for_stop()：不退出、不重启、不告警
-            assert [r for r in caplog.records if r.levelno >= logging.WARNING] == []  # 日志里查不到
-            assert any("日志监听已启动: main" in r.getMessage() for r in caplog.records)  # 其余轮询照旧
-        finally:
-            service._signal_flag.set()
+            service._signal_flag.set()  # 等价于收到 SIGINT/SIGTERM
             code = await asyncio.wait_for(task, timeout=10)
+        finally:
+            if not task.done():  # pragma: no cover - 兜底，避免用例挂住
+                task.cancel()
             for sig, handler in original.items():
                 signal.signal(sig, handler)
 
     assert code == 0
-    assert gateway.closed is True
+    assert [record.getMessage() for record in caplog.records if record.levelno >= logging.ERROR] == []
+    assert gateway.started is False  # shutdown 关掉了网关

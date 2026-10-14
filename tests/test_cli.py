@@ -65,27 +65,64 @@ def test_usage_error_exit_code_2(workdir: App) -> None:
 def test_check_reports_failure_for_unreachable_rcon(workdir: App, capsys) -> None:
     text = workdir.config_path.read_text(encoding="utf-8")
     workdir.config_path.write_text(text.replace("port = 25575", "port = 34567"), encoding="utf-8")
-    code, lines, _err = run(["check", "--config", CONFIG], capsys)
+    code, lines, _err = run(["check", "--config", CONFIG, "--no-probe"], capsys)
 
     assert code == 1
     assert lines[0] == "[配置] OK config.toml 解析成功，1 个 MC 服"
-    assert lines[1] == "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置"
+    assert lines[1] == "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置"
     assert lines[2].startswith("[RCON main] FAIL 无法连接 127.0.0.1:34567:")
     assert lines[3] == f"[日志 main] OK {workdir.log_path} 可读，偏移 0 字节"
     assert lines[4] == "[绑定] OK 0 条"
     assert lines[5] == "FAIL"
 
 
+def test_check_probes_credentials_by_default(workdir: App, capsys, monkeypatch: pytest.MonkeyPatch) -> None:
+    """默认（不带 `--no-probe`）真取一次 access_token：成功 → `[QQ] OK access_token 获取成功…`。"""
+
+    from y33bot import service as service_module
+
+    seen: list[tuple[str, str]] = []
+
+    async def fake_probe(app_id: str, app_secret: str) -> int:
+        seen.append((app_id, app_secret))
+        return 7200
+
+    monkeypatch.setattr(service_module, "probe_access_token", fake_probe)
+    code, lines, _err = run(["check", "--config", CONFIG], capsys)
+
+    assert seen == [(DEFAULT_ENV["QQ_BOT_APP_ID"], DEFAULT_ENV["QQ_BOT_APP_SECRET"])]
+    assert lines[1] == (
+        "[QQ] OK access_token 获取成功（有效期 7200s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置"
+    )
+    assert code == 1  # RCON 项仍然失败（本用例只关心 QQ 项的语义）
+
+
+def test_check_reports_unusable_credentials(workdir: App, capsys, monkeypatch: pytest.MonkeyPatch) -> None:
+    """BUG-001 的 R5：凭据「填了但取不到 token」→ `[QQ] FAIL <原因>`（旧行为是照样 OK）。"""
+
+    from y33bot import service as service_module
+    from y33bot.qq.probe import QQProbeError
+
+    async def failing_probe(_app_id: str, _app_secret: str) -> int:
+        raise QQProbeError("平台返回错误: code=100007 message=appid or secret invalid")
+
+    monkeypatch.setattr(service_module, "probe_access_token", failing_probe)
+    code, lines, _err = run(["check", "--config", CONFIG], capsys)
+
+    assert code == 1
+    assert lines[1] == "[QQ] FAIL access_token 获取失败: 平台返回错误: code=100007 message=appid or secret invalid"
+
+
 def test_check_reports_missing_secret(workdir: App, capsys, monkeypatch) -> None:
     monkeypatch.delenv("QQ_BOT_APP_SECRET")
-    code, lines, _err = run(["check", "--config", CONFIG], capsys)
+    code, lines, _err = run(["check", "--config", CONFIG, "--no-probe"], capsys)
     assert code == 1
     assert lines[1] == "[QQ] FAIL 环境变量 QQ_BOT_APP_SECRET 未设置"
 
 
 def test_check_reports_missing_rcon_password(workdir: App, capsys, monkeypatch) -> None:
     monkeypatch.delenv("MC_RCON_PASSWORD_MAIN")
-    code, lines, _err = run(["check", "--config", CONFIG], capsys)
+    code, lines, _err = run(["check", "--config", CONFIG, "--no-probe"], capsys)
     assert code == 1
     assert lines[2].startswith("[RCON main] FAIL 无法连接 127.0.0.1:25575:")
     assert "MC_RCON_PASSWORD_MAIN" in lines[2]
@@ -93,7 +130,7 @@ def test_check_reports_missing_rcon_password(workdir: App, capsys, monkeypatch) 
 
 def test_check_missing_log_file(workdir: App, capsys) -> None:
     workdir.log_path.unlink()
-    code, lines, _err = run(["check", "--config", CONFIG], capsys)
+    code, lines, _err = run(["check", "--config", CONFIG, "--no-probe"], capsys)
     assert code == 1
     assert lines[3].startswith("[日志 main] FAIL")
     assert "不存在" in lines[3]
