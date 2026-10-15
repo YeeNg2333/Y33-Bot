@@ -12,6 +12,28 @@
 
 按最新在前记录。每条包含三部分：日期（YYYY-MM-DD）、已完成、进行中、已知阻塞/待办。
 
+### 2026-10-15（BUG-001 修复：R2-lite + R5）
+
+- 已完成：按 `BUGS.md` BUG-001「回复」的推荐（**R2 + R5**）与用户拍板口径「网关任务结束即视为故障：
+  打 `[错误]` 并立即非 0 退出，交给 `systemd`/`nssm` 拉起，**不做退避重启**」完成修复（卡 `t_80249809`）：
+  - **R2-lite**：`QQGateway` 协议新增 `wait_closed()`（`BotpyGateway` 用 done-callback 观测自己的网关任务，
+    `FakeQQGateway` 等到 `close()`）；`Service.run()` 同时等「停止信号」与「网关任务结束」——
+    网关先结束 → `[错误] QQ 网关已断开（收不到群消息），进程退出等待重启` + 走 `shutdown()` + 返回 **1**；
+    收到停止信号 → 仍 **0**、不打 `[错误]`。改动文件：`src/y33bot/service.py`、`qq/gateway.py`、`qq/fakes.py`。
+  - **R5**：新增 `src/y33bot/qq/probe.py`（`urllib` POST `getAppAccessToken`，超时 5s，可注入可 monkeypatch）；
+    `check` 的 QQ 项默认**真探活**（成功 `[QQ] OK access_token 获取成功（有效期 Ns），…`；
+    失败 `[QQ] FAIL access_token 获取失败: <原因>`），新增 `check --no-probe` 给离线/CI 用（文案写明「未探活」）。
+- 已完成：登记与文档同步 —— `PLAN.md` §7.2 新增变更记录并同步 §3.1/§3.2/§3.3/§3.4/§3.6/§5 S1/S5；
+  `README.md` §7/§8/§13（新增 FAQ14）/§14；`docs/smoke.md` §1/§6/§7；`docs/acceptance.md` 新增 §9 复验
+  （§7/§8 历史粘贴与 348/352/357 未改写，只加标注；§1 总表已更新为 381）；`BUGS.md` BUG-001 改为**已修复** + 「修复记录」。
+- 已完成：本机实跑 —— `pytest -q` **381 passed**（357 → +24）、覆盖率 **99.33%**、
+  `ruff check .` / `ruff format --check .` 全绿（43 文件），`tests/` 无 skip/xfail。
+- 已完成：真机能测的都测了（`docs/acceptance.md` §9）—— 离线前后对照：修复前网关结束后 `run()` 3s 内不返回、
+  0 条 `[错误]`；修复后 `[错误] QQ 网关已断开…` + `exit=1`。`check` 真网络实测（假凭据）：
+  修复前 `[QQ] OK app_id 已设置 …` → 修复后 `[QQ] FAIL access_token 获取失败: 平台返回错误: code=10004 message=机器人不存在`。
+- 阻塞 / 待办：真机触发链路（Q1/Q3）与 `BUGS.md` 真机三步、S5 真机 8 步**仍未执行**（无真实 QQ 凭据/真 MC 服）；
+  本次刻意不做退避重启与 SDK 重连驱动（R1/R3）；`check` 默认真探活意味着**离线环境请用 `--no-probe`**（CI 不跑 `check`，不受影响）。
+
 ### 2026-10-15（BUG-001 调查：QQ 网关静默失效）
 
 - 已完成：登记并调查 **BUG-001**（用户真机观察：QQ 凭据/token 过期后群里无反应、进程还活着、日志没提示）。
