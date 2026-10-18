@@ -1,0 +1,26 @@
+
+############ 补测 A：1.21.11 QQ→MC 真客户端可见性（等 spawn 后再注入） 2026-10-18 15:42:49 ############
+[补测] 1.21.11 启动等待轮次=8 端口 1
+[补测A] 客户端 spawn 等待轮次=6 spawned=yes
+[RCON fab12111] tellraw @a {"text":"[QQ] Steve: 你好"}
+tellraw exit=0
+[补测A] 客户端收到注入消息: yes
+[hold 07:43:48] 收到: [QQ] Steve: 你好
+[补测] 1.21.11 已停（等待轮次=2）
+
+############ 补测 B：26.3 上 mineflayer 客户端能力探测 2026-10-18 15:44:21 ############
+[补测] 26.3 启动等待轮次=10 端口 1
+client exit=1
+[client] 连接 127.0.0.1:25618 用户名 Watcher
+Error: No data available for version 26.3
+    at createProtocol (/home/hermes/mc-test/client/node_modules/minecraft-protocol/src/transforms/serializer.js:21:11)
+    at createSerializer (/home/hermes/mc-test/client/node_modules/minecraft-protocol/src/transforms/serializer.js:48:25)
+    at Client.setSerializer (/home/hermes/mc-test/client/node_modules/minecraft-protocol/src/client.js:44:23)
+    at set state (/home/hermes/mc-test/client/node_modules/minecraft-protocol/src/client.js:135:10)
+    at /home/hermes/mc-test/client/node_modules/minecraft-protocol/src/client/autoVersion.js:43:18
+    at /home/hermes/mc-test/client/node_modules/minecraft-protocol/src/ping.js:13:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[client] 出错: No data available for version 26.3
+minecraft-data 支持的版本尾部: 1.21.1 1.21.3 1.21.4 1.21.5 1.21.6 1.21.8 1.21.9 1.21.10 1.21.11 26.1
+[补测] 26.3 已停（等待轮次=2）
+############ 补测结束 2026-10-18 15:45:12 ############

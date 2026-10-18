@@ -1,0 +1,9 @@
+[hold] 连接 127.0.0.1:25611 用户名 Watcher 保持 30s
+[hold] 已 spawn（进服成功），版本协商: 1.21.4
+[hold 07:01:24] 收到: [QQ] Steve: 你好
+[hold 07:01:30] 收到: Steve joined the game
+[hold 07:01:32] 收到: <Steve> 大家好，这是普通聊天（不该被转发）
+[hold 07:01:33] 收到: <Steve> #大家好，这是带井号的聊天（应被转发）
+[hold 07:01:35] 收到: Steve left the game
+[hold] 保持结束，主动退出（spawned=true）
+[hold] 连接结束

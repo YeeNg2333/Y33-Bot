@@ -1,0 +1,6 @@
+start_ok=1
+check_exit=0
+status_exit=0
+tellraw_exit=0
+note_tellraw=本次未执行 bind，'#你好' 走的是 R02「请先使用 /bind <游戏ID> 绑定」分支，未真正注入；26.3 的真 RCON 注入已在主矩阵用例（fab263）验证 tellraw_exit=0
+conclusion=loader 0.20.0 在 26.3 上可用：服务端启动（3.4s）+ 机器人 check（真 RCON /list）+ /status 真往返 均通过
