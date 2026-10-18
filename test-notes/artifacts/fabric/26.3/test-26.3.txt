@@ -1,0 +1,145 @@
+########## Fabric 26.3 完整测试流程 开始 2026-10-18 15:30:31 ##########
+--- 实例静态信息 ---
+  export MC_VERSION="26.3"
+  export MC_FAMILY="fabric"
+  export MC_DIR="/home/hermes/mc-test/fabric/26.3"
+  export MC_GAME_PORT=25618
+  export MC_RCON_PORT=25718
+  export MC_TMUX="mc-fabric-26_3"
+  export MC_LOADER="0.19.5"
+  export MC_FAPI="0.163.0+26.3"
+  export JAVA_HOME="/home/hermes/jdk-25"
+  export MC_LOG="/home/hermes/mc-test/fabric/26.3/logs/latest.log"
+  java: openjdk version "21.0.12.1" 2026-08-18 LTS
+--- 配置 ---
+  group_openid = "E2E_DUMMY_GROUP_OPENID"   # 假群：让 MC→QQ 真的走到平台（预期被平台拒），验证完整链路
+  bindings = "data/bindings-fabric-26.3.toml"
+  state = "data/state-fabric-26.3.json"
+  name = "fab263"
+  port = 25718
+  log_path = "/home/hermes/mc-test/fabric/26.3/logs/latest.log"
+  chat = '\[\d{2}:\d{2}:\d{2}\] \[Async Chat Thread - #\d+/INFO\]: <(?P<player>\w+)> (?P<message>.+)'
+
+===================== T0 启动服务端（游戏 25618 / RCON 25718，tmux mc-fabric-26_3） =====================
+
+等待轮次=16 就绪=1
+1:[15:30:36] [main/INFO]: Loading Minecraft 26.3 with Fabric Loader 0.19.5
+3:[15:30:36] [main/INFO]: Loading 42 mods:
+66:[15:31:16] [Server thread/INFO]: Done (9.175s)! For help, type "help"
+69:[15:31:16] [Server thread/INFO]: RCON running on 0.0.0.0:25718
+LISTEN 0      4096               *:25618            *:*   
+LISTEN 0      50                 *:25718            *:*   
+>>> [RESULT] start_ok=1
+
+===================== T1 (S1) check 自检：真 QQ 探活 + 真 RCON /list =====================
+
+[配置] OK config-fabric-26.3.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 6652s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON fab263] OK /list -> There are 0 of a max of 20 players online:
+[日志 fab263] OK /home/hermes/mc-test/fabric/26.3/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+>>> [RESULT] check_exit=0
+
+===================== T2 (S2) QQ→MC：绑定 + 真 RCON tellraw 注入（真客户端核对可见性） =====================
+
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-fabric-26.3.toml)
+bind exit=0
+[绑定] 1A2B3C4D -> Steve
+[跳过] 无头客户端不支持 26.3，跳过真客户端可见性核对
+[RCON fab263] tellraw @a {"text":"[QQ] Steve: 你好"}
+>>> [RESULT] tellraw_exit=0
+
+===================== T3 (S2) QQ→MC：/status 真往返（服务端真 /list 响应解析） =====================
+
+[RCON fab263] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+>>> [RESULT] status_exit=0
+
+===================== T4 (S3) MC→QQ：真玩家进服/聊天（普通+#）/退服 → 真实日志行 =====================
+
+[跳过] 26.3：无头客户端（mineflayer/minecraft-data）不支持，无法造真玩家日志行
+>>> [RESULT] real_client=unsupported_version
+>>> [RESULT] chat_template_match=unverified(no_real_line)
+>>> [RESULT] join_template_match=unverified(no_real_line)
+>>> [RESULT] quit_template_match=unverified(no_real_line)
+
+===================== T6 (S4) 健康翻转：离线→重复离线→上线 =====================
+
+[RCON fab263] /list
+[警告] RCON fab263 命令失败: 假 RCON 服务器离线: 127.0.0.1:25718
+[群消息] [服务器状态] fab263 离线
+[RCON fab263] /list
+[警告] RCON fab263 命令失败: 假 RCON 服务器离线: 127.0.0.1:25718
+[忽略] 状态未变化，不重复提示
+[RCON fab263] /list
+[群消息] [服务器状态] fab263 上线
+>>> [RESULT] health_flip_tested=yes
+
+===================== T7 (S5) 常驻 run：真 QQ 网关 + 运行期真玩家 → MC→QQ 真链路 =====================
+
+--- run 启动阶段 ---
+2:[启动] y33bot 0.1.0（1 个 MC 服）
+5:[启动] 日志监听已启动: fab263
+9:[启动] QQ 网关已连接
+16:[启动] QQ 网关就绪
+
+===================== T8 (S6) 日志轮转：运行中清空 latest.log 再写入真实进服行 =====================
+
+日志已清空（清空前大小 5038 字节），当前大小 0
+--- 轮转相关行 ---
+96:[警告] 日志文件缩小（size=0 < offset=5038），偏移重置为 0
+>>> [RESULT] rotation_tested=yes
+
+===================== T7b run 收尾：SIGTERM → 退出码 =====================
+
+>>> [RESULT] run_exit=0
+--- run 尾部 ---
+[忽略] 日志行未匹配任何模板: [15:31:16] [Server thread/INFO]: Preparing spawn area: 100%
+[忽略] 日志行未匹配任何模板: [15:31:16] [Server thread/INFO]: Time elapsed: 8670 ms
+[忽略] 日志行未匹配任何模板: [15:31:16] [Server thread/INFO]: Done (9.175s)! For help, type "help"
+[忽略] 日志行未匹配任何模板: [15:31:16] [Server thread/INFO]: Starting remote control listener
+[忽略] 日志行未匹配任何模板: [15:31:16] [Server thread/INFO]: Thread RCON Listener started
+[忽略] 日志行未匹配任何模板: [15:31:16] [Server thread/INFO]: RCON running on 0.0.0.0:25718
+[忽略] 日志行未匹配任何模板: [15:31:16] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[忽略] 日志行未匹配任何模板: [15:31:16] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[忽略] 日志行未匹配任何模板: [15:31:16] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[忽略] 日志行未匹配任何模板: [15:31:18] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:31:19] [RCON Client /127.0.0.1 #2/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:31:20] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:31:21] [RCON Client /127.0.0.1 #3/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:31:24] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:31:24] [RCON Client /127.0.0.1 #4/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:31:27] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[警告] 日志文件缩小（size=0 < offset=5038），偏移重置为 0
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-26.3.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'f0bf8b07a75a798697d7292043d989dd'}, trace_id:f0bf8b07a75a798697d7292043d989dd
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-26.3.json
+[停止] 收到退出信号
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-26.3.json
+[停止] 已退出
+
+===================== T9 优雅停服 =====================
+
+停服等待轮次=2
+(端口已释放)
+mc-neoforge-1_21_11: 1 windows (created Sun Oct 18 15:31:08 2026)
+  总用量 56
+  -rw-r--r-- 1 hermes hermes    66 10月 18 15:31 bindings-26.3.txt
+  -rw-r--r-- 1 hermes hermes     0 10月 18 15:31 client-hold-26.3.txt
+  -rw-r--r-- 1 hermes hermes 14791 10月 18 15:31 console-26.3.txt
+  -rw-r--r-- 1 hermes hermes  5692 10月 18 15:31 latest-log-26.3.txt
+  -rw-r--r-- 1 hermes hermes  5038 10月 18 15:31 latest-log-before-rotate-26.3.txt
+  -rw-r--r-- 1 hermes hermes   274 10月 18 15:31 results-26.3.txt
+  -rw-r--r-- 1 hermes hermes  9563 10月 18 15:31 run-26.3.txt
+  -rw-r--r-- 1 hermes hermes   243 10月 18 15:31 state-26.3.txt
+已清理 libraries/world/logs（保留 server.jar + 制品）
+/dev/mapper/rlm-root   17G   16G  1.3G   93% /
+               total        used        free      shared  buff/cache   available
+Mem:            2679        1484         720           1         630        1195
+>>> [RESULT] conclusion_26.3=已跑完（见 /home/hermes/mc-test/fabric/26.3/artifacts/results-26.3.txt 上方各标记与 artifacts 原始制品）
+########## Fabric 26.3 完整测试流程 结束 2026-10-18 15:31:52 ##########

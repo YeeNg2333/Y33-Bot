@@ -1,0 +1,4 @@
+[1810月2026 15:46:18.032] [main/INFO] [net.neoforged.fml.startup.Entrypoint/]: JVM Uptime at startup: 66ms
+[1810月2026 15:46:18.044] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Starting FancyModLoader version 11.0.15 (DEDICATED_SERVER in PROD)
+[1810月2026 15:46:18.045] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Game directory: /home/hermes/mc-test/neoforge/26.1.2
+[1810月2026 15:46:18.102] [main/INFO] [net.neoforged.fml.loading.EarlyServiceDiscovery/]: Found 2 early service jars (out of 67) in 29ms

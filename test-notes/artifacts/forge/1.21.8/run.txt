@@ -1,0 +1,11 @@
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: forge
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 4439
+请求超时，请求连接: https://api.sgroup.qq.com/users/@me
+[错误] QQ 网关异常退出: 'NoneType' object has no attribute 'get'
+[错误] QQ 网关启动失败: QQ 网关启动失败: 'NoneType' object has no attribute 'get'
+[停止] 正在关闭…
+[停止] 已退出
+run exit=1

@@ -1,0 +1,2 @@
+[15:01:32] [Server thread/INFO]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[15:01:33] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）

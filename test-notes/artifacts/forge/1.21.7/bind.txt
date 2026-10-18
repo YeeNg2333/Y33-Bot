@@ -1,0 +1,1 @@
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-forge-1_21_7.toml)

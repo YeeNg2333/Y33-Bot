@@ -8,16 +8,590 @@
 2. **没复现的一律标「疑似」**，不许把猜测写成结论；结论只能写在「回复」小节里，且必须带证据（命令、日志、时间戳、SDK 源码 `文件:行号`）。
 3. 「已核实」与「疑点」分开写：前者是本仓代码/SDK 里**读得到**的事实，后者是需要跑起来才能定的问题。
 4. 修复与调查分开：调查卡只负责把结论写进「回复」；真要改代码另开卡，并走 `PLAN.md` §7 的变更登记。
+5. 严重级别用词固定为三档：**高（功能级）** / **中（可用性、可观测性）** / **低（文档、部署、测试流程）**；
+   排序规则：先按级别降序，同级别内按影响范围（加载器数 × 版本数）降序；**已修复的历史条目排在最后**。
+6. **批量矩阵条目**（BUG-002 起，由实机测试矩阵产出）用「根因分析 / 修复方向 / 未验证的边界」三节
+   代替「待核实的疑点 / 回复」：这类条目的分析卡就是汇总卡本身，结论直接落在条目里，不再另设「回复」小节；
+   证据必须是**原始日志片段、`文件:行号`、或可复跑命令**（能离线跑的优先给离线复核）。
+7. 影响范围必须写清「**哪些加载器 × 哪些版本是实证、哪些是外推或未验证**」；
+   **同一根因**在不同加载器/版本上的表现合并为一条，**不同根因**（哪怕症状一样）不合并，条目之间互相引用。
+
+## 汇总表（2026-10-18 实机测试矩阵，汇总卡 `t_1c0e88a4`）
+
+来源：四张矩阵卡 —— 原版 `t_ac457fe1`、Fabric `t_5bccfcd8`、Forge `t_157ba7fe`、NeoForge `t_efe57773` ——
+在测试机 `hermes@10.1.1.4`（Rocky 9.7）上的实机输出，逐条证据见 `test-notes/00-env.md` ~ `04-neoforge.md`
+与各自 `artifacts/`（原件在四张卡的分支与测试机上，见 §「测试矩阵与证据来源」）。
+
+| 编号 | 标题 | 加载器 | 版本区间（实证） | 严重级别 | 状态 |
+|---|---|---|---|---|---|
+| BUG-002 | 默认 `chat` 模板与 1.21.2+ 的真实聊天行不匹配 → 游戏内 `#` 聊天不被转发 | 原版 / Fabric / Forge / NeoForge | 原版 1.21.2–26.3（15/15）、Fabric 1.21.2–26.1（7/7）；窗口内**无版本边界**，变更点 ≤ 1.21.1 | 高（功能级） | 已复现，未修 |
+| BUG-003 | 加载器自带的 log4j2 布局与默认 `join`/`quit`/`chat` **三个模板全部不匹配** → MC→QQ 方向（进出服通知 + `#` 聊天）全哑 | Forge / NeoForge | Forge 1.21.3–26.3（12/12）、NeoForge 1.21.3–26.3（9/9），**加载器级、非版本级** | 高（功能级） | 已复现，未修 |
+| BUG-004 | 日志行 100% 未匹配时没有任何可见提示（只有 DEBUG 级 `[忽略]`），缺「零事件」看门狗 | 全部 | 全部（与加载器、版本无关） | 中（可观测性） | 已复现（是否按缺陷处理待口径） |
+| BUG-005 | QQ 网关遇平台接口超时时：SDK 把超时吞成 `None` → 报错不可读（`'NoneType' …`）并**不重试**直接非 0 退出 | 全部（与 MC 无关，平台/网络触发） | 全部加载器与版本；实测 Forge 5 次、NeoForge 3 次、原版 1 次 | 中（可用性） | 已复现（触发条件随机、不可控复现） |
+
+> **本轮复验 BUG-001**：四张卡在真机上共触发 9 次「网关启动期失败 / 网关任务结束」，每次都出现 `[错误]` +
+> 非 0 退出（不再静默常驻），R2-lite 契约实测生效 —— 原始输出见 BUG-005「症状」。
+
+## 测试矩阵与证据来源
+
+- 环境：`hermes@10.1.1.4`（Rocky 9.7，2 vCPU / 2.6 GiB）、Temurin JDK21（默认）与 JDK25、
+  Python 3.12.8 + 仓库 `.venv`、源码 `f7fd5cb`（与 `main` 同步）；端口分配表见 `test-notes/00-env.md` §5.2。
+- 四份逐版本记录（**本轮新增，未改动任何项目代码**）：
+
+| 卡 | 记录 | 分支 / 提交 | 覆盖 |
+|---|---|---|---|
+| `t_a4c6c3ae` | `test-notes/00-env.md` | `wt/t_a4c6c3ae` @ `3c20315` | 环境基座 + 原版 1.21.11 / 26.3 冒烟 |
+| `t_ac457fe1` | `test-notes/01-vanilla.md` | `wt/t_ac457fe1` @ `d387de5`、`bb9166e` | 原版 15 个正式版 × 17 条用例（255 条，0 失败） |
+| `t_5bccfcd8` | `test-notes/02-fabric.md` | `wt/t_5bccfcd8` @ `c8ef7bc` | Fabric 9 个版本 + 1 个 loader 变体 |
+| `t_157ba7fe` | `test-notes/03-forge.md` | `wt/t_157ba7fe` @ `5f25918` | Forge 12 个版本 + D1–D4 补充观察 |
+| `t_efe57773` | `test-notes/04-neoforge.md` | `wt/t_efe57773` @ `ee94d57` | NeoForge 9 个版本（T0–T9） |
+
+- 本卡新增：`BUGS.md`（本文件）+ `test-notes/*.md`（上面五份记录的逐字副本，便于本文件引用的证据落在同一棵树里）；
+  **原始制品**（`artifacts/vanilla|fabric|forge|neoforge/`）仍在各自卡分支与测试机上，本节按条目给出相对路径。
+- **根卡 `t_d25d5a1d` 汇总（2026-10-18）**：六张卡的分支全部合入根卡分支 `y33-bot/t_d25d5a1d`（6 个 merge 提交、0 冲突），
+  于是本文引用的 `test-notes/**` 与**原始制品**落在同一棵树里；制品**实测 761 个文件**
+  （`00-env` 4、`vanilla` 107、`fabric` 162、`forge` 296、`neoforge` 192）。
+  合并后全仓 `git diff f7fd5cb..HEAD -- src tests docs README.md PLAN.md IDEA.md config.example.toml` 为**空**。
+  根卡的独立复核与一处修正见文末「根卡复核记录」。
 
 ## 索引
 
 | 编号 | 标题 | 状态 | 登记日 | 调查卡 |
 |---|---|---|---|---|
+| [BUG-002](#bug-002-默认-chat-模板与-1212-的真实聊天行不匹配--游戏内--聊天不被转发) | 默认 `chat` 模板与 1.21.2+ 真实聊天行不匹配 | 已复现，未修 | 2026-10-18 | 汇总卡 `t_1c0e88a4` |
+| [BUG-003](#bug-003-加载器自带-log4j2-布局与默认-joinquitchat-三个模板全部不匹配--mcqq-方向全哑) | 加载器日志布局与三个默认模板全部不匹配 | 已复现，未修 | 2026-10-18 | 汇总卡 `t_1c0e88a4` |
+| [BUG-004](#bug-004-日志行-100-未匹配时没有任何可见提示仅-debug-级) | 全量未匹配无可见提示，缺「零事件」看门狗 | 已复现（待口径） | 2026-10-18 | 汇总卡 `t_1c0e88a4` |
+| [BUG-005](#bug-005-qq-网关遇平台接口超时时-sdk-吞成-none--报错不可读且直接非-0-退出) | QQ 网关遇平台超时：报错不可读、不重试直接退出 | 已复现（触发随机） | 2026-10-18 | 汇总卡 `t_1c0e88a4` |
 | [BUG-001](#bug-001-qq-token-过期后运行时静默失效运行期无任何提示) | QQ token 过期后运行时静默失效，运行期无任何提示 | **已修复**（2026-10-15 落地 R2-lite + R5，见本条「修复记录」；真机触发链路仍未验证） | 2026-10-13 | 看板 `default` 的 `t_6cc56405`（2026-10-15 结案，结论见本条「回复」）；修复卡 `t_80249809` |
+
+> 本轮（2026-10-18）另附两节，紧跟 BUG-005 之后：§「非产品缺陷观察（环境 / 部署 / 测试流程）」、
+> §「**未能复现 / 信息不足清单**（本轮四张矩阵卡汇总）」。
+> 排在最后的 `§ 模板` 是「新增条目照抄」的格式说明。
+
+---
+
+## BUG-002 默认 `chat` 模板与 1.21.2+ 的真实聊天行不匹配 → 游戏内 `#` 聊天不被转发
+
+**状态**：已复现（未修；汇总卡只做根因分析，不改代码）
+**登记日**：2026-10-18
+**上报**：实机测试矩阵 —— 环境基座卡 `t_a4c6c3ae` 首次抓到现场证据（`00-env.md` §7-10），
+原版卡 `t_ac457fe1`、Fabric 卡 `t_5bccfcd8` 逐版本复现并给出真行
+**影响范围**：**所有加载器**。实证：原版 1.21.2–26.3（15/15，`01-vanilla.md` §6.1）、
+Fabric 1.21.2–26.1（7/7，`02-fabric.md` §3.1）；Forge 12/12（其中 26.2/26.3 用的是「真前缀 + 正文」合成行，
+`03-forge.md` §7-1）与 NeoForge 有真玩家日志的全部版本（`04-neoforge.md` §4.2 共 7 版，含 26.1.2）**亦命中**，
+但那两族另有加载器级问题（[BUG-003](#bug-003-加载器自带-log4j2-布局与默认-joinquitchat-三个模板全部不匹配--mcqq-方向全哑)）叠加
+**版本边界**：**窗口内没有边界** —— 自窗口最早一版 1.21.2（2024-10-22）起聊天行就是这个形态，
+变更点在窗口之前（**≤ 1.21.1**）（`01-vanilla.md` §6.2-1）
+
+### 症状（可观测）
+
+1. 玩家在游戏内发 `#…`，**群里收不到**（没有 `[群消息] <玩家>@<服名>: <内容>` 这样的行）。
+2. 机器人侧**没有报错**：常驻 `run` 在默认日志级别下只在 DEBUG 里留一行
+   `[忽略] 日志行未匹配任何模板: <真实行>`；只有 `simulate log-event --line` 会显形为
+   `[警告] 日志行未匹配任何模板` + **退出码 1**（`src/y33bot/cli.py:221-225`）。
+3. 同一时刻**进出服通知、`/status`、QQ→MC 注入全部正常** —— 所以从外面看「机器人是好的」。
+
+### 原始证据
+
+真机日志行（各版本逐字相同；服务端原文在 `artifacts/vanilla/<版本>/latest-log.txt`、
+`artifacts/fabric/<版本>/real-chat-line-<版本>.txt`，本仓库内的逐字副本见 `test-notes/01-vanilla.md` §5 F-V1、`test-notes/02-fabric.md` §4 F-1）：
+
+```text
+1.21.2  [14:57:20] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+1.21.11 [14:30:09] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+26.1    [15:22:31] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+```
+
+项目出厂默认（`config.example.toml:33`；同款见 `IDEA.md:170`、`PLAN.md:482`、`README.md:119`）：
+
+```toml
+chat = '\[\d{2}:\d{2}:\d{2}\] \[Async Chat Thread - #\d+/INFO\]: <(?P<player>\w+)> (?P<message>.+)'
+```
+
+机器人侧输出（A/B 对照，只差 `chat` 模板；`00-env.md` §7-10、`01-vanilla.md` §5 F-V1、`02-fabric.md` §4 F-1）：
+
+```text
+[A] 默认模板 + 真行       → [警告] 日志行未匹配任何模板              （退出码 1，无 [群消息]）
+[A] 默认模板 + 旧格式行   → [群消息] Steve@main: 大家好              （对照组：≤1.21.1 的行能匹配）
+[B] 放宽 chat 模板 + 真行  → [群消息] Steve@main: 大家好，这是带井号的聊天（应被转发）
+```
+
+### 复现步骤
+
+**离线（不需要 MC 服，任何装了本项目 `.venv` 的机器都能跑）** —— 本卡用**仓库自己的代码**复核
+（脚本在仓库外，不入库：`C:\Users\Lenovo\AppData\Local\hermes\cache\scratch\t1c0e88a4\verify_patterns2.py`；
+`python -c` 在本机被判为危险命令，故写成脚本再跑）：
+
+```bash
+E:/D-Data/Users/Lenovo/docs/GitHub/Y33-Bot/.venv/Scripts/python.exe \
+  C:/Users/Lenovo/AppData/Local/hermes/cache/scratch/t1c0e88a4/verify_patterns2.py
+```
+
+实测输出（2026-10-18 17:05:02 +0800，节选）：
+
+```text
+[1] config.example.toml 的默认模板（出厂默认）
+    join = '\\[\\d{2}:\\d{2}:\\d{2}\\] \\[Server thread/INFO\\]: (?P<player>\\w+) joined the game'
+    quit = '\\[\\d{2}:\\d{2}:\\d{2}\\] \\[Server thread/INFO\\]: (?P<player>\\w+) left the game'
+    chat = '\\[\\d{2}:\\d{2}:\\d{2}\\] \\[Async Chat Thread - #\\d+/INFO\\]: <(?P<player>\\w+)> (?P<message>.+)'
+
+[2] 编译后（patterns._anchor 补 ^/$，parse_line 用 re.match）
+    chat -> '^\\[\\d{2}:\\d{2}:\\d{2}\\] \\[Async Chat Thread - #\\d+/INFO\\]: <(?P<player>\\w+)> (?P<message>.+)$'
+
+[3] 默认模板 x 真实行
+    vanilla 1.21.2 chat        default=False event=None
+    fabric  1.21.9 chat        default=False event=None
+    vanilla 1.21.2 join        default=True  event=join
+    vanilla 1.21.2 quit        default=True  event=quit
+    docs old chat (<=1.21.1)   default=True  event=chat
+    docs old join (<=1.21.1)   default=True  event=join
+
+[4] 各卡实测的放宽模板 x 同一批真行（验证修复方向）
+    [vanilla/fabric 放宽] vanilla-chat=Y fabric-chat=Y vanilla-join=Y vanilla-quit=Y docs-chat=Y docs-join=Y
+```
+
+**真机（任选一版）**：`01-vanilla.md` §5 F-V1 的命令（`bash ~/mc-test/vanilla-matrix.sh 1.21.9 6 full`，看 `[C19]/[C20]` 两段）；
+或起一台服 + 无头客户端进服发一条 `#…`，再 `grep '<玩家> #' <实例>/logs/latest.log`。
+
+### 根因分析（代码级）
+
+**不是「解析到了但被过滤」，而是「根本没有解析出事件」**：
+
+| # | 环节 | 位置 | 事实 |
+|---|---|---|---|
+| 1 | 出厂默认模板写的是旧形态 | `config.example.toml:31-33`（来源 `IDEA.md:170`） | chat 模板认的是 **≤ 1.21.1** 的行：`[Async Chat Thread - #N/INFO]: <player> msg` —— 线程名是异步聊天执行器，且没有 `[Not Secure] ` 标记 |
+| 2 | 模板编译时被整行锚定 | `src/y33bot/mclog/patterns.py:52-60`（`_anchor()`）、`:96`（`re.match`） | 模板自身没写 `^`/`$` 也会被补成 `^…$` ⇒ **整行必须逐字匹配**：行首时间戳、线程名、`[Not Secure] ` 任何一处不同都不命中 |
+| 3 | 上游在 ≥ 1.21.2 改了聊天行 | MC 1.21.2 起（本窗口全部版本） | 聊天回到**主线程**、未签名身份带前缀：`[Server thread/INFO]: [Not Secure] <player> msg`（`01-vanilla.md` §5 F-V1 的 15 版真行） |
+| 4 | 未命中 ⇒ 没有事件 | `src/y33bot/mclog/patterns.py:91-110`（按 `join`→`quit`→`chat` 依次 `match`，全败返回 `None`）、`src/y33bot/mclog/watcher.py:112-115` | `parse_line()` 返回 `None` → `poll_new_events()` 只记一条 DEBUG `[忽略] 日志行未匹配任何模板` 后 `continue` |
+| 5 | 桥接层根本没被调用 | `src/y33bot/bridge.py:139`（`handle_log_event`，只在**有事件**时由 `src/y33bot/service.py:284-289` 调用；`#` 前缀判断在 `bridge.py:165-167`） | 「非 `#` 开头不转发」这类判断都在事件层**之上**；没有事件就没有任何判断机会 |
+| 6 | 于是静默 | `src/y33bot/cli.py:221-225` 是唯一显形点 | `run` 不告警、不退出、不自愈 ⇒ 与 BUG-001 同类「静默失效」，只是方向相反（MC→QQ） |
+
+**为什么以前没被发现（同类事实，一并登记）**：默认模板、文档示例与**测试夹具**是同一份旧格式 ——
+`tests/conftest.py:19-21`（`CHAT_TEMPLATE`）、`tests/e2e/test_acceptance.py:131/148/164`、`tests/test_cli.py:274-312`、
+`docs/acceptance.md:138-148`、`docs/smoke.md:124-132`、`PLAN.md:618-622` 喂的都是 `[Async Chat Thread - #0/INFO]` 的行，
+等于「自造行验自造模板」；所以 381 条单测全绿（`00-env.md` §4）也测不出这个问题。
+
+### 未验证的边界
+
+- **`online-mode=true`（正版签名聊天）**：本环境所有实例统一 `online-mode=false`（`00-env.md` §5.3），
+  无法判定默认模板当初是不是为正版服而写（`01-vanilla.md` §7-2）。若正版服的行是 `<Steve> msg`（无 `[Not Secure] ` 前缀），
+  修复时必须把该前缀做成**可选**（下面的放宽模板已这么做）。
+- **MC 26.2 / 26.3 的真实聊天行**：无头客户端（mineflayer + minecraft-data）最高支持 26.1（实测连 26.3 报
+  `No data available for version 26.3`，`02-fabric.md` §4 F-2）⇒ 这两版只能标「未验证」，不外推。
+- Bedrock / 非 Java 版日志格式：不在本仓支持范围，未测。
+
+### 修复方向（只登记方向，不在本卡改）
+
+1. **改默认值**（一行）：`config.example.toml:33` 的 `chat` 换成兼容形态，同时保留旧线程名分支 ——
+   `\[\d{2}:\d{2}:\d{2}\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\]: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)`
+   （实测：真行 `Y`、旧格式行 `Y`、普通聊天仍被 `bridge.py:165-167` 忽略、回环防护不受影响；15 版的 `[B]` 段全 PASS。）
+2. **同步文档与测试夹具**：`README.md:116-127`、`PLAN.md:479-483/618-622`、`docs/smoke.md:124-132`、
+   `docs/acceptance.md:138-148` 的示例行换成真行；`tests/conftest.py:19-21` 增加**真机行夹具**（新形态 + 旧形态各一条）。
+   `IDEA.md:170` 是冻结需求书，**不直接改**，按 `PLAN.md` §7 登记偏离。
+3. **（可选，与 BUG-004 合并）** 让 `check` 拿 `latest.log` 的最后一行试匹配三模板，把「模板与真机不匹配」
+   在启动期变成 `FAIL`，而不是等玩家发现群里没消息。
+4. 文档侧 FAQ（`README.md` §13）建议补一条：「群里收不到游戏内聊天，但进服通知正常 → 先看 `[log_patterns].chat`」。
+
+---
+
+## BUG-003 加载器自带 log4j2 布局与默认 join/quit/chat 三个模板全部不匹配 → MC→QQ 方向全哑
+
+**状态**：已复现（未修；汇总卡只做根因分析，不改代码）
+**登记日**：2026-10-18
+**上报**：Forge 卡 `t_157ba7fe`（12 个版本 100% 命中）、NeoForge 卡 `t_efe57773`（9 个版本 100% 命中）
+**影响范围**：**加载器级，非版本级** —— Forge 1.21.3 / 1.21.4 / 1.21.5 / 1.21.6 / 1.21.7 / 1.21.8 / 1.21.9 /
+1.21.10 / 1.21.11 / 26.1 / 26.2 / 26.3（**12/12**，`03-forge.md` §6）；NeoForge 1.21.3 / 1.21.4 / 1.21.5 / 1.21.8 /
+1.21.10 / 1.21.11 / 26.1.2 有真玩家日志（7/7），26.2 / 26.3 由常驻 `run` 的全量「未匹配」+ 格式取样佐证（合计 **9/9**，`04-neoforge.md` §5.1/§6.1）
+**与 BUG-002 的关系**：两个**独立根因**，症状叠加 —— 即使只修 BUG-002 的 `chat` 模板，
+Forge/NeoForge 上的 `join`/`quit`（进出服通知）**仍然全哑**；反之只修本条的布局兼容，`chat` 也仍然不匹配（`Server thread` 线程名）
+
+### 症状（可观测）
+
+1. 换成 Forge/NeoForge 服务端后：**玩家进服、退服、游戏内 `#` 聊天都不进群**（默认配置下 MC→QQ 方向整体失效）。
+2. 机器人侧不报错、不退出；`run --verbose` 里对**每一行**服务端日志都打
+   `[忽略] 日志行未匹配任何模板: <真实行>`（把进出服/聊天三行本身也包含在内）。
+3. `check`（真 QQ 探活 + 真 RCON `/list`）、`tellraw` 注入、`/status` 真往返、健康翻转、日志轮转、SIGTERM 退出码 0
+   **全部正常**（`04-neoforge.md` §5.3）⇒ 故障面完全落在「日志 → 事件」这一步。
+
+### 原始证据
+
+真机日志行（Forge 1.21.11，`artifacts/forge/1.21.11/real-lines.txt`；NeoForge 1.21.4 同族）：
+
+```text
+[1810月2026 15:35:33.486] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+[1810月2026 15:35:36.278] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[1810月2026 15:35:37.785] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+```
+
+默认模板对这三行的实测（`artifacts/forge/1.21.11/pattern-default.txt` 原文）：
+
+```text
+--- 默认 join 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[join] exit=1
+--- 默认 quit 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[quit] exit=1
+--- 默认 chat 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[chat] exit=1
+```
+
+NeoForge 的 A/B（同一条真行、只改配置；`artifacts/neoforge/1.21.4/results-1.21.4.txt`）：
+
+```text
+default_join_exit=1      default_quit_exit=1      default_chat_exit=1      default_chatplain_exit=1
+relaxed_join_exit=0      relaxed_quit_exit=0      relaxed_chat_exit=0      relaxed_chatplain_exit=0
+```
+
+生产现场（NeoForge 1.21.4，真客户端进服/聊天/退服，`artifacts/neoforge/1.21.4/run-1.21.4.txt`）：
+
+```text
+[忽略] 日志行未匹配任何模板: [1810月2026 15:26:13.926] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve2 joined the game
+[忽略] 日志行未匹配任何模板: [1810月2026 15:26:17.100] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve2> #大家好，这是带井号的聊天（应被转发）
+[忽略] 日志行未匹配任何模板: [1810月2026 15:26:18.637] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve2 left the game
+```
+
+本卡的离线复核（同一脚本，2026-10-18 17:05:02 +0800，节选）：
+
+```text
+[3] 默认模板 x 真实行
+    forge   1.21.11 join       default=False event=None
+    forge   1.21.11 quit       default=False event=None
+    forge   1.21.11 chat       default=False event=None
+    neoforge 1.21.4 join       default=False event=None
+    neoforge 1.21.4 chat       default=False event=None
+[4] 各卡实测的放宽模板 x 同一批真行
+    [forge/neoforge 放宽] forge-join=Y forge-quit=Y forge-chat=Y neoforge-join=Y neoforge-chat=Y
+```
+
+### 复现步骤
+
+**离线**：同 BUG-002 的脚本（真行已内置在脚本的 `CASES` 里），或把上面任意一行喂给
+`y33bot simulate log-event --server <名> --line '<真行>' --dry-run --config <配置>` → `[警告] 日志行未匹配任何模板`（退出码 1）。
+
+**真机（Forge，`03-forge.md` §4 F1 原文）**：
+
+```bash
+ssh hermes@10.1.1.4; . ~/y33-env.sh
+bash ~/mc-test/new-forge.sh 1.21.11 61.2.0 8
+tmux new -d -s mc-forge-1_21_11 "cd ~/mc-test/forge/1.21.11 && ./start.sh 2>&1 | tee -a console.out.log"   # 等 Done (...) 与 RCON 监听
+cd ~/Y33-Bot && .venv/bin/python -m y33bot simulate log-event --server forge --dry-run --config config-forge-1_21_11.toml \
+  --line '[1810月2026 15:35:33.486] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game'
+```
+
+NeoForge 侧等价命令见 `04-neoforge.md` §6.1（`nf_smoke_one.sh` + 无头客户端）。
+
+### 根因分析（代码级）
+
+| # | 环节 | 位置 | 事实 |
+|---|---|---|---|
+| 1 | 默认模板按 **vanilla 布局**书写 | `config.example.toml:31-33` | 三模板都以 `\[\d{2}:\d{2}:\d{2}\] \[<线程>/INFO\]: ` 开头 —— 这是原版 `latest.log` 的形状 |
+| 2 | 加载器改写了整套日志布局 | Forge / NeoForge 自带 `log4j2`（`03-forge.md` §4 F1、`04-neoforge.md` §5.2） | ① 时间戳变 `[dd月yyyy hh:mm:ss.SSS]`（本机 `zh_CN` 下渲染成 `[1810月2026 15:35:33.486]`）；② `[线程/级别]` 之后**多一层 `[logger/]` 段**（`[net.minecraft.server.MinecraftServer/]`） |
+| 3 | 整行锚定 ⇒ 三模板全灭 | `src/y33bot/mclog/patterns.py:52-60`、`:96` | 行首只差一个时间戳形状、行中少一段 logger，`^…$` 就必然不命中；`join`/`quit`/`chat` 三个模板**同时**失效（与原版只坏 `chat` 不同） |
+| 4 | 不命中只记 DEBUG | `src/y33bot/mclog/watcher.py:112-115` | 见 BUG-004：默认级别下「全量未匹配」看起来和「服务器很安静」一模一样 |
+| 5 | 影响被放大到整个方向 | `src/y33bot/bridge.py:139-155` | 进出服通知与聊天**都**依赖日志事件 ⇒ MC→QQ 方向（含 RCON 之外的几乎全部功能）整体失效 |
+
+补充事实（不是缺陷，但影响修复写法）：加载器的时间戳是 `ddMMMyyyy HH:mm:ss.SSS` 形态（`18` + `10月` + `2026`），
+月份名由 **JVM 默认 locale** 渲染（本机 `zh_CN` 渲染成 `10月`）。
+**因此修复模板不要写死 `\d+月\d+`**（那会绑死 zh_CN），用 `\[[^\]]+\]` 把时间戳整体吃掉更稳。
+（此点为**推断**：只有 zh_CN 机器，未能用 en_US 的 JVM 实测渲染结果。）
+
+### 未验证的边界
+
+- MC 26.2 / 26.3 的**真玩家**行：无头客户端上限 26.1（`04-neoforge.md` §6.3）⇒ 这两版只有「全量未匹配 + 格式取样」佐证。
+- 其它加载器（Quilt / 自行改 `log4j2.xml` / 服务端加自定义 appender）：未测。
+- Forge 26.2 / 26.3 的聊天行是「真前缀 + 正文」合成的（`03-forge.md` §7-1），已在 `real-lines.txt` 标注。
+
+### 修复方向（只登记方向，不在本卡改）
+
+1. **默认模板改成对加载器布局宽容**（与 BUG-002 的第 1 条可以合并成一次配置改动，给出实测可用的一组）：
+   ```toml
+   join = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) joined the game'
+   quit = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) left the game'
+   chat = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)'
+   ```
+   （三模板均为**本卡离线复核 + 两张卡真机实测**通过的形态；时间戳与 logger 段用「不解析内容」的 `[^\]]+` 吃掉，避免绑死 locale。）
+2. **或提供「按加载器预设」**：`config.example-<loader>.toml` 之类，或在 `README.md` 增加一小节
+   「换了加载器 → `[log_patterns]` 怎么改」，并说明「同一根因：加载器自带 log4j2 布局」。
+3. **测试夹具补真行**：`tests/conftest.py:19-21` 增加 Forge / NeoForge 形态的真行样本，
+   让「模板 × 真实布局」有回归保护（现在的夹具只覆盖 vanilla 旧形态）。
+4. 文档 FAQ 增一条：**「群里收不到进服通知、`/status` 却正常」→ 先按本节放宽 `[log_patterns]`**。
+
+---
+
+## BUG-004 日志行 100% 未匹配时没有任何可见提示（仅 DEBUG 级）
+
+**状态**：已复现（行为确凿；**是否按缺陷处理取决于用户口径**，见「修复方向」）
+**登记日**：2026-10-18
+**上报**：Fabric 卡 `t_5bccfcd8`（F-5 记录「未匹配噪声」）、NeoForge 卡 `t_efe57773`（§5.1/§6.1 把它写成「静默」）
+**影响范围**：全部加载器、全部版本（与 MC 无关）；它是 BUG-002 / BUG-003 变成「静默失效」的直接原因，
+也是 BUG-001 那条「明确不接受静默」的口径在 MC→QQ 方向上的同类缺口
+
+### 症状（可观测）
+
+1. 服务端日志格式一变（换加载器、MC 改格式、`log4j2.xml` 被改），MC→QQ 方向可以**整体失效而没有任何告警**：
+   进程常驻、`check` 全 OK、`/status` 有回、健康轮询照常，群里却是死的。
+2. 唯一的痕迹是 DEBUG 级 `[忽略] 日志行未匹配任何模板: <行>`（`src/y33bot/mclog/watcher.py:114`）——
+   默认日志级别下不打印；`run --verbose` 下则被淹没在启动信息、mod 列表、RCON 线程行里（`02-fabric.md` §4 F-5 记了「噪声大」）。
+3. 唯一会**显形**的入口是手动跑 `y33bot simulate log-event --line '<真行>'`（`[警告]` + 退出码 1，`src/y33bot/cli.py:221-225`）——
+   必须人主动去跑，且要先知道「格式可能变了」。
+
+### 原始证据
+
+- `artifacts/neoforge/1.21.4/run-1.21.4.txt`：常驻 `run` 对每一条服务端日志（含玩家进服/聊天/退服三行本身）都打
+  `[忽略] 日志行未匹配任何模板: …`，但**没有任何** `[警告]`/`[错误]`、退出码仍为 0；
+- `artifacts/fabric/*/run-<版本>.txt`：同样的 DEBUG 噪声（F-5）；
+- `artifacts/vanilla/<版本>/run.out`：`[忽略] 日志行未匹配任何模板: … <Alex> #矩阵测试…`（`01-vanilla.md` §5 F-V1）。
+
+### 复现步骤
+
+```bash
+# 任意一台 MC 服（或直接用一段日志文本）
+y33bot run --config config.toml            # 正常级别：日志里看不到任何异常
+y33bot run --config config.toml --verbose  # 才看得到 [忽略] 日志行未匹配任何模板
+y33bot simulate log-event --server main --line '[14:30:09] [Server thread/INFO]: [Not Secure] <Steve> #你好' --dry-run
+# → [警告] 日志行未匹配任何模板（退出码 1）
+```
+
+### 根因分析（代码级）
+
+| # | 环节 | 位置 | 事实 |
+|---|---|---|---|
+| 1 | 未匹配只记 DEBUG | `src/y33bot/mclog/watcher.py:112-115` | `self._logger.debug("[忽略] 日志行未匹配任何模板: %s", text)` —— 默认级别不可见 |
+| 2 | 没有任何计数/阈值 | `src/y33bot/mclog/watcher.py`（整文件） | 不统计「本轮/最近 N 行里命中了几条」，也没有「连续 T 秒零事件」的看门狗 |
+| 3 | `check` 不校验模板与真机日志行 | `src/y33bot/service.py:85-173`（自检项：配置 / QQ / RCON / 日志可读 / 绑定表） | 只判「日志文件可读」，不判「模板能匹配这个服的日志」⇒ 配错模板照样 `check` OK |
+| 4 | 桥接/健康轮询与日志事件解耦 | `src/y33bot/service.py:271-304` | 没有事件时 `_log_loop` 什么都不做，`_health_loop` 只看 RCON ⇒ 进程一切正常的表象被维持 |
+
+### 未验证的边界
+
+- **用户口径未定**：是要求「打一次 `[警告]` 即可」，还是要求「长时间零事件就非 0 退出」（像 BUG-001 的 R2-lite 那样），
+  本卡不替用户拍板。误报风险也需要口径：一个真·安静的服务器本来就长时间没有进出服事件。
+
+### 修复方向（只登记方向，不在本卡改）
+
+1. **加「零事件」提示**：按服统计「最近 N 条日志行命中 0 条」或「连续 T 分钟零事件且期间有新日志行」→ 打**一次**
+   `[警告] 日志与 [log_patterns] 不匹配（最近 N 行全部未命中），MC→QQ 方向可能失效`（只打一次，避免刷屏）。
+2. **`check` 增一项**「模板 × 真机日志行」：读 `latest.log` 的最后一行（或配置里指定的样例行）试匹配
+   `join`/`quit`/`chat`，不匹配即 `FAIL` 并在 detail 里给出建议模板 —— 把 BUG-002 / BUG-003 挡在启动前。
+3. **文档**：`README.md` §13 FAQ 增加排查顺序「群里没有进服通知/聊天 → 先 `run --verbose` 看有没有
+   `[忽略] 日志行未匹配任何模板` → 再按 `[log_patterns]` 调整」。
+
+---
+
+## BUG-005 QQ 网关遇平台接口超时时：SDK 吞成 `None` → 报错不可读且直接非 0 退出
+
+**状态**：已复现（触发条件随机；错误链条可在离线逐字复现）
+**登记日**：2026-10-18
+**上报**：Forge 卡 `t_157ba7fe`（F2，12 版里 5 次）、原版卡 `t_ac457fe1`（F-V2，1 次）、NeoForge 卡 `t_efe57773`（§6.2，3 次）
+**影响范围**：**与 MC 加载器/版本无关**（QQ 平台侧或网络瞬时不稳触发）；凡 `y33bot run` 都会遇到，
+表现是**启动期**失败（网关还没就绪就退出）或运行期网关任务结束
+
+### 症状（可观测）
+
+1. 启动期撞上平台接口超时时：网关**起不来**，进程打两条**读不出原因**的 `[错误]`，走 `[停止]` 收尾后**退出码 1**
+   （交给 `systemd`/`nssm` 拉起 —— 契约对，但运维只能看到 `'NoneType' …`）。
+2. 真机上是**随机**的：同版本复跑、3 次冷启动尝试都恢复正常（`01-vanilla.md` §5 F-V2）。
+3. 运行期同样走这条链路（`src/y33bot/service.py:238-244`）：网关任务结束 → `[错误] QQ 网关已断开（收不到群消息）…` + 返回 1。
+
+### 原始证据
+
+原版 1.21.8 首跑原文（`artifacts/vanilla/1.21.8/run.out.gateway-starttimeout-original.txt`，整个 `run.out` 只有 12 行）：
+
+```text
+Using selector: EpollSelector
+[启动] y33bot 0.1.0（1 个 MC 服）
+[RCON 127.0.0.1:25705] 已连接
+[RCON v1_21_8] 已连接
+[启动] 日志监听已启动: v1_21_8
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 1015
+请求超时，请求连接: https://api.sgroup.qq.com/gateway/bot
+[错误] QQ 网关异常退出: 'NoneType' object is not subscriptable
+[错误] QQ 网关启动失败: QQ 网关启动失败: 'NoneType' object is not subscriptable
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.8.json
+[停止] 已退出
+```
+
+Forge 侧原文（`03-forge.md` §4 F2，同一形态、两条超时都出现）：
+
+```text
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 5209
+请求超时，请求连接: https://api.sgroup.qq.com/users/@me
+请求超时，请求连接: https://api.sgroup.qq.com/gateway/bot
+[错误] QQ 网关异常退出: 'NoneType' object is not subscriptable
+[错误] QQ 网关启动失败: QQ 网关启动失败: 'NoneType' object is not subscriptable
+[停止] 正在关闭… / [停止] 已退出      → run exit=1
+```
+
+NeoForge 侧另一种措辞（`04-neoforge.md` §6.2）：`users/@me` 超时那一步抛的是
+`'NoneType' object has no attribute 'get'`；26.2 那次是 `[botpy] access_token TimeoutError:`。
+
+**观察到的频率**：Forge 12 个版本命中 5 次（1.21.3 / 1.21.5 / 1.21.8 / 26.1 / 26.3，其中 1.21.8 两次），
+NeoForge 3 次（1.21.10 连续两轮 + 26.2 一轮）、原版 1 次（1.21.8 首跑）；
+**同版本复跑/重装后均恢复正常**（`forge-retry.sh`、`neoforge/scripts/rerun_*.sh`、3 次冷启动全成功）。
+
+### 复现步骤
+
+- **正面复现**（平台超时）：**不可控** —— 本卡未找到稳定触发条件（见「未复现 / 信息不足」第 4 条）；
+  四张卡共 9 次都是「随机撞上」，且都在 4 张卡并行跑 MC 服务端、机器负载高时（`01-vanilla.md` §5 F-V2 的环境观察）。
+- **反向复现**（错误文本的产生方式，离线可跑）：SDK 吞掉超时后返回 `None`，随后被当 dict 用。
+  本卡用脚本造出同样的两条异常文本：
+
+  ```text
+  None[...]      -> TypeError: 'NoneType' object is not subscriptable
+  None.get(..)   -> AttributeError: 'NoneType' object has no attribute 'get'
+  ```
+
+  与日志里的 `[错误] QQ 网关异常退出: …` 逐字一致。
+
+### 根因分析（代码级）
+
+| # | 环节 | 位置 | 事实 |
+|---|---|---|---|
+| 1 | SDK 把 HTTP 超时**吞掉并返回 `None`** | `.venv/Lib/site-packages/botpy/http.py:181-195` | `except asyncio.TimeoutError: _log.warning(f"请求超时，请求连接: {route.url}")` —— 之后**隐式 `return None`**（这正是日志里那条 `请求超时，请求连接: …` 的来源） |
+| 2 | 启动链路第一站：`/users/@me` | `botpy/client.py:161-164`（`_bot_login`）→ `botpy/http.py:197-207`（`login()` 里 `data = await self.request(Route("GET","/users/@me"))`）→ `botpy/client.py:178`（`Robot(user)`）→ `botpy/robot.py:16-19`（`data.get("username")` / `int(data["id"])`） | `data` 为 `None` ⇒ `AttributeError: 'NoneType' object has no attribute 'get'`（NeoForge 那两轮的文本） |
+| 3 | 启动链路第二站：`/gateway/bot` | `botpy/client.py:167`（`self._ws_ap = await self.api.get_ws_url()`）→ `botpy/api.py:805-813`（`Route("GET","/gateway/bot")`）→ `botpy/client.py:171`（`max_async=self._ws_ap["session_start_limit"]["max_concurrency"]`），另见 `:183/187/203` 的 `self._ws_ap["shards"]` | `_ws_ap` 为 `None` ⇒ `TypeError: 'NoneType' object is not subscriptable`（原版/Forge 的文本） |
+| 4 | 我们这层原样透传，不做分类 | `src/y33bot/qq/gateway.py:145-147` | `except Exception as exc: self._logger.error("[错误] QQ 网关异常退出: %s", exc)` ⇒ 异常原文成了给运维看的唯一线索 |
+| 5 | 启动期失败 ⇒ 报错 + 返回 1 | `src/y33bot/service.py:229-234`、`src/y33bot/qq/gateway.py:104-116`（`start()` 把 `_up_error` 再包一层） | 契约**正确**（BUG-001 的 R2-lite：不静默）—— 但错误文本对运维不可读，且**启动期没有重试/退避**，进程管理器会反复拉起 |
+| 6 | 运行期同样会走这条路径 | `src/y33bot/service.py:238-244` | 网关任务结束 → `[错误] QQ 网关已断开（收不到群消息），进程退出等待重启` + 返回 1 |
+
+**性质判定**：**触发原因是外部的**（QQ 平台接口超时/无响应），但**代码侧的缺陷是明确的**：
+① 把 SDK 的内部异常（`TypeError`/`AttributeError`）当成给用户的错误文案；
+② 启动期失败不做有限重试/退避（`IDEA.md` §4 的「不重试」只约束**单条消息**；启动期重试属装配决策，需按 `PLAN.md` §7 登记）；
+③ 没有区分「凭据不可用」（可用）与「平台抖动」（应重试）的手段。
+
+### 未验证的边界
+
+- **触发条件与频率**：只在平台/网络抖动时出现，本卡无法主动复现（`01-vanilla.md` §7-4）。
+- **放大因素**：NeoForge 卡留了两个疑点给本卡 —— ① 机器内存压力（2.6 GiB 峰值）；② **4 张矩阵卡共用同一套 QQ 凭据**、
+  同一时刻可能有并发会话（SDK 自己打印 `最大并发连接数: 1`）。本卡无法判定二者与失败率的关系（见「未复现 / 信息不足」第 4 条）。
+- 重启风暴的实际后果（`systemd` 拉起频率、平台是否限流）未实测。
+
+### 修复方向（只登记方向，不在本卡改）
+
+1. **启动期有限重试 + 退避**（需用户拍板次数与间隔，例如 3 次 / 5·15·45s；落地要按 `PLAN.md` §7 登记并更新 §5 S5 期望值）——
+   平台抖动时能自愈，而不是让进程管理器反复冷启动。
+2. **把 `None` 类错误翻译成可读原因**：在 `src/y33bot/qq/gateway.py:145-147` 捕获 `TypeError`/`AttributeError`/`TimeoutError`，
+   输出如 `[错误] QQ 平台接口无响应（超时）: https://api.sgroup.qq.com/gateway/bot（SDK 未处理 None 响应）`，
+   原始异常留在 DEBUG。这样运维能区分「平台抖动」与「凭据/配置错误」。
+3. **启动前先探活**（复用 BUG-001 R5 的 `src/y33bot/qq/probe.py`）：`run` 启动时先取一次 `access_token`，
+   失败就报可读原因并不再往下走；成功后再起网关 —— 能把「凭据问题」和「sgroup 接口抖动」分开。
+4. **文档**：`README.md` §13 FAQ 增加「`run` 立刻退出 `exit=1` 且报 `'NoneType' object is not subscriptable'`
+   → 平台接口瞬时超时，直接重跑即可（附带本条编号）」。
+
+---
+
+## 非产品缺陷观察（环境 / 部署 / 测试流程）
+
+以下现象**实测存在、但不属本仓代码缺陷**，登记是为了后续卡不重复踩坑、也避免被误读成 BUG。
+
+| # | 现象 | 证据 | 性质与处置 |
+|---|---|---|---|
+| A1 | **NeoForge 26.x 的服务端类文件是 Java 25**（class file 69.0），用 JDK21 启动直接 `UnsupportedClassVersionError: … class file version 69.0 … up to 65.0`；换 `~/jdk-25` 后 26.3 起服 18s | `04-neoforge.md` §5.4、`artifacts/neoforge/26.3/console-26.3-jdk21-bootstrap-fail.txt` | 部署事实。本仓只管 RCON + 日志，不校验 MC 端 JDK；但**文档/`check` 都不提示**，建议在 `README`/`docs/smoke.md` 的部署小节写明「26.x 加载器服务端用 JDK25」 |
+| A2 | `maven.neoforged.net` 在本机不可达（DNS 被污染 + 真实 IP 也不通），installer 自带的 `--mirror` **不生效**；改用 `maven.creeperhost.net` + 主机替换后的 installer 才装成 | `04-neoforge.md` §2.1-2.3、§5.5 | 环境/网络。后续任何 NeoForge 任务别指望 `--mirror` |
+| A3 | Fabric：测试脚本清掉 `libraries/` 后实例不能再直接启动（`ClassNotFoundException: … FabricServerLauncher`），需先重跑 `new-fabric.sh` | `02-fabric.md` §4 F-3 | 测试流程坑，非产品问题 |
+| A4 | `run --verbose` 的 `[忽略] 日志行未匹配任何模板` 噪声很大（启动信息、mod 列表、RCON 线程行全打） | `02-fabric.md` §4 F-5 | 属预期解析行为；同时也是 BUG-004 的正面材料（「看不到」与「看不清」是同一个问题的两面） |
+| A5 | 用假 `group_openid` 时 MC→QQ 必然被平台拒绝（`code 11255 / err_code 40011028`「群不存在」/ 400），`state.json` 的 `msg_seq` 照常递增落盘 | `01-vanilla.md` §5.3、`03-forge.md` §6-7 | **预期**：环境里没有真群 openid，这是用来证明「链路真的走到平台」的判据 |
+| A6 | 日志轮转时可能**先**报 `[警告] 日志文件已轮转（inode A -> B）`、**再**报 `[警告] 日志文件缩小（size=… < offset=…）` | `01-vanilla.md` §5.3 | 两条只做同一件事（偏移重置为 0），之后事件仍正确解析；无功能影响，未深究 |
+| A7 | 同机 4 张矩阵卡并行时：启动耗时被拖到 362s（无争抢时 18–45s）、平台请求超时变多、jar 下载停滞一次（断点续传 + sha1 校验后正常） | `01-vanilla.md` §4.1/§5.3、`04-neoforge.md` §6.2 备注 | 环境噪声；BUG-005 的频率可能被它放大（未证实） |
+| A8 | 窗口内**没有「版本相关」的差异**：13 个能真客户端跑完的版本行为逐条一致；聊天行自 1.21.2 起就是同一形态（变更点 ≤ 1.21.1） | `01-vanilla.md` §6.2、`02-fabric.md` §4 F-4 | 结论性事实，用于收窄 BUG-002 的影响范围 |
+
+---
+
+## 未能复现 / 信息不足清单（本轮四张矩阵卡汇总）
+
+| # | 缺什么 | 卡在哪 / 为什么 | 影响哪些条目 | 后续怎么补 |
+|---|---|---|---|---|
+| 1 | **真 QQ 群里的收发**（群侧步骤无法自证） | `~/.env` 只有 AppID/AppSecret；botpy 没有「列出机器人所在群」的 API，拿不到 `group_openid`（`00-env.md` §8-1） | 所有条目的「群里真的收到/发出」只能证明到平台层（400/11255 即「走到了平台」） | 由人给出目标群 `group_openid`，或去群里 `@机器人` 抓一次事件 |
+| 2 | **MC 26.2 / 26.3 的真玩家日志行** | 无头客户端 mineflayer + minecraft-data 最高支持 26.1（实测 `Error: No data available for version 26.3`，`02-fabric.md` §4 F-2、`04-neoforge.md` §6.3） | BUG-002 / BUG-003 在这两版上只能「格式取样 + 全量未匹配」佐证，不能断言 | 升级 `minecraft-data`（当前 latest 已到顶）或用真 26.2/26.3 客户端进服抓 `latest.log` |
+| 3 | **`online-mode=true` 的签名聊天行形态** | 全部实例统一 `online-mode=false`，无正版账号/客户端（`01-vanilla.md` §7-2） | BUG-002 的**定性**：默认模板当初是否为正版服而写 | 用真账号连一台 `online-mode=true` 实例抓同一位置的行 |
+| 4 | **BUG-005 的触发条件与频率**（含并发会话 / 内存压力是否放大） | 平台超时是随机事件；同版本复跑 + 3 次冷启动都不复现（`01-vanilla.md` §5 F-V2 / §7-4） | BUG-005 只能登记「已发生 9 次」，给不出频率与可控复现 | 空闲机器上多跑若干次 `run`；或对 `https://api.sgroup.qq.com/gateway/bot` 做稳定性采样；另可单机独占凭据再测一轮以排除并发会话因素 |
+| 5 | 加载器/API 版本不匹配、依赖缺失（sha1/缺库）、ClassLoader/ASM/mixin 异常、机器人连接后的协议握手差异 | 四张卡**都没有复现**：Fabric 9 版 + 1 变体（`02-fabric.md` §4 F-4）、Forge D1–D2（`03-forge.md` §5，且 D1 在 26.3 上是无效实验）、NeoForge 9 版（`04-neoforge.md` §4.2） | 反向结论：这些方向不是本轮的故障源 | 若要覆盖，需要构造具体组合（指定 loader/API/mod 版本）后另开卡 |
+| 6 | **第三方 mod 场景**（mod 之间 mixin/ASM 冲突、mod 与加载器的依赖约束、加载顺序） | 卡内要求「installer + 文档要求的最小依赖」= 无 mod；本机 `github.com` 不通也下不到真实 mod | 未列入任何 BUG（无证据） | 另开卡：给出具体 mod 清单（含 mixin/ASM 用法与版本约束）再测 |
+| 7 | 部分补丁版未逐版 | 按「x.xx.0 不细化到 x.xx.xx」的口径排除（Forge 无 1.21.2 构建、26.1.1/26.1.2 为补丁版；Fabric 未测 1.21.3/1.21.7/1.21.8/1.21.10/26.1.1/26.1.2） | 只影响覆盖密度，不影响 BUG-002/003 的结论（窗口内格式一致） | 用同一套脚本加版本即可（端口段按 `00-env.md` §5.2 扩） |
+| 8 | Forge 1.21.8 的 C8（日志轮转）**成功样本** | 主轮与补测各撞一次平台超时（BUG-005），同一用例在其余 11 版通过（`03-forge.md` §7-2） | BUG-005 的一条附证 | 空闲时段重跑该用例 |
+| 9 | Forge 26.2 / 26.3 的真聊天行 | 无头客户端上限 26.1；这两版的行是「真前缀 + PLAN 正文」合成的，已在 `real-lines.txt` 标注（`03-forge.md` §7-1） | BUG-002/003 的外推部分 | 同第 2 条 |
+
+---
+
+## 根卡复核记录（`t_d25d5a1d`，2026-10-18）
+
+根卡只做三件事：把六张卡的分支合进同一棵树、**独立复核**上面的结论、把残留问题写清楚。**没有改任何项目代码。**
+
+### 合并
+
+`wt/t_a4c6c3ae`、`wt/t_ac457fe1`、`wt/t_5bccfcd8`、`wt/t_157ba7fe`、`wt/t_efe57773`、`wt/t_1c0e88a4`
+六个分支依次合入 `y33-bot/t_d25d5a1d`（6 个 merge 提交，0 冲突）。合并后：
+
+- `git diff f7fd5cb..HEAD -- src tests docs README.md PLAN.md IDEA.md config.example.toml Makefile pyproject.toml requirements*.txt .github scripts` → **空**；
+- 相对 `f7fd5cb` 的全部改动 = `BUGS.md` + `test-notes/**`（773 个文件、39860 行插入）。
+
+### 复核一：结论独立复现（离线，用**本仓代码**，不引用他卡结论）
+
+用 `src/y33bot/config.py` 的 `LogPatterns` + `src/y33bot/mclog/patterns.py` 的 `compile_patterns` / `parse_line`，
+把 `config.example.toml` 的**出厂默认模板**编译起来，喂**各卡制品里的真机原始行**（逐字未改），
+再喂一遍「只放宽时间戳/线程名/logger 段」的模板做对照：
+
+| 真行（来源） | 默认模板 | 放宽模板（只改配置） |
+|---|---|---|
+| 原版 1.21.11 `join` / `quit`（`00-env` 制品） | 命中 join / quit | 命中 |
+| 原版 1.21.11 `chat`（`00-env` 制品） | **不命中** | 命中 |
+| Fabric 1.21.2 / 1.21.11 / 26.1 `chat`（`02-fabric` 制品） | **不命中** | 命中 |
+| Forge 1.21.11 `join` / `quit` / `chat`（`03-forge` 制品） | **三者全不命中** | 三者全命中 |
+| NeoForge 1.21.4 `join` / `quit` / `chat`（`04-neoforge` 制品） | **三者全不命中** | 三者全命中 |
+| 旧形态对照 `[14:30:09] [Async Chat Thread - #0/INFO]: <Steve> #hi` | **命中 chat** | 命中 |
+
+⇒ **BUG-002**（默认 `chat` 只认 ≤1.21.1 的形态）与 **BUG-003**（加载器布局把三个模板一起打死）**独立复现**；
+两者的「修复方向 = 只改 `[log_patterns]`」也**独立验证可行**。
+
+### 复核二：条目里的 `文件:行号` 抽查（逐条打开源码核对）
+
+`patterns.py:52-60`（`_anchor` 补 `^`/`$`）与 `:96`（`re.match` 整行锚定）；
+`watcher.py:112-115`（未命中只记 **DEBUG** `[忽略] 日志行未匹配任何模板`，这是 BUG-004 的支点）；
+`bridge.py:139`（`handle_log_event`）与 `:165-167`（`#` 前缀/回环判断都在事件层**之上**）；
+`service.py:284-289`（只有拿到事件才调桥接）；`cli.py:221-225`（`simulate log-event` 是唯一显形点）；
+`config.example.toml:31-33`（默认三模板，来源 `IDEA.md:170` 的 ≤1.21.1 形态）；
+`tests/conftest.py:19-21`（`CHAT_TEMPLATE` 与默认模板同为旧形态 ⇒ 381 条单测「自造行验自造模板」，
+测不出 BUG-002）—— **全部与条目描述一致**。
+
+### 复核三：本仓基线（合并后的树上重跑）
+
+```
+$ env -u MC_RCON_PASSWORD -u MC_RCON_PASSWORD_MAIN PYTHONPATH=src .venv/Scripts/python.exe -m pytest -q
+381 passed in 44.18s                      # 与 f7fd5cb 基线一致（本批未改代码）
+$ ruff check . && ruff format --check .   # make lint 同款
+All checks passed! / 44 files already formatted
+```
+
+### 根卡发现并处理的两点
+
+1. **制品数量**：原文「共 771 个文件」是估算，实测 **761**（分族见 §「测试矩阵与证据来源」）——已按实测改正。
+   四张卡各自的卡面数字与提交内容也有出入（Forge 卡元数据 297 含 1 份记录、NeoForge 卡元数据 219 而分支里 193 个）——
+   这也是「卡面自述不等于事实」的一例，故根卡以**树里的实测值**为准。
+2. **`make lint` 会被新加的测试脚本弄红**（CI 不受影响：CI 只 lint `src tests`，`make lint` 是 `ruff check .`）：
+   `test-notes/artifacts/neoforge/scripts/nf_patch_installer.py` 有一个未用的 `import json` + 一处换行不合 ruff format。
+   已用 `ruff check --fix` + `ruff format` 修好（`-3/+2` 行，行为不变，`py_compile` 通过），使 `make lint` 回到全绿。
+   这是本批**唯一**改动的非新增文件；若想保持「制品逐字未改」，替代做法是在 `pyproject.toml` 的 `[tool.ruff]` 里
+   `extend-exclude = ["test-notes"]`（需用户拍板，根卡未擅自改项目配置）。
+
+### 未做的两件事（如实登记）
+
+1. **`AGENTS.md` 的「开发进度」没有改**：根卡运行环境把 `AGENTS.md` 列为受保护的智能体指令文件，
+   写入需要交互式批准，本次无人值守 ⇒ 未写入。本批的进度等价记录就是本文件（`BUGS.md` 汇总表 + 证据来源 + 本条复核记录），
+   需要 `AGENTS.md` 同步时请人工补一条 2026-10-18 的条目（模板见该文件既有条目）。
+2. **没有改 `PLAN.md` §7 的变更登记**：本批零产品改动（`src/` 一行未动），按 `PLAN.md` §7 的口径，
+   变更登记留给真正改默认模板的修复卡去做。
 
 ---
 
 ## BUG-001 QQ token 过期后运行时静默失效，运行期无任何提示
+
+> **历史条目**（2026-10-13 登记、2026-10-15 修复）。2026-10-18 四张矩阵卡在真机上共触发 9 次
+> 「网关启动期失败 / 网关任务结束」，每次都出现 `[错误]` + 非 0 退出 —— **R2-lite 契约实测生效**，
+> 原始输出见 [BUG-005](#bug-005-qq-网关遇平台接口超时时-sdk-吞成-none--报错不可读且直接非-0-退出)「症状」。
 
 **状态**：**已修复**（2026-10-15，卡 `t_80249809` 落地 R2-lite + R5，见本条「修复记录」；真机触发链路 Q1/Q3 仍未验证）
 **登记日**：2026-10-13
@@ -542,6 +1116,8 @@ check --no-probe：
 
 ## 模板（新增条目照抄）
 
+**A. 调查类条目**（可疑→调查→修复，如 BUG-001）
+
 ```markdown
 ## BUG-00N <一句话标题>
 
@@ -559,4 +1135,23 @@ check --no-probe：
 ### 复现步骤
 ### 期望行为
 ### 回复
+```
+
+**B. 矩阵类条目**（实机测试矩阵产出：既有现象又有代码级根因，如 BUG-002 ~ BUG-005）
+
+```markdown
+## BUG-00N <一句话标题>
+
+**状态**：已复现（未修） / 已修复
+**登记日**：YYYY-MM-DD
+**上报**：<哪张矩阵卡 / 谁在什么场景下发现>
+**影响范围**：<加载器 × 版本区间（实证 / 外推 / 未验证 分开写）>
+**与其它条目的关系**：<同根因 / 叠加 / 独立>
+
+### 症状（可观测）
+### 原始证据        ← 原始日志片段 + 制品相对路径 + 时间戳
+### 复现步骤        ← 优先给「离线可复跑」的；真机步骤给完整命令
+### 根因分析（代码级）  ← 表格：环节 / 位置（文件:行号）/ 事实
+### 未验证的边界
+### 修复方向（只登记方向，不在本卡改）
 ```

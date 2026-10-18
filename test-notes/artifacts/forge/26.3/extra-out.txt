@@ -1,0 +1,57 @@
+########## D0 实例信息 ##########
+MC=26.3 Forge=66.0.13 正确 JDK=/home/hermes/jdk-25 错配 JDK=/home/hermes/jdk-21 RCON=25721
+unix_args 在位
+
+########## D1 加载器/MC 版本不匹配：篡改 unix_args 里的版本号后启动 ##########
+--- 篡改后的版本参数 ---
+D1 退出码=124
+org.apache.logging.log4j.core.appender.AppenderLoggingException: java.lang.NoClassDefFoundError: Could not initialize class io.netty.channel.kqueue.Native
+Caused by: java.lang.NoClassDefFoundError: Could not initialize class io.netty.channel.kqueue.Native
+Caused by: java.lang.ExceptionInInitializerError: Exception java.lang.IllegalStateException: Only supported on OSX/BSD [in thread "Server thread"]
+[16:38:52] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.removeErroringBlockEntities was corrected from null to its default, false. 
+[16:38:52] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.removeErroringEntities was corrected from null to its default, false. 
+
+########## D2 Java 版本不匹配：用 JDK21 启动本实例 ##########
+openjdk version "21.0.12.1" 2026-08-18 LTS
+D2 退出码=1
+Error: Could not create the Java Virtual Machine.
+Error: A fatal exception has occurred. Program will exit.
+
+########## D3 模组加载异常：放一个损坏的 mod jar（服务端是否还能起、机器人是否照常） ##########
+--- 服务端是否起完 ---
+(没起完)
+--- 损坏 mod 相关日志 ---
+java.util.zip.ZipException: zip END header not found
+	at jdk.zipfs/jdk.nio.zipfs.ZipFileSystem.findEND(ZipFileSystem.java:1362) ~[jdk.zipfs:?]
+	at jdk.zipfs/jdk.nio.zipfs.ZipFileSystem.initCEN(ZipFileSystem.java:1571) ~[jdk.zipfs:?]
+	at jdk.zipfs/jdk.nio.zipfs.ZipFileSystem.<init>(ZipFileSystem.java:215) ~[jdk.zipfs:?]
+	at jdk.zipfs/jdk.nio.zipfs.ZipFileSystemProvider.getZipFileSystem(ZipFileSystemProvider.java:122) ~[jdk.zipfs:?]
+	at jdk.zipfs/jdk.nio.zipfs.ZipFileSystemProvider.newFileSystem(ZipFileSystemProvider.java:103) ~[jdk.zipfs:?]
+net.minecraftforge.fml.ModLoadingException: Failed to create secure jar for "/home/hermes/mc-test/forge/26.3/mods/broken-mod-1.0.jar" - zip END header not found
+	Failed to create secure jar for "/home/hermes/mc-test/forge/26.3/mods/broken-mod-1.0.jar" - zip END header not found
+--- 带损坏 mod 时机器人是否照常工作 ---
+[日志 forge] OK /home/hermes/mc-test/forge/26.3/logs/latest.log 可读，偏移 121 字节
+[绑定] OK 1 条
+FAIL
+[RCON forge] /list
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25721 失败: [Errno 111] Connect call failed ('127.0.0.1', 25721)
+[群消息] [服务器状态] 服务器离线
+
+########## D4 运行中把服务端停掉：机器人侧掉线/健康翻转观察 ##########
+--- 停止服务端 ---
+run 退出码=0
+[警告] RCON forge 连接失败（服务继续，下次调用自动重连）: 连接 127.0.0.1:25721 失败: [Errno 111] Connect call failed ('127.0.0.1', 25721)
+[警告] 日志文件已轮转（inode 24739981 -> 55582892），偏移重置为 0
+[RCON forge] /list
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25721 失败: [Errno 111] Connect call failed ('127.0.0.1', 25721)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '72c13daaf0454c28d3094879f6079667'}, trace_id:72c13daaf0454c28d3094879f6079667
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[RCON forge] /list
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25721 失败: [Errno 111] Connect call failed ('127.0.0.1', 25721)
+[RCON forge] /list
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25721 失败: [Errno 111] Connect call failed ('127.0.0.1', 25721)
+[RCON forge] /list
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25721 失败: [Errno 111] Connect call failed ('127.0.0.1', 25721)
+[RCON forge] /list
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25721 失败: [Errno 111] Connect call failed ('127.0.0.1', 25721)
+===== forge-extra.sh 结束 =====

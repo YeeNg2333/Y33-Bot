@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "qq": {
+    "msg_seq": 3
+  },
+  "servers": {
+    "forge": {
+      "log_offset": 8550,
+      "log_size": 8550,
+      "log_inode": "55582642",
+      "health_online": null,
+      "health_changed_at": 0.0
+    }
+  }
+}

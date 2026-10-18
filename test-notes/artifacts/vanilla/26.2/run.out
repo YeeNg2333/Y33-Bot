@@ -1,0 +1,59 @@
+Using selector: EpollSelector
+[启动] y33bot 0.1.0（1 个 MC 服）
+[RCON 127.0.0.1:25708] 已连接
+[RCON v26_2] 已连接
+[启动] 日志监听已启动: v26_2
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 6082
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[忽略] 日志行未匹配任何模板: [15:40:30] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[忽略] 日志行未匹配任何模板: [15:40:31] [Worker-Main-1/INFO]: No existing world data, creating new world
+[忽略] 日志行未匹配任何模板: [15:40:32] [ServerMain/INFO]: Loaded 1585 recipes
+[忽略] 日志行未匹配任何模板: [15:40:32] [ServerMain/INFO]: Loaded 1688 advancements
+[忽略] 日志行未匹配任何模板: [15:40:32] [Server thread/INFO]: Starting minecraft server version 26.2
+[忽略] 日志行未匹配任何模板: [15:40:32] [Server thread/INFO]: Loading properties
+[忽略] 日志行未匹配任何模板: [15:40:32] [Server thread/INFO]: Default game type: SURVIVAL
+[忽略] 日志行未匹配任何模板: [15:40:32] [Server thread/INFO]: Generating keypair
+[忽略] 日志行未匹配任何模板: [15:40:32] [Server thread/INFO]: Starting Minecraft server on *:25608
+[忽略] 日志行未匹配任何模板: [15:40:32] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[忽略] 日志行未匹配任何模板: [15:40:32] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
+[忽略] 日志行未匹配任何模板: [15:40:32] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[忽略] 日志行未匹配任何模板: [15:40:32] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[忽略] 日志行未匹配任何模板: [15:40:32] [Server thread/INFO]: Preparing level "world"
+[忽略] 日志行未匹配任何模板: [15:40:33] [Server thread/INFO]: Selecting global world spawn...
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: Loading 0 persistent chunks...
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: Preparing spawn area: 100%
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: Time elapsed: 8637 ms
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: Done (8.965s)! For help, type "help"
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: Starting remote control listener
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: Thread RCON Listener started
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: RCON running on 0.0.0.0:25708
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[忽略] 日志行未匹配任何模板: [15:40:41] [Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
+[忽略] 日志行未匹配任何模板: [15:40:43] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:40:43] [RCON Client /127.0.0.1 #2/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:40:44] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:40:44] [RCON Client /127.0.0.1 #3/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:40:45] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:40:45] [RCON Client /127.0.0.1 #4/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:40:46] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:40:46] [RCON Client /127.0.0.1 #5/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:40:48] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[警告] 日志文件缩小（size=0 < offset=3091），偏移重置为 0
+[停止] 收到退出信号
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.2.json
+[停止] 已退出

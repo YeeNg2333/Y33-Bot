@@ -1,0 +1,8 @@
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25729 失败: [Errno 111] Connect call failed ('127.0.0.1', 25729)
+[配置] OK config-forge-26_1.toml 解析成功，1 个 MC 服
+[QQ] FAIL access_token 获取失败: 无法连接 https://bots.qq.com/app/getAppAccessToken: <urlopen error _ssl.c:983: The handshake operation timed out>
+[RCON forge] FAIL 无法连接 127.0.0.1:25729: 连接 127.0.0.1:25729 失败: [Errno 111] Connect call failed ('127.0.0.1', 25729)
+[日志 forge] OK /home/hermes/mc-test/forge/26.1/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 1 条
+FAIL
+check(停服后) exit=1

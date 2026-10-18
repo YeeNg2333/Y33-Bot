@@ -1,0 +1,49 @@
+# 1.21.8 首跑：QQ 网关启动失败（一次性、后 3 次尝试未复现）
+
+> **providmce（先说清证据来源，避免误读）**：
+> 本文件是 2026-10-18 15:10–15:16 那次 `1.21.8` 运行（batch2 的首个版本）里
+> `~/mc-test/artifacts/vanilla/1.21.8/run.out` 的**原样粘贴**。
+> 该文件随后被**同一版本的第二次运行**（batch2 里被重复排版的 1.21.8 复跑）覆盖，
+> 因此这里保存的是当次会话内的原文，而不是服务器上仍存在的文件 —— 已在 §5 如实标注。
+> 复现尝试记录见 `artifacts/vanilla/_gateway-restart/`（3 次冷启动，全部正常）。
+
+命令（当次批量脚本实际执行的那一条）：
+
+```bash
+cd ~/Y33-Bot
+.venv/bin/python -m y33bot run --verbose --config config-vanilla-1.21.8.toml > run.out 2>&1
+```
+
+`run.out` 原文（全部 12 行，含空行）：
+
+```
+Using selector: EpollSelector
+[启动] y33bot 0.1.0（1 个 MC 服）
+[RCON 127.0.0.1:25705] 已连接
+[RCON v1_21_8] 已连接
+[启动] 日志监听已启动: v1_21_8
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 1015
+请求超时，请求连接: https://api.sgroup.qq.com/gateway/bot
+[错误] QQ 网关异常退出: 'NoneType' object is not subscriptable
+[错误] QQ 网关启动失败: QQ 网关启动失败: 'NoneType' object is not subscriptable
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.8.json
+[停止] 已退出
+```
+
+可观测症状：
+
+1. `access_token` 拿到了（`expires_in 1015`），说明 QQ 凭据有效；
+2. 紧接着 botpy 打 **`请求超时，请求连接: https://api.sgroup.qq.com/gateway/bot`**（平台侧取网关地址的接口超时）；
+3. 随后进程侧两条 `[错误]`：`QQ 网关异常退出: 'NoneType' object is not subscriptable` +
+   `QQ 网关启动失败: QQ 网关启动失败: 'NoneType' object is not subscriptable`；
+4. 进程随即走 `[停止]` 收尾；**没有 Traceback**（异常被上层捕获后只打了一行 message）。
+
+当次记录的其它可观测项：
+
+- 服务端、RCON、日志监听都正常（`[RCON …] 已连接`、`[启动] 日志监听已启动`）；
+- 因为网关没起来，`run` 期间 MC→QQ 方向**一条 `[群消息]` 都没有**（该次 `1.21.8` 的 C19 因此不成立）。
+
+同版本复跑（15:10:38→15:16:00 之后那次，即 `artifacts/vanilla/1.21.8/` 里现存的那份）**没有再出现**；
+另在 `_gateway-restart/` 里做了 3 次冷启动尝试（15:36:52–15:37:50），3/3 网关正常连接、退出码 0。

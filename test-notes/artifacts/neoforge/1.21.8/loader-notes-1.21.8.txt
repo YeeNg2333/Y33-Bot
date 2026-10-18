@@ -1,0 +1,5 @@
+1:[16:00:15] [main/INFO]: ModLauncher running: args [--launchTarget, neoforgeserver, --fml.neoForgeVersion, 21.8.57, --fml.fmlVersion, 9.0.18, --fml.mcVersion, 1.21.8, --fml.neoFormVersion, 20250717.133445, nogui]
+3:[16:00:15] [main/INFO]: ModLauncher 9.0 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+5:[16:00:15] [main/INFO]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=union:/home/hermes/mc-test/neoforge/1.21.8/libraries/net/fabricmc/sponge-mixin/0.15.2+mixin.0.8.7/sponge-mixin-0.15.2+mixin.0.8.7.jar%2388!/ Service=ModLauncher Env=SERVER
+9:[16:00:16] [main/INFO]: Found gamelibrary file "mixinextras-neoforge-0.5.3.jar" [parent: neoforge-21.8.57-universal.jar, locator: jarinjar, reader: mod manifest]
+18:[32m[16:00:17] [main/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.3).

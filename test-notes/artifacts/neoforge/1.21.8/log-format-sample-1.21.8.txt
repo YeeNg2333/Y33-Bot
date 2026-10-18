@@ -1,0 +1,4 @@
+[1810月2026 16:00:17.934] [main/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.3).
+[1810月2026 16:00:24.587] [modloading-worker-0/INFO] [net.neoforged.neoforge.common.NeoForgeMod/NEOFORGE-MOD]: NeoForge mod loading, version 21.8.57, for MC 1.21.8
+[1810月2026 16:00:24.993] [main/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[1810月2026 16:00:25.049] [main/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/home/hermes/mc-test/neoforge/1.21.8/libraries/net/minecraft/server/1.21.8-20250717.133445/server-1.21.8-20250717.133445-srg.jar%23143!/assets/.mcassetsroot' uses unexpected schema

@@ -1,0 +1,80 @@
+########## T2/T3 证据（1.21.2） ##########
+===================== T2 (S2) QQ→MC：绑定 + 真 RCON tellraw 注入（真客户端核对可见性） =====================
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-fabric-1.21.2.toml)
+bind exit=0
+[绑定] 1A2B3C4D -> Steve
+[hold] 连接 127.0.0.1:25610 用户名 Watcher 保持 30s
+[hold] 已 spawn（进服成功），版本协商: 1.21.3
+[RCON fab1212] tellraw @a {"text":"[QQ] Steve: 你好"}
+>>> [RESULT] tellraw_exit=0
+>>> [RESULT] client_saw_tellraw=yes
+3:[hold 06:57:13] 收到: [QQ] Steve: 你好
+===================== T3 (S2) QQ→MC：/status 真往返（服务端真 /list 响应解析） =====================
+[RCON fab1212] /list
+[群消息] [服务器状态]
+[群消息] 在线: 1/20
+[群消息] 玩家: Watcher
+>>> [RESULT] status_exit=0
+===================== T4 (S3) MC→QQ：真玩家进服/聊天（普通+#）/退服 → 真实日志行 =====================
+
+########## T3 证据（26.1） ##########
+===================== T3 (S2) QQ→MC：/status 真往返（服务端真 /list 响应解析） =====================
+
+[RCON fab261] /list
+[群消息] [服务器状态]
+[群消息] 在线: 1/20
+[群消息] 玩家: Watcher
+>>> [RESULT] status_exit=0
+
+===================== T4 (S3) MC→QQ：真玩家进服/聊天（普通+#）/退服 → 真实日志行 =====================
+
+########## T6 健康翻转（26.3） ##########
+===================== T6 (S4) 健康翻转：离线→重复离线→上线 =====================
+
+[RCON fab263] /list
+[警告] RCON fab263 命令失败: 假 RCON 服务器离线: 127.0.0.1:25718
+[群消息] [服务器状态] fab263 离线
+[RCON fab263] /list
+[警告] RCON fab263 命令失败: 假 RCON 服务器离线: 127.0.0.1:25718
+[忽略] 状态未变化，不重复提示
+[RCON fab263] /list
+[群消息] [服务器状态] fab263 上线
+>>> [RESULT] health_flip_tested=yes
+
+
+########## T8 轮转（1.21.2）—— run 尾部 ##########
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'f7eaf0a1135cc0e2f7310767c7afe541'}, trace_id:f7eaf0a1135cc0e2f7310767c7afe541
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-1.21.2.json
+[RCON fab1212] /list
+[忽略] 状态未变化，不重复提示
+[警告] 日志文件缩小（size=0 < offset=7085），偏移重置为 0
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-1.21.2.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'a28bbf08f0a30c93570ece69fd7e38c5'}, trace_id:a28bbf08f0a30c93570ece69fd7e38c5
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-1.21.2.json
+[停止] 收到退出信号
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-1.21.2.json
+[停止] 已退出
+
+########## T8 轮转（26.3）—— run 尾部 ##########
+[忽略] 日志行未匹配任何模板: [15:31:19] [RCON Client /127.0.0.1 #2/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:31:20] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:31:21] [RCON Client /127.0.0.1 #3/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:31:24] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:31:24] [RCON Client /127.0.0.1 #4/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:31:27] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[警告] 日志文件缩小（size=0 < offset=5038），偏移重置为 0
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-26.3.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'f0bf8b07a75a798697d7292043d989dd'}, trace_id:f0bf8b07a75a798697d7292043d989dd
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-26.3.json
+[停止] 收到退出信号
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-26.3.json
+[停止] 已退出
+
+########## 26.2 运行期是否真的产生过 send ##########
+103:[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '82d037634d7a9bea5f43d07a17dc1b2e'}, trace_id:82d037634d7a9bea5f43d07a17dc1b2e
+104:[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)

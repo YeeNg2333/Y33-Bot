@@ -1,0 +1,97 @@
+2026-10-18T08:03:32.127719435Z main WARN Advanced terminal features are not available in this environment
+[16:03:32] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[16:03:32] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS
+[16:03:32] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: ModLauncher 10.2.4 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+[16:03:32] [main/WARN] [ne.mi.fm.lo.FMLConfig/CORE]: Configuration file /home/hermes/mc-test/forge/1.21.7/config/fml.toml is not correct. Correcting
+[16:03:32] [main/INFO] [ne.mi.fm.lo.FMLConfig/CORE]: Incorrect key [earlyWindowSkipGLVersions] was corrected from null to []
+[16:03:32] [main/INFO] [ne.mi.fm.lo.FMLConfig/CORE]: Incorrect key [earlyWindowLogHelpMessage] was corrected from null to true
+[16:03:32] [main/INFO] [ne.mi.fm.lo.FMLConfig/CORE]: Incorrect key [earlyWindowSquir] was corrected from null to false
+[16:03:32] [main/INFO] [ne.mi.fm.lo.FMLConfig/CORE]: Incorrect key [earlyWindowShowCPU] was corrected from null to false
+[16:03:32] [main/INFO] [ne.mi.fm.lo.ImmediateWindowHandler/]: ImmediateWindowProvider not loading because launch target is forge_server
+[16:03:32] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=jar:file:///home/hermes/mc-test/forge/1.21.7/libraries/org/spongepowered/mixin/0.8.7/mixin-0.8.7.jar!/ Service=ModLauncher Env=SERVER
+[16:03:32] [main/INFO] [ne.mi.fm.lo.mo.JarInJarDependencyLocator/]: No dependencies to load found. Skipping!
+[16:03:33] [main/INFO] [cp.mo.mo.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forge_server' with arguments [nogui]
+[16:03:38] [modloading-worker-0/INFO] [ne.mi.co.ForgeMod/FORGEMOD]: Forge mod loading, version 57.0.3, for MC 1.21.7 with MCP 20250630.104312
+[16:03:38] [modloading-worker-0/INFO] [ne.mi.co.MinecraftForge/FORGE]: MinecraftForge v57.0.3 Initialized
+[16:03:38] [modloading-worker-0/INFO] [ne.mi.co.ForgeMod/FORGEMOD]: Opening jdk.naming.dns/com.sun.jndi.dns to java.naming
+[16:03:39] [main/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Configuration file /home/hermes/mc-test/forge/1.21.7/config/forge-common.toml is not correct. Correcting
+[16:03:39] [main/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key general was corrected from null to its default, SynchronizedConfig{DataHolder:{}}. 
+[16:03:39] [main/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key general.logLegacyTagWarnings was corrected from null to its default, OFF. 
+[16:03:39] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
+[16:03:40] [main/INFO] [mojang/YggdrasilAuthenticationService]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[16:03:41] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [forge] Found status: BETA Current: 57.0.3 Target: 57.0.3
+[16:03:41] [main/INFO] [minecraft/Main]: No existing world data, creating new world
+[16:03:42] [main/INFO] [minecraft/RecipeManager]: Loaded 1407 recipes
+[16:03:42] [main/INFO] [minecraft/AdvancementTree]: Loaded 1520 advancements
+[16:03:42] [Server thread/INFO] [minecraft/DedicatedServer]: Starting minecraft server version 1.21.7
+[16:03:42] [Server thread/INFO] [minecraft/DedicatedServer]: Loading properties
+[16:03:42] [Server thread/INFO] [minecraft/DedicatedServer]: Default game type: SURVIVAL
+[16:03:42] [Server thread/INFO] [minecraft/MinecraftServer]: Generating keypair
+[16:03:42] [Server thread/INFO] [minecraft/DedicatedServer]: Starting Minecraft server on *:25624
+[16:03:42] [Server thread/INFO] [minecraft/ServerConnectionListener]: Using epoll channel type
+[16:03:42] [Server thread/WARN] [minecraft/DedicatedServer]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[16:03:42] [Server thread/WARN] [minecraft/DedicatedServer]: The server will make no attempt to authenticate usernames. Beware.
+[16:03:42] [Server thread/WARN] [minecraft/DedicatedServer]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[16:03:42] [Server thread/WARN] [minecraft/DedicatedServer]: To change this, set "online-mode" to "true" in the server.properties file.
+[16:03:42] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Configuration file ./world/serverconfig/forge-server.toml is not correct. Correcting
+[16:03:42] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server was corrected from null to its default, SynchronizedConfig{DataHolder:{}}. 
+[16:03:42] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.removeErroringBlockEntities was corrected from null to its default, false. 
+[16:03:42] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.removeErroringEntities was corrected from null to its default, false. 
+[16:03:42] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.fullBoundingBoxLadders was corrected from null to its default, false. 
+[16:03:42] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.permissionHandler was corrected from null to its default, forge:default_handler. 
+[16:03:42] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.advertiseDedicatedServerToLan was corrected from null to its default, true. 
+[16:03:42] [Server thread/INFO] [minecraft/DedicatedServer]: Preparing level "world"
+[16:03:51] [Server thread/INFO] [minecraft/MinecraftServer]: Preparing start region for dimension minecraft:overworld
+[16:03:51] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[16:03:51] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[16:03:52] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[16:03:52] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[16:03:53] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[16:03:53] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[16:03:54] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[16:03:54] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[16:03:55] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[16:03:55] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 51%
+[16:03:56] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 59%
+[16:03:56] [Server thread/INFO] [minecraft/LoggerChunkProgressListener]: Time elapsed: 5307 ms
+[16:03:56] [Server thread/INFO] [minecraft/DedicatedServer]: Done (13.628s)! For help, type "help"
+[16:03:56] [Server thread/INFO] [minecraft/DedicatedServer]: Starting remote control listener
+[16:03:56] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener started
+[16:03:56] [Server thread/INFO] [minecraft/RconThread]: RCON running on 0.0.0.0:25724
+[16:03:56] [Server thread/INFO] [ne.mi.se.pe.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
+[16:03:58] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[16:03:58] [RCON Client /127.0.0.1 #2/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[16:03:58] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[16:03:58] [RCON Client /127.0.0.1 #3/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[16:03:59] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[16:03:59] [RCON Client /127.0.0.1 #4/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[16:04:00] [Server thread/INFO] [minecraft/PlayerList]: Steve[/127.0.0.1:46102] logged in with entity id 6 at (-280.5, 91.0, 86.5)
+[16:04:00] [Server thread/INFO] [minecraft/MinecraftServer]: Steve joined the game
+[16:04:02] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[16:04:03] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[16:04:05] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Steve lost connection: Disconnected
+[16:04:05] [Server thread/INFO] [minecraft/MinecraftServer]: Steve left the game
+[16:04:10] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[16:04:24] [RCON Client /127.0.0.1 #5/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[16:04:24] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[16:04:33] [Server thread/INFO] [minecraft/PlayerList]: Steve[/127.0.0.1:48272] logged in with entity id 56 at (-280.5, 91.0, 86.5)
+[16:04:33] [Server thread/INFO] [minecraft/MinecraftServer]: Steve joined the game
+[16:04:34] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[16:04:35] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[16:04:37] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Steve lost connection: Disconnected
+[16:04:37] [Server thread/INFO] [minecraft/MinecraftServer]: Steve left the game
+[16:04:44] [RCON Client /127.0.0.1 #6/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[16:04:44] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[16:04:58] [RCON Client /127.0.0.1 #7/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[16:04:58] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping the server
+[16:04:58] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping server
+[16:04:58] [Server thread/INFO] [minecraft/MinecraftServer]: Saving players
+[16:04:58] [Server thread/INFO] [minecraft/MinecraftServer]: Saving worlds
+[16:04:58] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[16:04:59] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[16:04:59] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[16:04:59] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[16:04:59] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[16:04:59] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[16:04:59] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage: All dimensions are saved
+[16:04:59] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener stopped

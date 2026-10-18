@@ -1,0 +1,6 @@
+版本=1.21.8 Forge=58.1.0 Java=21 游戏端口=25625 RCON端口=25725
+推导模板是否成功=1
+openjdk version "21.0.12.1" 2026-08-18 LTS
+OpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)
+目录占用：189M

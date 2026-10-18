@@ -1,0 +1,19 @@
+[14:57:34] [Server thread/INFO]: Alex[/127.0.0.1:42786] logged in with entity id 101 at (-0.5, 74.0, -7.5)
+[14:57:34] [Server thread/INFO]: Alex joined the game
+[14:57:35] [Server thread/INFO]: [Not Secure] <Alex> 矩阵测试：普通聊天（不该被转发）
+[14:57:36] [Server thread/INFO]: [Not Secure] <Alex> #矩阵测试：带井号聊天（应被转发）
+[14:57:38] [Server thread/INFO]: Alex lost connection: Disconnected
+[14:57:38] [Server thread/INFO]: Alex left the game
+[14:57:47] [RCON Client /127.0.0.1 #6/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[14:57:48] [Server thread/INFO]: Stopping the server
+[14:57:48] [Server thread/INFO]: Stopping server
+[14:57:48] [Server thread/INFO]: Saving players
+[14:57:48] [Server thread/INFO]: Saving worlds
+[14:57:48] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[14:57:49] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[14:57:49] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[14:57:49] [Server thread/INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[14:57:49] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[14:57:49] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[14:57:49] [Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
+[14:57:49] [Server thread/INFO]: Thread RCON Listener stopped

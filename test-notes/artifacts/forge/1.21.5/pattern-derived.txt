@@ -1,0 +1,9 @@
+--- 推导 join 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[join] exit=0
+--- 推导 quit 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[quit] exit=0
+--- 推导 chat 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[chat] exit=0
