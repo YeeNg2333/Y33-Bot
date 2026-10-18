@@ -1,0 +1,5 @@
+真实日志前缀 = [1810月2026 16:22:09.594] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+客户端可用 = 0
+join 行 = [1810月2026 16:22:09.594] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Steve joined the game（合成：真前缀 + PLAN 样式内容）
+chat 行 = [1810月2026 16:22:09.594] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）（合成：真前缀 + PLAN 样式内容）
+quit 行 = [1810月2026 16:22:09.594] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Steve left the game（合成：真前缀 + PLAN 样式内容）

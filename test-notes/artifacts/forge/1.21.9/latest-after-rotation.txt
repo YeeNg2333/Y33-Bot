@@ -1,0 +1,1 @@
+[1810月2026 16:12:24.971] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game

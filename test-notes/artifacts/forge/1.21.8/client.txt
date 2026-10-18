@@ -1,0 +1,7 @@
+[client] 连接 127.0.0.1:25625 用户名 Steve
+[client] 已 spawn（进服成功），版本协商: 1.21.8
+[client] 已发送普通聊天
+[client] 已发送 # 聊天
+[client] 主动退出
+[client] 连接结束
+client exit=0
