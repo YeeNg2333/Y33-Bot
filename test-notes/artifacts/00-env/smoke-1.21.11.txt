@@ -1,0 +1,102 @@
+===== 环境 =====
+2026-10-18 14:29:46 CST
+openjdk version "21.0.12.1" 2026-08-18 LTS
+Python 3.12.8
+MC 版本: 1.21.11（原版 Vanilla，需要 Java 21）
+
+===== 1) 启动服务端（libraries 已被清理过，验证能自动重新解压） =====
+启动耗时: 9s
+[14:29:54] [Server thread/INFO]: Preparing spawn area: 100%
+[14:29:54] [Server thread/INFO]: Time elapsed: 11 ms
+[14:29:54] [Server thread/INFO]: Done (0.339s)! For help, type "help"
+[14:29:54] [Server thread/INFO]: Starting remote control listener
+[14:29:54] [Server thread/INFO]: Thread RCON Listener started
+[14:29:54] [Server thread/INFO]: RCON running on 0.0.0.0:25700
+LISTEN 0      4096               *:25600            *:*   
+LISTEN 0      50                 *:25700            *:*   
+Mem:           2.6Gi       1.7Gi       359Mi        16Mi       740Mi       898Mi
+
+===== 2) check：QQ 真探活 + RCON 真连接 + 日志可读 =====
+[配置] OK config-e2e.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 3141s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON main] OK /list -> There are 0 of a max of 20 players online:
+[日志 main] OK /home/hermes/mc-test/vanilla/1.21.11/logs/latest.log 可读，偏移 2644 字节
+[绑定] OK 1 条
+OK
+check exit=0
+
+===== 3) QQ→MC：真 RCON 注入 tellraw（无 --dry-run） =====
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings.toml)
+[RCON main] tellraw @a {"text":"[QQ] Steve: 冒烟：真 RCON 注入"}
+exit=0
+
+===== 4) QQ→MC：真 RCON 往返（/status 读服务端 /list 响应） =====
+[RCON main] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+exit=0
+
+===== 5) MC→QQ：机器人 run（真 QQ 网关）+ 无头客户端真进服/聊天 =====
+[client] 连接 127.0.0.1:25600 用户名 Steve
+[client] 已 spawn（进服成功），版本协商: 1.21.11
+[client] 已发送普通聊天
+[client] 已发送 # 聊天
+[client] 主动退出
+[client] 连接结束
+client exit=0
+bot exit=0
+--- run-e2e.out ---
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: main
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 3139
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '4483b84038024e3d0b2e4355d67fa6b0'}, trace_id:4483b84038024e3d0b2e4355d67fa6b0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'ad32d284bd36d33dac6b0c913021dcdd'}, trace_id:ad32d284bd36d33dac6b0c913021dcdd
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[停止] 收到退出信号
+[停止] 正在关闭…
+[停止] 已退出
+
+===== 6) 服务端真实日志（本次会话的进服/聊天/退服行原样） =====
+[14:29:56] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[14:29:56] [RCON Client /127.0.0.1 #3/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[14:29:57] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[14:29:57] [RCON Client /127.0.0.1 #4/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[14:29:57] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[14:30:07] [Server thread/INFO]: Steve[/127.0.0.1:33502] logged in with entity id 90 at (-5.5, 79.0, 13.5)
+[14:30:07] [Server thread/INFO]: Steve joined the game
+[14:30:08] [Server thread/INFO]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[14:30:09] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[14:30:11] [Server thread/INFO]: Steve lost connection: Disconnected
+[14:30:11] [Server thread/INFO]: Steve left the game
+[14:30:17] [RCON Client /127.0.0.1 #5/INFO]: Thread RCON Client /127.0.0.1 shutting down
+
+===== 7) 默认 chat 模板 vs 真实 1.21.11 聊天行（A/B） =====
+[A] 默认模板（config-e2e.toml）喂真行：
+    输入: [14:30:09] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[警告] 日志行未匹配任何模板
+    → 上面没有 [群消息] 行 = 默认模板不匹配这一版的聊天行
+[B] 放宽 chat 模板（config-fix.toml，只改配置不改代码）：
+    输入: [14:30:09] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[群消息] Steve@main: 大家好，这是带井号的聊天（应被转发）
+    输入（普通聊天，应忽略）: [14:30:08] [Server thread/INFO]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[忽略] 聊天非 # 开头，不转发
+    输入（真进服行，模板改动不应影响）: [14:30:07] [Server thread/INFO]: Steve joined the game
+[群消息] Steve进入了main
+
+===== 8) 收尾：停服务端 =====
+(没有 MC 进程)
+no server running on /tmp/tmux-1002/default
+/dev/mapper/rlm-root   17G   15G  2.5G   86% /
+===== 冒烟结束 2026-10-18 14:30:20 CST =====
