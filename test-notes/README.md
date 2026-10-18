@@ -37,3 +37,11 @@
   脚本 `~/mc-test/*.sh`（`new-vanilla.sh` / `new-fabric.sh` / `new-forge.sh` / `nf_*.sh` / `*matrix*.sh`）。
 
 `BUGS.md` 的每条证据都给到「文件 + 小节」或「制品相对路径 + 真行原文」，因此即使不搬制品也能核对。
+
+## 根卡 `t_d25d5a1d` 汇总后的位置（2026-10-18）
+
+根卡把上表六个分支（含五份记录与全部制品）依次合入 `y33-bot/t_d25d5a1d`（6 个 merge 提交、0 冲突），
+所以在这个树的 `test-notes/` 里**制品就在原地**，不必再去各自分支捞（实测 761 个制品文件：
+`00-env` 4、`vanilla` 107、`fabric` 162、`forge` 296、`neoforge` 192）。
+合并后 `src/`、`tests/`、`docs/`、`README.md`、`PLAN.md`、`IDEA.md`、`config.example.toml` 相对 `f7fd5cb` **零改动**；
+根卡的独立复核（离线复现 BUG-002/003 + 抽查 `文件:行号` + 重跑 381 passed）记在 `BUGS.md` §「根卡复核记录」。

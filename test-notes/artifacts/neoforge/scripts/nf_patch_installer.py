@@ -5,7 +5,7 @@
 背景: 测试机 DNS 被污染 + 真实 IP 被墙，maven.neoforged.net 完全不可达；installer 的所有下载
       URL 都写死在 install_profile.json / version.json 里，替换主机即可让 install 走镜像。
 """
-import json
+
 import re
 import sys
 import zipfile
@@ -31,8 +31,7 @@ def main() -> int:
         txt = txt.replace(OLD_HOST2, mirror + "/")
         if name == "install_profile.json":
             # 镜像清单指向被墙的 mirrors.neoforged.net -> 换成不可路由地址，避免卡住
-            txt = re.sub(r'"mirrorList"\s*:\s*"[^"]*"',
-                         '"mirrorList": "http://127.0.0.1:9/disabled.json"', txt)
+            txt = re.sub(r'"mirrorList"\s*:\s*"[^"]*"', '"mirrorList": "http://127.0.0.1:9/disabled.json"', txt)
         blobs[name] = txt.encode("utf-8")
         stats[name] = (n1, n2)
     with zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED) as zout:

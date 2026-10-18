@@ -47,7 +47,12 @@
 | `t_efe57773` | `test-notes/04-neoforge.md` | `wt/t_efe57773` @ `ee94d57` | NeoForge 9 个版本（T0–T9） |
 
 - 本卡新增：`BUGS.md`（本文件）+ `test-notes/*.md`（上面五份记录的逐字副本，便于本文件引用的证据落在同一棵树里）；
-  **原始制品**（`artifacts/vanilla|fabric|forge|neoforge/`，共 771 个文件）仍在各自卡分支与测试机上，本节按条目给出相对路径。
+  **原始制品**（`artifacts/vanilla|fabric|forge|neoforge/`）仍在各自卡分支与测试机上，本节按条目给出相对路径。
+- **根卡 `t_d25d5a1d` 汇总（2026-10-18）**：六张卡的分支全部合入根卡分支 `y33-bot/t_d25d5a1d`（6 个 merge 提交、0 冲突），
+  于是本文引用的 `test-notes/**` 与**原始制品**落在同一棵树里；制品**实测 761 个文件**
+  （`00-env` 4、`vanilla` 107、`fabric` 162、`forge` 296、`neoforge` 192）。
+  合并后全仓 `git diff f7fd5cb..HEAD -- src tests docs README.md PLAN.md IDEA.md config.example.toml` 为**空**。
+  根卡的独立复核与一处修正见文末「根卡复核记录」。
 
 ## 索引
 
@@ -509,6 +514,76 @@ NeoForge 3 次（1.21.10 连续两轮 + 26.2 一轮）、原版 1 次（1.21.8 �
 | 7 | 部分补丁版未逐版 | 按「x.xx.0 不细化到 x.xx.xx」的口径排除（Forge 无 1.21.2 构建、26.1.1/26.1.2 为补丁版；Fabric 未测 1.21.3/1.21.7/1.21.8/1.21.10/26.1.1/26.1.2） | 只影响覆盖密度，不影响 BUG-002/003 的结论（窗口内格式一致） | 用同一套脚本加版本即可（端口段按 `00-env.md` §5.2 扩） |
 | 8 | Forge 1.21.8 的 C8（日志轮转）**成功样本** | 主轮与补测各撞一次平台超时（BUG-005），同一用例在其余 11 版通过（`03-forge.md` §7-2） | BUG-005 的一条附证 | 空闲时段重跑该用例 |
 | 9 | Forge 26.2 / 26.3 的真聊天行 | 无头客户端上限 26.1；这两版的行是「真前缀 + PLAN 正文」合成的，已在 `real-lines.txt` 标注（`03-forge.md` §7-1） | BUG-002/003 的外推部分 | 同第 2 条 |
+
+---
+
+## 根卡复核记录（`t_d25d5a1d`，2026-10-18）
+
+根卡只做三件事：把六张卡的分支合进同一棵树、**独立复核**上面的结论、把残留问题写清楚。**没有改任何项目代码。**
+
+### 合并
+
+`wt/t_a4c6c3ae`、`wt/t_ac457fe1`、`wt/t_5bccfcd8`、`wt/t_157ba7fe`、`wt/t_efe57773`、`wt/t_1c0e88a4`
+六个分支依次合入 `y33-bot/t_d25d5a1d`（6 个 merge 提交，0 冲突）。合并后：
+
+- `git diff f7fd5cb..HEAD -- src tests docs README.md PLAN.md IDEA.md config.example.toml Makefile pyproject.toml requirements*.txt .github scripts` → **空**；
+- 相对 `f7fd5cb` 的全部改动 = `BUGS.md` + `test-notes/**`（773 个文件、39860 行插入）。
+
+### 复核一：结论独立复现（离线，用**本仓代码**，不引用他卡结论）
+
+用 `src/y33bot/config.py` 的 `LogPatterns` + `src/y33bot/mclog/patterns.py` 的 `compile_patterns` / `parse_line`，
+把 `config.example.toml` 的**出厂默认模板**编译起来，喂**各卡制品里的真机原始行**（逐字未改），
+再喂一遍「只放宽时间戳/线程名/logger 段」的模板做对照：
+
+| 真行（来源） | 默认模板 | 放宽模板（只改配置） |
+|---|---|---|
+| 原版 1.21.11 `join` / `quit`（`00-env` 制品） | 命中 join / quit | 命中 |
+| 原版 1.21.11 `chat`（`00-env` 制品） | **不命中** | 命中 |
+| Fabric 1.21.2 / 1.21.11 / 26.1 `chat`（`02-fabric` 制品） | **不命中** | 命中 |
+| Forge 1.21.11 `join` / `quit` / `chat`（`03-forge` 制品） | **三者全不命中** | 三者全命中 |
+| NeoForge 1.21.4 `join` / `quit` / `chat`（`04-neoforge` 制品） | **三者全不命中** | 三者全命中 |
+| 旧形态对照 `[14:30:09] [Async Chat Thread - #0/INFO]: <Steve> #hi` | **命中 chat** | 命中 |
+
+⇒ **BUG-002**（默认 `chat` 只认 ≤1.21.1 的形态）与 **BUG-003**（加载器布局把三个模板一起打死）**独立复现**；
+两者的「修复方向 = 只改 `[log_patterns]`」也**独立验证可行**。
+
+### 复核二：条目里的 `文件:行号` 抽查（逐条打开源码核对）
+
+`patterns.py:52-60`（`_anchor` 补 `^`/`$`）与 `:96`（`re.match` 整行锚定）；
+`watcher.py:112-115`（未命中只记 **DEBUG** `[忽略] 日志行未匹配任何模板`，这是 BUG-004 的支点）；
+`bridge.py:139`（`handle_log_event`）与 `:165-167`（`#` 前缀/回环判断都在事件层**之上**）；
+`service.py:284-289`（只有拿到事件才调桥接）；`cli.py:221-225`（`simulate log-event` 是唯一显形点）；
+`config.example.toml:31-33`（默认三模板，来源 `IDEA.md:170` 的 ≤1.21.1 形态）；
+`tests/conftest.py:19-21`（`CHAT_TEMPLATE` 与默认模板同为旧形态 ⇒ 381 条单测「自造行验自造模板」，
+测不出 BUG-002）—— **全部与条目描述一致**。
+
+### 复核三：本仓基线（合并后的树上重跑）
+
+```
+$ env -u MC_RCON_PASSWORD -u MC_RCON_PASSWORD_MAIN PYTHONPATH=src .venv/Scripts/python.exe -m pytest -q
+381 passed in 44.18s                      # 与 f7fd5cb 基线一致（本批未改代码）
+$ ruff check . && ruff format --check .   # make lint 同款
+All checks passed! / 44 files already formatted
+```
+
+### 根卡发现并处理的两点
+
+1. **制品数量**：原文「共 771 个文件」是估算，实测 **761**（分族见 §「测试矩阵与证据来源」）——已按实测改正。
+   四张卡各自的卡面数字与提交内容也有出入（Forge 卡元数据 297 含 1 份记录、NeoForge 卡元数据 219 而分支里 193 个）——
+   这也是「卡面自述不等于事实」的一例，故根卡以**树里的实测值**为准。
+2. **`make lint` 会被新加的测试脚本弄红**（CI 不受影响：CI 只 lint `src tests`，`make lint` 是 `ruff check .`）：
+   `test-notes/artifacts/neoforge/scripts/nf_patch_installer.py` 有一个未用的 `import json` + 一处换行不合 ruff format。
+   已用 `ruff check --fix` + `ruff format` 修好（`-3/+2` 行，行为不变，`py_compile` 通过），使 `make lint` 回到全绿。
+   这是本批**唯一**改动的非新增文件；若想保持「制品逐字未改」，替代做法是在 `pyproject.toml` 的 `[tool.ruff]` 里
+   `extend-exclude = ["test-notes"]`（需用户拍板，根卡未擅自改项目配置）。
+
+### 未做的两件事（如实登记）
+
+1. **`AGENTS.md` 的「开发进度」没有改**：根卡运行环境把 `AGENTS.md` 列为受保护的智能体指令文件，
+   写入需要交互式批准，本次无人值守 ⇒ 未写入。本批的进度等价记录就是本文件（`BUGS.md` 汇总表 + 证据来源 + 本条复核记录），
+   需要 `AGENTS.md` 同步时请人工补一条 2026-10-18 的条目（模板见该文件既有条目）。
+2. **没有改 `PLAN.md` §7 的变更登记**：本批零产品改动（`src/` 一行未动），按 `PLAN.md` §7 的口径，
+   变更登记留给真正改默认模板的修复卡去做。
 
 ---
 
