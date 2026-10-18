@@ -1,0 +1,62 @@
+[1810月2026 16:00:17.934] [main/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.3).
+[1810月2026 16:00:24.587] [modloading-worker-0/INFO] [net.neoforged.neoforge.common.NeoForgeMod/NEOFORGE-MOD]: NeoForge mod loading, version 21.8.57, for MC 1.21.8
+[1810月2026 16:00:24.993] [main/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[1810月2026 16:00:25.049] [main/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/home/hermes/mc-test/neoforge/1.21.8/libraries/net/minecraft/server/1.21.8-20250717.133445/server-1.21.8-20250717.133445-srg.jar%23143!/assets/.mcassetsroot' uses unexpected schema
+[1810月2026 16:00:25.050] [main/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/home/hermes/mc-test/neoforge/1.21.8/libraries/net/minecraft/server/1.21.8-20250717.133445/server-1.21.8-20250717.133445-srg.jar%23143!/data/.mcassetsroot' uses unexpected schema
+[1810月2026 16:00:26.267] [main/INFO] [net.minecraft.server.Main/]: No existing world data, creating new world
+[1810月2026 16:00:27.266] [main/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 1407 recipes
+[1810月2026 16:00:27.287] [main/INFO] [net.minecraft.advancements.AdvancementTree/]: Loaded 1520 advancements
+[1810月2026 16:00:27.291] [main/INFO] [net.neoforged.neoforge.common.crafting.RecipePriorityManager/]: Loaded 0 recipe priority overrides
+[1810月2026 16:00:27.474] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting minecraft server version 1.21.8
+[1810月2026 16:00:27.474] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Loading properties
+[1810月2026 16:00:27.475] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Default game type: SURVIVAL
+[1810月2026 16:00:27.475] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
+[1810月2026 16:00:27.545] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting Minecraft server on *:25632
+[1810月2026 16:00:27.657] [Server thread/INFO] [net.minecraft.server.network.ServerConnectionListener/]: Using epoll channel type
+[1810月2026 16:00:27.690] [Server thread/WARN] [net.minecraft.server.dedicated.DedicatedServer/]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[1810月2026 16:00:27.691] [Server thread/WARN] [net.minecraft.server.dedicated.DedicatedServer/]: The server will make no attempt to authenticate usernames. Beware.
+[1810月2026 16:00:27.692] [Server thread/WARN] [net.minecraft.server.dedicated.DedicatedServer/]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[1810月2026 16:00:27.692] [Server thread/WARN] [net.minecraft.server.dedicated.DedicatedServer/]: To change this, set "online-mode" to "true" in the server.properties file.
+[1810月2026 16:00:27.758] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Preparing level "world"
+[1810月2026 16:00:40.489] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Preparing start region for dimension minecraft:overworld
+[1810月2026 16:00:40.543] [Worker-Main-1/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[1810月2026 16:00:41.085] [Worker-Main-1/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[1810月2026 16:00:41.570] [Worker-Main-1/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[1810月2026 16:00:42.008] [Worker-Main-1/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[1810月2026 16:00:42.551] [Worker-Main-1/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[1810月2026 16:00:43.155] [Worker-Main-1/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[1810月2026 16:00:43.543] [Worker-Main-1/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[1810月2026 16:00:44.009] [Worker-Main-1/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[1810月2026 16:00:44.562] [Worker-Main-1/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[1810月2026 16:00:45.046] [Worker-Main-1/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[1810月2026 16:00:45.504] [Worker-Main-1/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[1810月2026 16:00:46.061] [Worker-Main-1/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[1810月2026 16:00:46.128] [Server thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Time elapsed: 5638 ms
+[1810月2026 16:00:46.129] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (18.419s)! For help, type "help"
+[1810月2026 16:00:46.132] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting remote control listener
+[1810月2026 16:00:46.135] [Server thread/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread RCON Listener started
+[1810月2026 16:00:46.135] [Server thread/INFO] [net.minecraft.server.rcon.thread.RconThread/]: RCON running on 0.0.0.0:25732
+[1810月2026 16:00:46.157] [Server thread/INFO] [net.neoforged.neoforge.server.permission.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler
+[1810月2026 16:00:47.866] [RCON Listener #1/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread RCON Client /127.0.0.1 started
+[1810月2026 16:00:48.083] [RCON Client /127.0.0.1 #2/INFO] [net.minecraft.server.rcon.thread.RconClient/]: Thread RCON Client /127.0.0.1 shutting down
+[1810月2026 16:00:49.949] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Watcher[/127.0.0.1:50354] logged in with entity id 21 at (454.5, 75.0, -27.5)
+[1810月2026 16:00:49.981] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Watcher joined the game
+[1810月2026 16:01:01.330] [RCON Listener #1/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread RCON Client /127.0.0.1 started
+[1810月2026 16:01:01.545] [RCON Client /127.0.0.1 #3/INFO] [net.minecraft.server.rcon.thread.RconClient/]: Thread RCON Client /127.0.0.1 shutting down
+[1810月2026 16:01:04.841] [RCON Listener #1/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread RCON Client /127.0.0.1 started
+[1810月2026 16:01:05.045] [RCON Client /127.0.0.1 #4/INFO] [net.minecraft.server.rcon.thread.RconClient/]: Thread RCON Client /127.0.0.1 shutting down
+[1810月2026 16:01:06.043] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Steve[/127.0.0.1:53616] logged in with entity id 177 at (454.5, 69.0, -41.5)
+[1810月2026 16:01:06.062] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+[1810月2026 16:01:07.777] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[1810月2026 16:01:08.968] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[1810月2026 16:01:10.525] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Steve lost connection: Disconnected
+[1810月2026 16:01:10.525] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+[1810月2026 16:01:17.684] [RCON Listener #1/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread RCON Client /127.0.0.1 started
+[1810月2026 16:01:19.064] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Watcher lost connection: Disconnected
+[1810月2026 16:01:19.065] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Watcher left the game
+[1810月2026 16:01:32.171] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Steve2[/127.0.0.1:35286] logged in with entity id 183 at (455.5, 68.0, -29.5)
+[1810月2026 16:01:32.178] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve2 joined the game
+[1810月2026 16:01:33.948] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve2> 大家好，这是普通聊天（不该被转发）
+[1810月2026 16:01:35.149] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve2> #大家好，这是带井号的聊天（应被转发）
+[1810月2026 16:01:36.664] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Steve2 lost connection: Disconnected
+[1810月2026 16:01:36.665] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve2 left the game

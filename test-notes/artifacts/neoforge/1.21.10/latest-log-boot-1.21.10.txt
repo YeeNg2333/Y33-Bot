@@ -1,0 +1,52 @@
+[1810月2026 16:18:47.960] [main/INFO] [net.neoforged.fml.startup.Entrypoint/]: JVM Uptime at startup: 71ms
+[1810月2026 16:18:47.969] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Starting FancyModLoader version 10.0.32 (DEDICATED_SERVER in PROD)
+[1810月2026 16:18:47.969] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Game directory: /home/hermes/mc-test/neoforge/1.21.10
+[1810月2026 16:18:48.031] [main/INFO] [net.neoforged.fml.loading.EarlyServiceDiscovery/]: Found 2 early service jars (out of 73) in 31ms
+[1810月2026 16:18:48.032] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Loading FML Early Services:
+[1810月2026 16:18:48.033] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - libraries/net/neoforged/fancymodloader/earlydisplay/10.0.32/earlydisplay-10.0.32.jar
+[1810月2026 16:18:48.034] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - libraries/net/neoforged/fancymodloader/loader/10.0.32/loader-10.0.32.jar
+[1810月2026 16:18:48.041] [main/INFO] [net.neoforged.fml.loading.ImmediateWindowHandler/]: Not loading early display in headless mode.
+[1810月2026 16:18:48.072] [main/INFO] [net.neoforged.fml.loading.moddiscovery.locators.GameLocator/]: Failed to find common Minecraft classes and resources on the classpath. Assuming we're launching production.
+[1810月2026 16:18:48.270] [main/INFO] [net.neoforged.fml.loading.moddiscovery.locators.JarInJarDependencyLocator/]: Found 2 dependencies adding them to mods collection
+[1810月2026 16:18:48.272] [main/INFO] [net.neoforged.fml.loading.moddiscovery.ModDiscoverer/]: 
+     Mod List:
+		Name Version (Mod Id)
+
+		Minecraft 1.21.10 (minecraft)
+		NeoForge 21.10.64 (neoforge)
+[1810月2026 16:18:48.407] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/hermes/mc-test/neoforge/1.21.10/libraries/net/fabricmc/sponge-mixin/0.16.5+mixin.0.8.7/sponge-mixin-0.16.5+mixin.0.8.7.jar Service=FML Env=SERVER
+[1810月2026 16:18:48.438] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Loading FML Plugins:
+[1810月2026 16:18:48.440] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - ~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar > net.neoforged.neoforge-coremods-21.10.64.jar
+[1810月2026 16:18:48.600] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Building game content classloader:
+ - minecraft (jar(~libraries/net/neoforged/minecraft-server-patched/21.10.64/minecraft-server-patched-21.10.64.jar))
+ - mixinextras.neoforge (jar(~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar > mixinextras-neoforge-0.5.0.jar))
+ - neoforge (jar(~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar))
+ - net.neoforged.fml.generated (empty(VirtualJar/net.neoforged.fml.generated))
+[1810月2026 16:18:48.617] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Built game content classloader in 27ms
+[1810月2026 16:18:49.536] [main/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.0).
+[1810月2026 16:18:55.247] [modloading-worker-0/INFO] [net.neoforged.neoforge.common.NeoForgeMod/NEOFORGE-MOD]: NeoForge mod loading, version 21.10.64, for MC 1.21.10
+[1810月2026 16:18:55.729] [main/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[1810月2026 16:18:57.071] [main/INFO] [net.minecraft.server.Main/]: No existing world data, creating new world
+[1810月2026 16:18:58.243] [main/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 1461 recipes
+[1810月2026 16:18:58.254] [main/INFO] [net.minecraft.advancements.AdvancementTree/]: Loaded 1574 advancements
+[1810月2026 16:18:58.258] [main/INFO] [net.neoforged.neoforge.common.crafting.RecipePriorityManager/]: Loaded 0 recipe priority overrides
+[1810月2026 16:18:58.403] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting minecraft server version 1.21.10
+[1810月2026 16:18:58.404] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Loading properties
+[1810月2026 16:18:58.404] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Default game type: SURVIVAL
+[1810月2026 16:18:58.406] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
+[1810月2026 16:18:58.556] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting Minecraft server on *:25633
+[1810月2026 16:18:58.598] [Server thread/INFO] [net.minecraft.server.network.ServerConnectionListener/]: Using epoll channel type
+[1810月2026 16:18:58.639] [Server thread/WARN] [net.minecraft.server.dedicated.DedicatedServer/]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[1810月2026 16:18:58.639] [Server thread/WARN] [net.minecraft.server.dedicated.DedicatedServer/]: The server will make no attempt to authenticate usernames. Beware.
+[1810月2026 16:18:58.640] [Server thread/WARN] [net.minecraft.server.dedicated.DedicatedServer/]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[1810月2026 16:18:58.640] [Server thread/WARN] [net.minecraft.server.dedicated.DedicatedServer/]: To change this, set "online-mode" to "true" in the server.properties file.
+[1810月2026 16:18:58.698] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Preparing level "world"
+[1810月2026 16:18:59.028] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Selecting global world spawn...
+[1810月2026 16:19:07.073] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Loading 0 persistent chunks...
+[1810月2026 16:19:07.074] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Preparing spawn area: 100%
+[1810月2026 16:19:07.076] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Time elapsed: 8056 ms
+[1810月2026 16:19:07.076] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (8.423s)! For help, type "help"
+[1810月2026 16:19:07.076] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting remote control listener
+[1810月2026 16:19:07.079] [Server thread/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread RCON Listener started
+[1810月2026 16:19:07.079] [Server thread/INFO] [net.minecraft.server.rcon.thread.RconThread/]: RCON running on 0.0.0.0:25733
+[1810月2026 16:19:07.097] [Server thread/INFO] [net.neoforged.neoforge.server.permission.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler
