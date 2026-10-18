@@ -1,0 +1,56 @@
+Starting net.minecraft.server.Main
+[15:19:04] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[15:19:06] [ServerMain/INFO]: Loaded 1470 recipes
+[15:19:06] [ServerMain/INFO]: Loaded 1584 advancements
+[15:19:06] [Server thread/INFO]: Starting minecraft server version 1.21.11
+[15:19:06] [Server thread/INFO]: Loading properties
+[15:19:06] [Server thread/INFO]: Default game type: SURVIVAL
+[15:19:06] [Server thread/INFO]: Generating keypair
+[15:19:06] [Server thread/INFO]: Starting Minecraft server on *:25600
+[15:19:06] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[15:19:06] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
+[15:19:06] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[15:19:06] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[15:19:06] [Server thread/INFO]: Preparing level "world"
+[15:19:07] [Server thread/INFO]: Loading 0 persistent chunks...
+[15:19:07] [Server thread/INFO]: Preparing spawn area: 100%
+[15:19:07] [Server thread/INFO]: Time elapsed: 17 ms
+[15:19:07] [Server thread/INFO]: Done (0.393s)! For help, type "help"
+[15:19:07] [Server thread/INFO]: Starting remote control listener
+[15:19:07] [Server thread/INFO]: Thread RCON Listener started
+[15:19:07] [Server thread/INFO]: RCON running on 0.0.0.0:25700
+[15:25:00] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[15:25:00] [RCON Client /127.0.0.1 #2/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[15:25:01] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[15:25:02] [RCON Client /127.0.0.1 #3/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[15:25:02] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[15:25:02] [RCON Client /127.0.0.1 #4/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[15:25:05] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[15:25:05] [RCON Client /127.0.0.1 #5/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[15:25:09] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[15:25:24] [Server thread/INFO]: Steve[/127.0.0.1:41020] logged in with entity id 108 at (-5.5, 79.0, 13.5)
+[15:25:24] [Server thread/INFO]: Steve joined the game
+[15:25:26] [Server thread/INFO]: [Not Secure] <Steve> 矩阵测试：普通聊天（不该被转发）
+[15:25:27] [Server thread/WARN]: Can't keep up! Is the server overloaded? Running 2110ms or 42 ticks behind
+[15:25:27] [Server thread/INFO]: [Not Secure] <Steve> #矩阵测试：带井号聊天（应被转发）
+[15:25:28] [Server thread/INFO]: Steve lost connection: Disconnected
+[15:25:28] [Server thread/INFO]: Steve left the game
+[15:25:40] [Server thread/INFO]: Alex[/127.0.0.1:44340] logged in with entity id 248 at (-14.5, 82.0, 20.5)
+[15:25:40] [Server thread/INFO]: Alex joined the game
+[15:25:41] [Server thread/INFO]: [Not Secure] <Alex> 矩阵测试：普通聊天（不该被转发）
+[15:25:43] [Server thread/INFO]: [Not Secure] <Alex> #矩阵测试：带井号聊天（应被转发）
+[15:25:44] [Server thread/INFO]: Alex lost connection: Disconnected
+[15:25:44] [Server thread/INFO]: Alex left the game
+[15:25:53] [RCON Client /127.0.0.1 #6/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[15:25:54] [Server thread/INFO]: Stopping the server
+[15:25:55] [Server thread/INFO]: Stopping server
+[15:25:55] [Server thread/INFO]: Saving players
+[15:25:55] [Server thread/INFO]: Saving worlds
+[15:25:55] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[15:25:55] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[15:25:55] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[15:25:55] [Server thread/INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[15:25:55] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[15:25:55] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[15:25:55] [Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
+[15:25:55] [Server thread/INFO]: Thread RCON Listener stopped

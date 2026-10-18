@@ -1,0 +1,10 @@
+[client] 连接 127.0.0.1:25608 用户 Steve version=auto
+Error: No data available for version 26.2
+    at createProtocol (/home/hermes/mc-test/client/node_modules/minecraft-protocol/src/transforms/serializer.js:21:11)
+    at createSerializer (/home/hermes/mc-test/client/node_modules/minecraft-protocol/src/transforms/serializer.js:48:25)
+    at Client.setSerializer (/home/hermes/mc-test/client/node_modules/minecraft-protocol/src/client.js:44:23)
+    at set state (/home/hermes/mc-test/client/node_modules/minecraft-protocol/src/client.js:135:10)
+    at /home/hermes/mc-test/client/node_modules/minecraft-protocol/src/client/autoVersion.js:43:18
+    at /home/hermes/mc-test/client/node_modules/minecraft-protocol/src/ping.js:13:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[client] 出错: No data available for version 26.2

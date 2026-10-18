@@ -1,0 +1,204 @@
+===== 原版矩阵：26.3（slot 1，mode=full）开始 2026-10-18 15:41:21 CST =====
+  server.jar: 成功
+  [实例] 版本        = 26.3（Java 25）
+  [实例] 目录        = /home/hermes/mc-test/vanilla/26.3
+  [实例] 游戏端口    = 25601     RCON 端口 = 25701
+  [实例] online-mode = false
+  [实例] 日志        = /home/hermes/mc-test/vanilla/26.3/logs/latest.log
+  [实例] 元数据      = . /home/hermes/mc-test/vanilla/26.3/instance.env
+  [启动] tmux new -d -s mc-vanilla-26_3 "cd /home/hermes/mc-test/vanilla/26.3 && ./start.sh 2>&1 | tee -a console.out.log"
+  [停止] tmux send-keys -t mc-vanilla-26_3 'stop' Enter
+
+----- 生成的配置（核对端口/日志/服名） -----
+state = "data/state-vanilla-26.3.json"
+name = "v26_3"
+port = 25701
+log_path = "/home/hermes/mc-test/vanilla/26.3/logs/latest.log"
+chat = '\[\d{2}:\d{2}:\d{2}\] \[Async Chat Thread - #\d+/INFO\]: <(?P<player>\w+)> (?P<message>.+)'
+
+----- [C1] 启动原版服务端（JDK openjdk version "25.0.4.1" 2026-08-18 LTS） -----
+启动耗时 362s；READY=0（1=Done 行出现且 RCON 端口在听）
+[15:41:34] [Server thread/INFO]: Done (3.860s)! For help, type "help"
+[15:41:34] [Server thread/INFO]: Starting remote control listener
+[15:41:34] [Server thread/INFO]: RCON running on 0.0.0.0:25701
+LISTEN 0      4096               *:25601            *:*   
+LISTEN 0      50                 *:25701            *:*   
+
+----- [C2] check：配置/QQ 真探活/RCON 真连/日志可读/绑定表 -----
+[配置] OK config-vanilla-26.3.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 5687s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON v26_3] OK /list -> There are 0 of a max of 20 players online:
+[日志 v26_3] OK /home/hermes/mc-test/vanilla/26.3/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+[结果] C2 PASS（exit=0，命中 /^OK$/）
+
+----- [C3] commands：QQ 管理端指令面板清单 -----
+[指令] /bind 绑定游戏ID
+[指令] /status 查询在线状态
+[结果] C3 PASS（exit=0，命中 /\[指令\] /status/）
+
+----- [C4] bind set + list（绑定落盘） -----
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-vanilla-26.3.toml)
+[绑定] 1A2B3C4D -> Steve
+[结果] C4 PASS（exit=0，命中 /1A2B3C4D -> Steve/）
+
+----- [C5] QQ→MC 真注入（真 RCON tellraw，无 --dry-run） -----
+[RCON v26_3] tellraw @a {"text":"[QQ] Steve: 矩阵：真 RCON 注入"}
+[结果] C5 PASS（exit=0，命中 /tellraw @a .*矩阵：真 RCON 注入/）
+
+----- [C6] /status 真往返（读服务端真实 /list 响应） -----
+[RCON v26_3] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+[结果] C6 PASS（exit=0，命中 /\[群消息\] 在线: /）
+
+----- [C7] 未绑定用户 → 绑定提示，不注入 -----
+[群消息] 请先使用 /bind <游戏ID> 绑定
+[结果] C7 PASS（exit=0，命中 /请先使用 /bind/）
+
+----- [C8] 非触发前缀 → 忽略 -----
+[忽略] 非触发前缀
+[结果] C8 PASS（exit=0，命中 /\[忽略\] 非触发前缀/）
+
+----- [C9] 未知指令 → 未知指令 -----
+[群消息] 未知指令
+[结果] C9 PASS（exit=0，命中 /未知指令/）
+
+----- [C10] /bind 缺参数 → 用法文案 -----
+[群消息] 用法: /bind <游戏ID>
+[结果] C10 PASS（exit=0，命中 /用法: /bind <游戏ID>/）
+
+----- [C11] /bind 非法游戏ID → 不合法 -----
+[群消息] 游戏ID 不合法
+[结果] C11 PASS（exit=0，命中 /游戏ID 不合法/）
+
+----- [C12] 多行内容只转发第一行（A7） -----
+[RCON v26_3] tellraw @a {"text":"[QQ] Steve: 第一行"}
+[结果] C12 PASS（exit=0，命中 /tellraw @a .*第一行/）
+
+----- [C13] simulate health 离线（首次提示） -----
+[RCON v26_3] /list
+[警告] RCON v26_3 命令失败: 假 RCON 服务器离线: 127.0.0.1:25701
+[群消息] [服务器状态] v26_3 离线
+[结果] C13 PASS（exit=0，命中 /\[服务器状态\] v26_3 离线/）
+
+----- [C14] simulate health 离线（第二次不重复提示） -----
+[RCON v26_3] /list
+[警告] RCON v26_3 命令失败: 假 RCON 服务器离线: 127.0.0.1:25701
+[忽略] 状态未变化，不重复提示
+[结果] C14 PASS（exit=0，命中 /状态未变化，不重复提示/）
+
+----- [C15] simulate health 上线（翻转提示） -----
+[RCON v26_3] /list
+[群消息] [服务器状态] v26_3 上线
+[结果] C15 PASS（exit=0，命中 /\[服务器状态\] v26_3 上线/）
+
+----- [C16] 旧格式聊天行（文档样例）→ 转发 -----
+[群消息] Steve@v26_3: 大家好
+[结果] C16 PASS（exit=0，命中 /\[群消息\] Steve@v26_3: 大家好/）
+
+----- [C17] 回环防护：命中 ignored_chat_prefixes（文档样例行） -----
+[忽略] 回环防护：命中 ignored_chat_prefixes
+[结果] C17 PASS（exit=0，命中 /回环防护/）
+
+----- [C18] join/quit 事件模板（真行格式） -----
+[群消息] Steve进入了v26_3
+[结果] C18 PASS（exit=0，命中 /Steve进入了v26_3/）
+
+----- [C19] run：真 QQ 网关 + 真实客户端进服/聊天/退服 + 日志轮转 + 优雅退出 -----
+启动判据（应出现 QQ 网关已连接 / 日志监听已启动）：
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: v26_3
+[启动] QQ 网关已连接
+[启动] QQ 网关就绪
+--- 客户端 A：Steve 进服 + 普通聊天 + # 聊天 + 退服 ---
+clientA exit=1
+[client] 连接 127.0.0.1:25601 用户 Steve version=auto
+Error: No data available for version 26.3
+    at createProtocol (/home/hermes/mc-test/client/node_modules/minecraft-protocol/src/transforms/serializer.js:21:11)
+    at createSerializer (/home/hermes/mc-test/client/node_modules/minecraft-protocol/src/transforms/serializer.js:48:25)
+    at Client.setSerializer (/home/hermes/mc-test/client/node_modules/minecraft-protocol/src/client.js:44:23)
+    at set state (/home/hermes/mc-test/client/node_modules/minecraft-protocol/src/client.js:135:10)
+    at /home/hermes/mc-test/client/node_modules/minecraft-protocol/src/client/autoVersion.js:43:18
+    at /home/hermes/mc-test/client/node_modules/minecraft-protocol/src/ping.js:13:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[client] 出错: No data available for version 26.3
+--- 日志轮转（S6）：清空 latest.log，再让客户端 B 进服/退服 ---
+clientB exit=1
+    at /home/hermes/mc-test/client/node_modules/minecraft-protocol/src/client/autoVersion.js:43:18
+    at /home/hermes/mc-test/client/node_modules/minecraft-protocol/src/ping.js:13:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[client] 出错: No data available for version 26.3
+--- SIGTERM（优雅退出，期望 exit=0）---
+bot exit=0
+
+----- run.out（机器人真实输出，全量） -----
+Using selector: EpollSelector
+[启动] y33bot 0.1.0（1 个 MC 服）
+[RCON 127.0.0.1:25701] 已连接
+[RCON v26_3] 已连接
+[启动] 日志监听已启动: v26_3
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 5680
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[忽略] 日志行未匹配任何模板: [15:41:27] [ServerMain/INFO]: Environment: Environment[discoveryUrl=https://discovery.minecraftservices.com/minecraft/client, name=PROD]
+[忽略] 日志行未匹配任何模板: [15:41:29] [Worker-Main-1/INFO]: No existing world data, creating new world
+[忽略] 日志行未匹配任何模板: [15:41:30] [Worker-Main-1/INFO]: Loaded 1866 advancements
+[忽略] 日志行未匹配任何模板: [15:41:30] [Server thread/INFO]: Starting minecraft server version 26.3
+[忽略] 日志行未匹配任何模板: [15:41:30] [Server thread/INFO]: Loading properties
+[忽略] 日志行未匹配任何模板: [15:41:30] [Server thread/INFO]: Default game type: SURVIVAL
+[忽略] 日志行未匹配任何模板: [15:41:30] [Server thread/INFO]: Generating keypair
+[忽略] 日志行未匹配任何模板: [15:41:30] [Server thread/INFO]: Starting Minecraft server on *:25601
+[忽略] 日志行未匹配任何模板: [15:41:30] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[忽略] 日志行未匹配任何模板: [15:41:30] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
+[忽略] 日志行未匹配任何模板: [15:41:30] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[忽略] 日志行未匹配任何模板: [15:41:30] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[忽略] 日志行未匹配任何模板: [15:41:30] [Server thread/INFO]: Preparing level "world"
+[忽略] 日志行未匹配任何模板: [15:41:31] [Server thread/INFO]: Selecting global world spawn...
+[忽略] 日志行未匹配任何模板: [15:41:34] [Server thread/INFO]: Loading 0 persistent chunks...
+[忽略] 日志行未匹配任何模板: [15:41:34] [Server thread/INFO]: Preparing spawn area: 100%
+[忽略] 日志行未匹配任何模板: [15:41:34] [Server thread/INFO]: Time elapsed: 3638 ms
+[忽略] 日志行未匹配任何模板: [15:41:34] [Server thread/INFO]: Done (3.860s)! For help, type "help"
+[忽略] 日志行未匹配任何模板: [15:41:34] [Server thread/INFO]: Starting remote control listener
+[忽略] 日志行未匹配任何模板: [15:41:34] [Server thread/INFO]: Thread RCON Listener started
+[忽略] 日志行未匹配任何模板: [15:41:34] [Server thread/INFO]: RCON running on 0.0.0.0:25701
+[忽略] 日志行未匹配任何模板: [15:41:34] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[忽略] 日志行未匹配任何模板: [15:41:34] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[忽略] 日志行未匹配任何模板: [15:41:34] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[忽略] 日志行未匹配任何模板: [15:47:24] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:47:24] [RCON Client /127.0.0.1 #2/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:47:25] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:47:25] [RCON Client /127.0.0.1 #3/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:47:26] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:47:26] [RCON Client /127.0.0.1 #4/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:47:27] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:47:28] [RCON Client /127.0.0.1 #5/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:47:30] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[警告] 日志文件缩小（size=0 < offset=2633），偏移重置为 0
+[停止] 收到退出信号
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.3.json
+[停止] 已退出
+
+----- [C20] 真实聊天行 vs 默认/放宽 chat 模板（A/B） -----
+本次会话真实聊天行（# 开头）: (无)
+本次会话真实聊天行（普通）  : (无)
+本次会话真实进服行          : (无)
+本次会话真实退服行          : (无)
+[A/B] 无真实聊天行（客户端未连上该版本）→ 本版聊天行格式无法判定
+
+----- 收尾：停服 + 归档制品 + 回收磁盘 -----
+端口检查：游戏端口 25601 监听数 = 0，RCON 25701 监听数 = 0
+本次会话真实玩家日志行：
+/dev/mapper/rlm-root   17G   16G  1.2G   93% /
+===== 原版矩阵：26.3 结束 2026-10-18 15:48:02 CST =====

@@ -1,0 +1,39 @@
+Using selector: EpollSelector
+[启动] y33bot 0.1.0（1 个 MC 服）
+[RCON 127.0.0.1:25707] 已连接
+[RCON v26_1] 已连接
+[启动] 日志监听已启动: v26_1
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 4732
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[警告] 日志文件缩小（size=2441 < offset=4073），偏移重置为 0
+[忽略] 日志行未匹配任何模板: [16:00:01] [Server thread/INFO]: Steve[/127.0.0.1:50001] logged in with entity id 10 at (0.5, 64.0, 0.5)
+[忽略] 日志行未匹配任何模板: [16:03:18] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '794e206e95f32b6b522d483ab88daf26'}, trace_id:794e206e95f32b6b522d483ab88daf26
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[忽略] 日志行未匹配任何模板: [16:00:05] [Server thread/INFO]: [Not Secure] <Steve> 合成行：普通聊天（不该被转发）
+[忽略] 日志行未匹配任何模板: [16:00:06] [Server thread/INFO]: [Not Secure] <Steve> #合成行：带井号聊天（应被转发）
+[忽略] 日志行未匹配任何模板: [16:00:08] [Server thread/INFO]: Steve lost connection: Disconnected
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'e3fc54cafc211bf95d21e2ca415b3df4'}, trace_id:e3fc54cafc211bf95d21e2ca415b3df4
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[警告] 日志文件缩小（size=54 < offset=2764），偏移重置为 0
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'e01a992cb1c6a55c2782e1c9b8526473'}, trace_id:e01a992cb1c6a55c2782e1c9b8526473
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[停止] 收到退出信号
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[停止] 已退出

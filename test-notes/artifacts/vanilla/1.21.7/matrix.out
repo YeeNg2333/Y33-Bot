@@ -1,0 +1,253 @@
+===== 原版矩阵：1.21.7（slot 5，mode=full）开始 2026-10-18 15:02:38 CST =====
+  [下载] 1.21.7 server.jar <- https://piston-data.mojang.com/v1/objects/05e4b48fbc01f0385adb74bcff9751d34552486c/server.jar
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                   Dload  Upload   Total   Spent    Left  Speed
+    0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0 54.8M    0  355k    0     0   349k      0  0:02:40  0:00:01  0:02:39  348k  2 54.8M    2 1391k    0     0   679k      0  0:01:22  0:00:02  0:01:20  679k  4 54.8M    4 2619k    0     0   865k      0  0:01:04  0:00:03  0:01:01  864k  7 54.8M    7 4327k    0     0  1077k      0  0:00:52  0:00:04  0:00:48 1076k 11 54.8M   11 6391k    0     0  1273k      0  0:00:44  0:00:05  0:00:39 1287k 15 54.8M   15 8894k    0     0  1476k      0  0:00:38  0:00:06  0:00:32 1705k 19 54.8M   19 10.8M    0     0  1575k      0  0:00:35  0:00:07  0:00:28 1942k 24 54.8M   24 13.2M    0     0  1693k      0  0:00:33  0:00:08  0:00:25 2195k 30 54.8M   30 16.7M    0     0  1890k      0  0:00:29  0:00:09  0:00:20 2540k 37 54.8M   37 20.7M    0     0  2116k      0  0:00:26  0:00:10  0:00:16 2961k 46 54.8M   46 25.2M    0     0  2343k      0  0:00:23  0:00:11  0:00:12 3383k 51 54.8M   51 28.2M    0     0  2401k      0  0:00:23  0:00:12  0:00:11 3567k 60 54.8M   60 33.2M    0     0  2613k      0  0:00:21  0:00:13  0:00:08 4087k 69 54.8M   69 38.2M    0     0  2780k      0  0:00:20  0:00:14  0:00:06 4383k 78 54.8M   78 43.1M    0     0  2940k      0  0:00:19  0:00:15  0:00:04 4591k 87 54.8M   87 48.1M    0     0  3074k      0  0:00:18  0:00:16  0:00:02 4689k 96 54.8M   96 52.7M    0     0  3164k      0  0:00:17  0:00:17 --:--:-- 4997k100 54.8M  100 54.8M    0     0  3233k      0  0:00:17  0:00:17 --:--:-- 5082k
+  server.jar: 成功
+  [实例] 版本        = 1.21.7（Java 21）
+  [实例] 目录        = /home/hermes/mc-test/vanilla/1.21.7
+  [实例] 游戏端口    = 25605     RCON 端口 = 25705
+  [实例] online-mode = false
+  [实例] 日志        = /home/hermes/mc-test/vanilla/1.21.7/logs/latest.log
+  [实例] 元数据      = . /home/hermes/mc-test/vanilla/1.21.7/instance.env
+  [启动] tmux new -d -s mc-vanilla-1_21_7 "cd /home/hermes/mc-test/vanilla/1.21.7 && ./start.sh 2>&1 | tee -a console.out.log"
+  [停止] tmux send-keys -t mc-vanilla-1_21_7 'stop' Enter
+
+----- 生成的配置（核对端口/日志/服名） -----
+state = "data/state-vanilla-1.21.7.json"
+name = "v1_21_7"
+port = 25705
+log_path = "/home/hermes/mc-test/vanilla/1.21.7/logs/latest.log"
+chat = '\[\d{2}:\d{2}:\d{2}\] \[Async Chat Thread - #\d+/INFO\]: <(?P<player>\w+)> (?P<message>.+)'
+
+----- [C1] 启动原版服务端（JDK openjdk version "21.0.12.1" 2026-08-18 LTS） -----
+启动耗时 24s；READY=1（1=Done 行出现且 RCON 端口在听）
+[15:03:19] [Server thread/INFO]: Done (14.930s)! For help, type "help"
+[15:03:19] [Server thread/INFO]: Starting remote control listener
+[15:03:19] [Server thread/INFO]: RCON running on 0.0.0.0:25705
+LISTEN 0      4096               *:25605            *:*   
+LISTEN 0      50                 *:25705            *:*   
+
+----- [C2] check：配置/QQ 真探活/RCON 真连/日志可读/绑定表 -----
+[配置] OK config-vanilla-1.21.7.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 1136s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON v1_21_7] OK /list -> There are 0 of a max of 20 players online:
+[日志 v1_21_7] OK /home/hermes/mc-test/vanilla/1.21.7/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+[结果] C2 PASS（exit=0，命中 /^OK$/）
+
+----- [C3] commands：QQ 管理端指令面板清单 -----
+[指令] /bind 绑定游戏ID
+[指令] /status 查询在线状态
+[结果] C3 PASS（exit=0，命中 /\[指令\] /status/）
+
+----- [C4] bind set + list（绑定落盘） -----
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-vanilla-1.21.7.toml)
+[绑定] 1A2B3C4D -> Steve
+[结果] C4 PASS（exit=0，命中 /1A2B3C4D -> Steve/）
+
+----- [C5] QQ→MC 真注入（真 RCON tellraw，无 --dry-run） -----
+[RCON v1_21_7] tellraw @a {"text":"[QQ] Steve: 矩阵：真 RCON 注入"}
+[结果] C5 PASS（exit=0，命中 /tellraw @a .*矩阵：真 RCON 注入/）
+
+----- [C6] /status 真往返（读服务端真实 /list 响应） -----
+[RCON v1_21_7] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+[结果] C6 PASS（exit=0，命中 /\[群消息\] 在线: /）
+
+----- [C7] 未绑定用户 → 绑定提示，不注入 -----
+[群消息] 请先使用 /bind <游戏ID> 绑定
+[结果] C7 PASS（exit=0，命中 /请先使用 /bind/）
+
+----- [C8] 非触发前缀 → 忽略 -----
+[忽略] 非触发前缀
+[结果] C8 PASS（exit=0，命中 /\[忽略\] 非触发前缀/）
+
+----- [C9] 未知指令 → 未知指令 -----
+[群消息] 未知指令
+[结果] C9 PASS（exit=0，命中 /未知指令/）
+
+----- [C10] /bind 缺参数 → 用法文案 -----
+[群消息] 用法: /bind <游戏ID>
+[结果] C10 PASS（exit=0，命中 /用法: /bind <游戏ID>/）
+
+----- [C11] /bind 非法游戏ID → 不合法 -----
+[群消息] 游戏ID 不合法
+[结果] C11 PASS（exit=0，命中 /游戏ID 不合法/）
+
+----- [C12] 多行内容只转发第一行（A7） -----
+[RCON v1_21_7] tellraw @a {"text":"[QQ] Steve: 第一行"}
+[结果] C12 PASS（exit=0，命中 /tellraw @a .*第一行/）
+
+----- [C13] simulate health 离线（首次提示） -----
+[RCON v1_21_7] /list
+[警告] RCON v1_21_7 命令失败: 假 RCON 服务器离线: 127.0.0.1:25705
+[群消息] [服务器状态] v1_21_7 离线
+[结果] C13 PASS（exit=0，命中 /\[服务器状态\] v1_21_7 离线/）
+
+----- [C14] simulate health 离线（第二次不重复提示） -----
+[RCON v1_21_7] /list
+[警告] RCON v1_21_7 命令失败: 假 RCON 服务器离线: 127.0.0.1:25705
+[忽略] 状态未变化，不重复提示
+[结果] C14 PASS（exit=0，命中 /状态未变化，不重复提示/）
+
+----- [C15] simulate health 上线（翻转提示） -----
+[RCON v1_21_7] /list
+[群消息] [服务器状态] v1_21_7 上线
+[结果] C15 PASS（exit=0，命中 /\[服务器状态\] v1_21_7 上线/）
+
+----- [C16] 旧格式聊天行（文档样例）→ 转发 -----
+[群消息] Steve@v1_21_7: 大家好
+[结果] C16 PASS（exit=0，命中 /\[群消息\] Steve@v1_21_7: 大家好/）
+
+----- [C17] 回环防护：命中 ignored_chat_prefixes（文档样例行） -----
+[忽略] 回环防护：命中 ignored_chat_prefixes
+[结果] C17 PASS（exit=0，命中 /回环防护/）
+
+----- [C18] join/quit 事件模板（真行格式） -----
+[群消息] Steve进入了v1_21_7
+[结果] C18 PASS（exit=0，命中 /Steve进入了v1_21_7/）
+
+----- [C19] run：真 QQ 网关 + 真实客户端进服/聊天/退服 + 日志轮转 + 优雅退出 -----
+启动判据（应出现 QQ 网关已连接 / 日志监听已启动）：
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: v1_21_7
+[启动] QQ 网关已连接
+[启动] QQ 网关就绪
+--- 客户端 A：Steve 进服 + 普通聊天 + # 聊天 + 退服 ---
+clientA exit=0
+[client] 连接 127.0.0.1:25605 用户 Steve version=auto
+[client] 已 spawn（进服成功），版本协商: 1.21.8
+[client] 已发送普通聊天
+[client] 已发送 # 聊天
+[client] 主动退出
+[client] 连接结束
+--- 日志轮转（S6）：清空 latest.log，再让客户端 B 进服/退服 ---
+clientB exit=0
+[client] 已发送普通聊天
+[client] 已发送 # 聊天
+[client] 主动退出
+[client] 连接结束
+--- SIGTERM（优雅退出，期望 exit=0）---
+bot exit=0
+
+----- run.out（机器人真实输出，全量） -----
+Using selector: EpollSelector
+[启动] y33bot 0.1.0（1 个 MC 服）
+[RCON 127.0.0.1:25705] 已连接
+[RCON v1_21_7] 已连接
+[启动] 日志监听已启动: v1_21_7
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 1130
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[忽略] 日志行未匹配任何模板: [15:03:02] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[忽略] 日志行未匹配任何模板: [15:03:03] [ServerMain/INFO]: No existing world data, creating new world
+[忽略] 日志行未匹配任何模板: [15:03:04] [ServerMain/INFO]: Loaded 1407 recipes
+[忽略] 日志行未匹配任何模板: [15:03:04] [ServerMain/INFO]: Loaded 1520 advancements
+[忽略] 日志行未匹配任何模板: [15:03:04] [Server thread/INFO]: Starting minecraft server version 1.21.7
+[忽略] 日志行未匹配任何模板: [15:03:04] [Server thread/INFO]: Loading properties
+[忽略] 日志行未匹配任何模板: [15:03:04] [Server thread/INFO]: Default game type: SURVIVAL
+[忽略] 日志行未匹配任何模板: [15:03:04] [Server thread/INFO]: Generating keypair
+[忽略] 日志行未匹配任何模板: [15:03:04] [Server thread/INFO]: Starting Minecraft server on *:25605
+[忽略] 日志行未匹配任何模板: [15:03:04] [Server thread/INFO]: Using epoll channel type
+[忽略] 日志行未匹配任何模板: [15:03:04] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[忽略] 日志行未匹配任何模板: [15:03:04] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
+[忽略] 日志行未匹配任何模板: [15:03:04] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[忽略] 日志行未匹配任何模板: [15:03:04] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[忽略] 日志行未匹配任何模板: [15:03:04] [Server thread/INFO]: Preparing level "world"
+[忽略] 日志行未匹配任何模板: [15:03:13] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
+[忽略] 日志行未匹配任何模板: [15:03:13] [Worker-Main-2/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [15:03:14] [Worker-Main-2/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [15:03:14] [Worker-Main-2/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [15:03:15] [Worker-Main-2/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [15:03:15] [Worker-Main-2/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [15:03:16] [Worker-Main-2/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [15:03:16] [Worker-Main-2/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [15:03:17] [Worker-Main-2/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [15:03:17] [Worker-Main-2/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [15:03:18] [Worker-Main-2/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [15:03:18] [Worker-Main-2/INFO]: Preparing spawn area: 71%
+[忽略] 日志行未匹配任何模板: [15:03:19] [Worker-Main-2/INFO]: Preparing spawn area: 73%
+[忽略] 日志行未匹配任何模板: [15:03:19] [Server thread/INFO]: Time elapsed: 5754 ms
+[忽略] 日志行未匹配任何模板: [15:03:19] [Server thread/INFO]: Done (14.930s)! For help, type "help"
+[忽略] 日志行未匹配任何模板: [15:03:19] [Server thread/INFO]: Starting remote control listener
+[忽略] 日志行未匹配任何模板: [15:03:19] [Server thread/INFO]: Thread RCON Listener started
+[忽略] 日志行未匹配任何模板: [15:03:19] [Server thread/INFO]: RCON running on 0.0.0.0:25705
+[忽略] 日志行未匹配任何模板: [15:03:20] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:03:21] [RCON Client /127.0.0.1 #2/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:03:22] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:03:22] [RCON Client /127.0.0.1 #3/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:03:22] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:03:22] [RCON Client /127.0.0.1 #4/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:03:24] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:03:24] [RCON Client /127.0.0.1 #5/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:03:26] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:03:39] [Server thread/INFO]: Steve[/127.0.0.1:46200] logged in with entity id 19 at (2.5, 70.0, 10.5)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.7.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '0b304bd46dbfbb5afa2ce4dbebc5bfb6'}, trace_id:0b304bd46dbfbb5afa2ce4dbebc5bfb6
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.7.json
+[忽略] 日志行未匹配任何模板: [15:03:41] [Server thread/INFO]: [Not Secure] <Steve> 矩阵测试：普通聊天（不该被转发）
+[忽略] 日志行未匹配任何模板: [15:03:42] [Server thread/INFO]: [Not Secure] <Steve> #矩阵测试：带井号聊天（应被转发）
+[忽略] 日志行未匹配任何模板: [15:03:43] [Server thread/INFO]: Steve lost connection: Disconnected
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.7.json
+请求超时，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages
+[群消息] Steve退出了v1_21_7
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.7.json
+[警告] 日志文件缩小（size=0 < offset=3557），偏移重置为 0
+[忽略] 日志行未匹配任何模板: [15:03:53] [Server thread/INFO]: Alex[/127.0.0.1:54714] logged in with entity id 79 at (7.5, 69.0, 7.5)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.7.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '5203a28372a2e8dffd7c2c853b12eab1'}, trace_id:5203a28372a2e8dffd7c2c853b12eab1
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.7.json
+[忽略] 日志行未匹配任何模板: [15:03:54] [Server thread/INFO]: [Not Secure] <Alex> 矩阵测试：普通聊天（不该被转发）
+[忽略] 日志行未匹配任何模板: [15:03:56] [Server thread/INFO]: [Not Secure] <Alex> #矩阵测试：带井号聊天（应被转发）
+[忽略] 日志行未匹配任何模板: [15:03:57] [Server thread/INFO]: Alex lost connection: Disconnected
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.7.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '19f6a695bec9c6bab99591973aeefac0'}, trace_id:19f6a695bec9c6bab99591973aeefac0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.7.json
+[停止] 收到退出信号
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.7.json
+[停止] 已退出
+
+----- [C20] 真实聊天行 vs 默认/放宽 chat 模板（A/B） -----
+本次会话真实聊天行（# 开头）: [15:03:56] [Server thread/INFO]: [Not Secure] <Alex> #矩阵测试：带井号聊天（应被转发）
+本次会话真实聊天行（普通）  : [15:03:54] [Server thread/INFO]: [Not Secure] <Alex> 矩阵测试：普通聊天（不该被转发）
+本次会话真实进服行          : [15:03:53] [Server thread/INFO]: Alex joined the game
+本次会话真实退服行          : [15:03:57] [Server thread/INFO]: Alex left the game
+[A] 默认模板 ← 真实 '#' 聊天行
+[警告] 日志行未匹配任何模板
+exit=1
+[B] 放宽模板 ← 同一行
+[群消息] Alex@v1_21_7: 矩阵测试：带井号聊天（应被转发）
+exit=0
+[B2] 放宽模板 ← 真实普通聊天行（应忽略）
+[忽略] 聊天非 # 开头，不转发
+exit=0
+[A2] 默认模板 ← 真实进服行（join 模板应不受影响）
+[群消息] Alex进入了v1_21_7
+exit=0
+
+----- 收尾：停服 + 归档制品 + 回收磁盘 -----
+端口检查：游戏端口 25605 监听数 = 0，RCON 25705 监听数 = 0
+本次会话真实玩家日志行：
+[15:03:53] [Server thread/INFO]: Alex[/127.0.0.1:54714] logged in with entity id 79 at (7.5, 69.0, 7.5)
+[15:03:53] [Server thread/INFO]: Alex joined the game
+[15:03:54] [Server thread/INFO]: [Not Secure] <Alex> 矩阵测试：普通聊天（不该被转发）
+[15:03:56] [Server thread/INFO]: [Not Secure] <Alex> #矩阵测试：带井号聊天（应被转发）
+[15:03:57] [Server thread/INFO]: Alex left the game
+/dev/mapper/rlm-root   17G   16G  1.6G   91% /
+===== 原版矩阵：1.21.7 结束 2026-10-18 15:04:09 CST =====

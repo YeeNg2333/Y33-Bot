@@ -1,0 +1,65 @@
+===== 合成日志行补充用例：26.2 开始 2026-10-18 15:51:02 CST =====
+  [下载] 26.2 server.jar <- https://piston-data.mojang.com/v1/objects/823e2250d24b3ddac457a60c92a6a941943fcd6a/server.jar
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                   Dload  Upload   Total   Spent    Left  Speed
+    0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  4 58.0M    4 2767k    0     0  2562k      0  0:00:23  0:00:01  0:00:22 2562k 23 58.0M   23 13.6M    0     0  6808k      0  0:00:08  0:00:02  0:00:06 6808k 35 58.0M   35 20.3M    0     0  6904k      0  0:00:08  0:00:03  0:00:05 6904k 42 58.0M   42 24.9M    0     0  6355k      0  0:00:09  0:00:04  0:00:05 6355k 51 58.0M   51 29.8M    0     0  6119k      0  0:00:09  0:00:04  0:00:05 6118k 59 58.0M   59 34.3M    0     0  5826k      0  0:00:10  0:00:06  0:00:04 6536k 69 58.0M   69 40.2M    0     0  5856k      0  0:00:10  0:00:07  0:00:03 5465k 81 58.0M   81 47.4M    0     0  6066k      0  0:00:09  0:00:08  0:00:01 5557k 99 58.0M   99 57.7M    0     0  6551k      0  0:00:09  0:00:09 --:--:-- 6709k100 58.0M  100 58.0M    0     0  6571k      0  0:00:09  0:00:09 --:--:-- 7128k
+  server.jar: 成功
+  [实例] 版本        = 26.2（Java 25）
+  [实例] 目录        = /home/hermes/mc-test/vanilla/26.2
+  [实例] 游戏端口    = 25608     RCON 端口 = 25708
+  [实例] online-mode = false
+  [实例] 日志        = /home/hermes/mc-test/vanilla/26.2/logs/latest.log
+  [实例] 元数据      = . /home/hermes/mc-test/vanilla/26.2/instance.env
+  [启动] tmux new -d -s mc-vanilla-26_2 "cd /home/hermes/mc-test/vanilla/26.2 && ./start.sh 2>&1 | tee -a console.out.log"
+  [停止] tmux send-keys -t mc-vanilla-26_2 'stop' Enter
+服务端就绪：[15:51:55] [Server thread/INFO]: RCON running on 0.0.0.0:25708
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: v26_2
+[启动] QQ 网关已连接
+[启动] QQ 网关就绪
+--- 追加：普通聊天 / # 聊天 / 退服 / 再进服 ---
+--- 轮转（S6）：清空 latest.log 后再追加一行进服 ---
+bot exit=0
+--- run-synth.out 全量 ---
+Using selector: EpollSelector
+[启动] y33bot 0.1.0（1 个 MC 服）
+[RCON 127.0.0.1:25708] 已连接
+[RCON v26_2] 已连接
+[启动] 日志监听已启动: v26_2
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 5411
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[警告] 日志文件已轮转（inode 39644983 -> 6877090），偏移重置为 0
+[忽略] 日志行未匹配任何模板: [16:00:01] [Server thread/INFO]: Steve[/127.0.0.1:50001] logged in with entity id 10 at (0.5, 64.0, 0.5)
+[忽略] 日志行未匹配任何模板: [15:51:57] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.2.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '49943fad105bc989282e23c26f6c8604'}, trace_id:49943fad105bc989282e23c26f6c8604
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.2.json
+[忽略] 日志行未匹配任何模板: [16:00:05] [Server thread/INFO]: [Not Secure] <Steve> 合成行：普通聊天（不该被转发）
+[忽略] 日志行未匹配任何模板: [16:00:06] [Server thread/INFO]: [Not Secure] <Steve> #合成行：带井号聊天（应被转发）
+[忽略] 日志行未匹配任何模板: [16:00:08] [Server thread/INFO]: Steve lost connection: Disconnected
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.2.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'aa18bffede9f9d52f21004acbfbacbb2'}, trace_id:aa18bffede9f9d52f21004acbfbacbb2
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.2.json
+[警告] 日志文件缩小（size=54 < offset=2764），偏移重置为 0
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.2.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'd22df0b0433222d1db976af2b3004086'}, trace_id:d22df0b0433222d1db976af2b3004086
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.2.json
+[停止] 收到退出信号
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.2.json
+[停止] 已退出
+--- 收尾 ---
+/dev/mapper/rlm-root   17G   16G 1008M   95% /
+===== 合成日志行补充用例：26.2 结束 2026-10-18 15:52:27 CST =====
