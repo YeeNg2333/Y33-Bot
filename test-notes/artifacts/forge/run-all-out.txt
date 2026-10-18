@@ -1,0 +1,1822 @@
+############ Forge 矩阵开始 2026-10-18 15:43:25，版本： 1.21.3:53.1.0:0 1.21.4:54.1.14:1 1.21.5:55.1.0:2 1.21.6:56.0.9:3 1.21.7:57.0.3:4 1.21.8:58.1.0:5 1.21.9:59.0.5:6 1.21.10:60.1.0:7 26.1:62.0.9:9 26.2:65.1.0:0 26.3:66.0.13:1 ############
+
+############################# 1.21.3 (Forge 53.1.0, slot 0) #############################
+install rc=0
+[实例] 游戏端口    = 25620     RCON 端口 = 25720
+[实例] online-mode = false
+[实例] 日志        = /home/hermes/mc-test/forge/1.21.3/logs/latest.log
+[实例] 元数据      = . /home/hermes/mc-test/forge/1.21.3/instance.env
+[启动] tmux new -d -s mc-forge-1_21_3 "cd /home/hermes/mc-test/forge/1.21.3 && ./start.sh 2>&1 | tee -a console.out.log"
+[停止] tmux send-keys -t mc-forge-1_21_3 'stop' Enter
+===== 版本 1.21.3 / Forge 53.1.0 / slot 0 / 端口 25620,25720 =====
+Java: /home/hermes/jdk-21
+
+########## C1 服务端启动（首次启动生成配置目录） ##########
+[资源] MemAvailable=2027MB 磁盘可用=1084MB —— 可以启动
+--- Done 行 ---
+[1810月2026 15:45:56.407] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (12.286s)! For help, type "help"
+--- 端口 ---
+LISTEN 0      4096               *:25620            *:*   
+LISTEN 0      50                 *:25720            *:*   
+--- 目录 ---
+banned-ips.json banned-players.json config defaultconfigs eula.txt forge-1.21.3-53.1.0-installer.jar forge-1.21.3-53.1.0-installer.jar.log forge-1.21.3-53.1.0-shim.jar instance.env libraries logs mods ops.json README.txt run.bat run.sh server.properties start.sh usercache.json user_jvm_args.txt whitelist.json world 
+--- 新生成的 config/ ---
+fml.toml
+forge-common.toml
+--- 日志前 3 行（真实格式） ---
+[1810月2026 15:45:31.611] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[1810月2026 15:45:31.614] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS
+[1810月2026 15:45:31.616] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.2.4 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+
+########## C2 S1 自检 check（QQ 真探活 + 真 RCON + 真日志路径） ##########
+[配置] OK config-forge-1_21_3.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 5773s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 未配置（MC→QQ 方向禁用）
+[RCON forge] OK /list -> There are 0 of a max of 20 players online:
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.3/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+check exit=0
+
+########## C3 S2 QQ→MC：真 RCON 注入 + /status 真往返 ##########
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-forge-1_21_3.toml)
+[RCON forge] tellraw @a {"text":"[QQ] Steve: 你好"}
+[RCON forge] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+
+########## C4 无头客户端真进服/聊天/退服 ##########
+client exit=0
+真实日志前缀 = [1810月2026 15:45:43.827] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+客户端可用 = 1
+join 行 = [1810月2026 15:46:00.204] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+chat 行 = [1810月2026 15:46:03.340] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+quit 行 = [1810月2026 15:46:04.885] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+
+########## C5a 默认模板 A/B（项目 config.example.toml 的默认 join/quit/chat） ##########
+--- 默认 join 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[join] exit=1
+--- 默认 quit 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[quit] exit=1
+--- 默认 chat 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[chat] exit=1
+
+########## C5b 由真行推导模板（只改配置，不改代码）后重测 ##########
+推导模板 join = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) joined the game
+推导模板 quit = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) left the game
+推导模板 chat = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)
+--- 推导 join 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[join] exit=0
+--- 推导 quit 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[quit] exit=0
+--- 推导 chat 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[chat] exit=0
+--- 普通聊天（应忽略） ---
+[忽略] 聊天非 # 开头，不转发
+--- 回环行（应忽略） ---
+[忽略] 回环防护：命中 ignored_chat_prefixes
+--- 群消息非触发前缀（应忽略） ---
+[忽略] 非触发前缀
+
+########## C6 run 常驻：真连 QQ 网关 + SIGTERM 优雅退出 ##########
+run exit=0
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: forge
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 5760
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[忽略] 聊天非 # 开头，不转发
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[RCON forge] /list
+[停止] 收到退出信号
+[停止] 正在关闭…
+[停止] 已退出
+run exit=0
+
+########## C7 MC→QQ 生产链路（假 group_openid，真跑到平台） ##########
+run-e2e exit=0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'f41f2bc5c98cad6c71ca961bccb9c968'}, trace_id:f41f2bc5c98cad6c71ca961bccb9c968
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '04a4ad8f51e85132d510ea59ae9ca01b'}, trace_id:04a4ad8f51e85132d510ea59ae9ca01b
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '3fdc79ef88b7931b1a4d08228c6b552d'}, trace_id:3fdc79ef88b7931b1a4d08228c6b552d
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'b5fb107f10e22dffc5202c0010ce8e97'}, trace_id:b5fb107f10e22dffc5202c0010ce8e97
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '295cd82ab83e015d94f34e1cfe8afd51'}, trace_id:295cd82ab83e015d94f34e1cfe8afd51
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'b4114d3f2b0e3bd61909f4a364bdfba0'}, trace_id:b4114d3f2b0e3bd61909f4a364bdfba0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[群消息] [服务器状态] forge 上线
+--- state（data/state-forge-1_21_3-e2e.json） ---
+{
+  "version": 1,
+  "qq": {
+    "msg_seq": 7
+  },
+  "servers": {
+    "forge": {
+      "log_offset": 13763,
+      "log_size": 13763,
+      "log_inode": "55582861",
+      "health_online": true,
+      "health_changed_at": 1792309595.1932178
+    }
+  }
+}
+########## C8 S6 日志轮转（重命名 latest.log → 期望 [警告] 日志文件缩小 + 偏移重置） ##########
+run-rot exit=1
+
+########## C9 停服 → RCON 连接被拒（机器人侧可观测错误） ##########
+check(停服后) exit=1
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25720 失败: [Errno 111] Connect call failed ('127.0.0.1', 25720)
+[配置] OK config-forge-1_21_3.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 5708s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON forge] FAIL 无法连接 127.0.0.1:25720: 连接 127.0.0.1:25720 失败: [Errno 111] Connect call failed ('127.0.0.1', 25720)
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.3/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 1 条
+FAIL
+
+########## 制品归档与清理 ##########
+清理后磁盘: /dev/mapper/rlm-root   17G   16G  1.1G   94% /
+bind.txt
+check-down.txt
+check.txt
+client-e2e.txt
+client.txt
+console.txt
+inject.txt
+latest-after-rotation.txt
+latest.log.txt
+meta.txt
+pattern-default.txt
+pattern-derived.txt
+pattern-negative.txt
+real-lines.txt
+run-e2e.txt
+run-rot.txt
+run.txt
+server.properties.txt
+state-e2e.txt
+status.txt
+===== 版本 1.21.3 测试结束 =====
+RESULT 1.21.3 install=0 test=0 2026-10-18 15:47:03
+
+############################# 1.21.4 (Forge 54.1.14, slot 1) #############################
+install rc=0
+[实例] 游戏端口    = 25621     RCON 端口 = 25721
+[实例] online-mode = false
+[实例] 日志        = /home/hermes/mc-test/forge/1.21.4/logs/latest.log
+[实例] 元数据      = . /home/hermes/mc-test/forge/1.21.4/instance.env
+[启动] tmux new -d -s mc-forge-1_21_4 "cd /home/hermes/mc-test/forge/1.21.4 && ./start.sh 2>&1 | tee -a console.out.log"
+[停止] tmux send-keys -t mc-forge-1_21_4 'stop' Enter
+===== 版本 1.21.4 / Forge 54.1.14 / slot 1 / 端口 25621,25721 =====
+Java: /home/hermes/jdk-21
+
+########## C1 服务端启动（首次启动生成配置目录） ##########
+[资源] MemAvailable=1894MB 磁盘可用=1074MB —— 可以启动
+--- Done 行 ---
+[1810月2026 15:50:17.279] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (16.971s)! For help, type "help"
+--- 端口 ---
+LISTEN 0      4096               *:25621            *:*   
+LISTEN 0      50                 *:25721            *:*   
+--- 目录 ---
+banned-ips.json banned-players.json config defaultconfigs eula.txt forge-1.21.4-54.1.14-installer.jar forge-1.21.4-54.1.14-installer.jar.log forge-1.21.4-54.1.14-shim.jar instance.env libraries logs mods ops.json README.txt run.bat run.sh server.properties start.sh usercache.json user_jvm_args.txt whitelist.json world 
+--- 新生成的 config/ ---
+fml.toml
+forge-common.toml
+--- 日志前 3 行（真实格式） ---
+[1810月2026 15:49:49.726] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[1810月2026 15:49:49.728] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS
+[1810月2026 15:49:49.729] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.2.4 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+
+########## C2 S1 自检 check（QQ 真探活 + 真 RCON + 真日志路径） ##########
+[配置] OK config-forge-1_21_4.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 5512s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 未配置（MC→QQ 方向禁用）
+[RCON forge] OK /list -> There are 0 of a max of 20 players online:
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.4/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+check exit=0
+
+########## C3 S2 QQ→MC：真 RCON 注入 + /status 真往返 ##########
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-forge-1_21_4.toml)
+[RCON forge] tellraw @a {"text":"[QQ] Steve: 你好"}
+[RCON forge] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+
+########## C4 无头客户端真进服/聊天/退服 ##########
+client exit=0
+真实日志前缀 = [1810月2026 15:50:00.101] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+客户端可用 = 1
+join 行 = [1810月2026 15:50:21.752] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+chat 行 = [1810月2026 15:50:24.951] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+quit 行 = [1810月2026 15:50:26.423] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+
+########## C5a 默认模板 A/B（项目 config.example.toml 的默认 join/quit/chat） ##########
+--- 默认 join 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[join] exit=1
+--- 默认 quit 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[quit] exit=1
+--- 默认 chat 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[chat] exit=1
+
+########## C5b 由真行推导模板（只改配置，不改代码）后重测 ##########
+推导模板 join = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) joined the game
+推导模板 quit = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) left the game
+推导模板 chat = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)
+--- 推导 join 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[join] exit=0
+--- 推导 quit 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[quit] exit=0
+--- 推导 chat 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[chat] exit=0
+--- 普通聊天（应忽略） ---
+[忽略] 聊天非 # 开头，不转发
+--- 回环行（应忽略） ---
+[忽略] 回环防护：命中 ignored_chat_prefixes
+--- 群消息非触发前缀（应忽略） ---
+[忽略] 非触发前缀
+
+########## C6 run 常驻：真连 QQ 网关 + SIGTERM 优雅退出 ##########
+run exit=0
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: forge
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 5497
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[忽略] 聊天非 # 开头，不转发
+[RCON forge] /list
+[停止] 收到退出信号
+[停止] 正在关闭…
+[停止] 已退出
+run exit=0
+
+########## C7 MC→QQ 生产链路（假 group_openid，真跑到平台） ##########
+run-e2e exit=0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'a48ce97949408ed9cd8d84ea720aa21b'}, trace_id:a48ce97949408ed9cd8d84ea720aa21b
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '64c2a328e380cdc6a1e0cc3b850f943d'}, trace_id:64c2a328e380cdc6a1e0cc3b850f943d
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'df61f62540b20542e2fc0395447c6f7e'}, trace_id:df61f62540b20542e2fc0395447c6f7e
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'd7b5c9b888df4556220f4bd1738b8bea'}, trace_id:d7b5c9b888df4556220f4bd1738b8bea
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '01d83811a2633a32f8ae90a34da9f5b8'}, trace_id:01d83811a2633a32f8ae90a34da9f5b8
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'b81862f2d76db8f6c06bc7eceb0f058e'}, trace_id:b81862f2d76db8f6c06bc7eceb0f058e
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '41a8bc49f9ccdd8ea4d8c995176721ad'}, trace_id:41a8bc49f9ccdd8ea4d8c995176721ad
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+--- state（data/state-forge-1_21_4-e2e.json） ---
+{
+  "version": 1,
+  "qq": {
+    "msg_seq": 7
+  },
+  "servers": {
+    "forge": {
+      "log_offset": 12825,
+      "log_size": 12825,
+      "log_inode": "42059604",
+      "health_online": true,
+      "health_changed_at": 1792309858.1398692
+    }
+  }
+}
+########## C8 S6 日志轮转（重命名 latest.log → 期望 [警告] 日志文件缩小 + 偏移重置） ##########
+run-rot exit=0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[警告] 日志文件缩小（size=111 < offset=13117），偏移重置为 0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+
+########## C9 停服 → RCON 连接被拒（机器人侧可观测错误） ##########
+check(停服后) exit=1
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25721 失败: [Errno 111] Connect call failed ('127.0.0.1', 25721)
+[配置] OK config-forge-1_21_4.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 5444s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON forge] FAIL 无法连接 127.0.0.1:25721: 连接 127.0.0.1:25721 失败: [Errno 111] Connect call failed ('127.0.0.1', 25721)
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.4/logs/latest.log 可读，偏移 111 字节
+[绑定] OK 1 条
+FAIL
+
+########## 制品归档与清理 ##########
+清理后磁盘: /dev/mapper/rlm-root   17G   16G  1.1G   95% /
+bind.txt
+check-down.txt
+check.txt
+client-e2e.txt
+client.txt
+console.txt
+inject.txt
+latest-after-rotation.txt
+latest.log.txt
+meta.txt
+pattern-default.txt
+pattern-derived.txt
+pattern-negative.txt
+real-lines.txt
+run-e2e.txt
+run-rot.txt
+run.txt
+server.properties.txt
+state-e2e.txt
+status.txt
+===== 版本 1.21.4 测试结束 =====
+RESULT 1.21.4 install=0 test=0 2026-10-18 15:51:26
+
+############################# 1.21.5 (Forge 55.1.0, slot 2) #############################
+install rc=0
+[实例] 游戏端口    = 25622     RCON 端口 = 25722
+[实例] online-mode = false
+[实例] 日志        = /home/hermes/mc-test/forge/1.21.5/logs/latest.log
+[实例] 元数据      = . /home/hermes/mc-test/forge/1.21.5/instance.env
+[启动] tmux new -d -s mc-forge-1_21_5 "cd /home/hermes/mc-test/forge/1.21.5 && ./start.sh 2>&1 | tee -a console.out.log"
+[停止] tmux send-keys -t mc-forge-1_21_5 'stop' Enter
+===== 版本 1.21.5 / Forge 55.1.0 / slot 2 / 端口 25622,25722 =====
+Java: /home/hermes/jdk-21
+
+########## C1 服务端启动（首次启动生成配置目录） ##########
+[资源] MemAvailable=1958MB 磁盘可用=973MB —— 可以启动
+--- Done 行 ---
+[1810月2026 15:54:32.805] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (16.249s)! For help, type "help"
+--- 端口 ---
+LISTEN 0      4096               *:25622            *:*   
+LISTEN 0      50                 *:25722            *:*   
+--- 目录 ---
+banned-ips.json banned-players.json config defaultconfigs eula.txt forge-1.21.5-55.1.0-installer.jar forge-1.21.5-55.1.0-installer.jar.log forge-1.21.5-55.1.0-shim.jar instance.env libraries logs mods ops.json README.txt run.bat run.sh server.properties start.sh usercache.json user_jvm_args.txt whitelist.json world 
+--- 新生成的 config/ ---
+fml.toml
+forge-common.toml
+--- 日志前 3 行（真实格式） ---
+[1810月2026 15:54:05.384] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[1810月2026 15:54:05.390] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS
+[1810月2026 15:54:05.392] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.2.4 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+
+########## C2 S1 自检 check（QQ 真探活 + 真 RCON + 真日志路径） ##########
+[配置] OK config-forge-1_21_5.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 5256s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 未配置（MC→QQ 方向禁用）
+[RCON forge] OK /list -> There are 0 of a max of 20 players online:
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.5/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+check exit=0
+
+########## C3 S2 QQ→MC：真 RCON 注入 + /status 真往返 ##########
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-forge-1_21_5.toml)
+[RCON forge] tellraw @a {"text":"[QQ] Steve: 你好"}
+[RCON forge] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+
+########## C4 无头客户端真进服/聊天/退服 ##########
+client exit=0
+真实日志前缀 = [1810月2026 15:54:16.171] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+客户端可用 = 1
+join 行 = [1810月2026 15:54:36.703] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+chat 行 = [1810月2026 15:54:39.808] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+quit 行 = [1810月2026 15:54:41.345] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+
+########## C5a 默认模板 A/B（项目 config.example.toml 的默认 join/quit/chat） ##########
+--- 默认 join 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[join] exit=1
+--- 默认 quit 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[quit] exit=1
+--- 默认 chat 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[chat] exit=1
+
+########## C5b 由真行推导模板（只改配置，不改代码）后重测 ##########
+推导模板 join = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) joined the game
+推导模板 quit = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) left the game
+推导模板 chat = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)
+--- 推导 join 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[join] exit=0
+--- 推导 quit 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[quit] exit=0
+--- 推导 chat 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[chat] exit=0
+--- 普通聊天（应忽略） ---
+[忽略] 聊天非 # 开头，不转发
+--- 回环行（应忽略） ---
+[忽略] 回环防护：命中 ignored_chat_prefixes
+--- 群消息非触发前缀（应忽略） ---
+[忽略] 非触发前缀
+
+########## C6 run 常驻：真连 QQ 网关 + SIGTERM 优雅退出 ##########
+run exit=0
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: forge
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 5244
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[忽略] 聊天非 # 开头，不转发
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[RCON forge] /list
+[停止] 收到退出信号
+[停止] 正在关闭…
+[停止] 已退出
+run exit=0
+
+########## C7 MC→QQ 生产链路（假 group_openid，真跑到平台） ##########
+run-e2e exit=0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '88af505765173b8f90c3a69af4cf5109'}, trace_id:88af505765173b8f90c3a69af4cf5109
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'a0283eeaa4f65e3aa496d905aab2c463'}, trace_id:a0283eeaa4f65e3aa496d905aab2c463
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '0369b1028e4497fbc36efb87eacc2b6c'}, trace_id:0369b1028e4497fbc36efb87eacc2b6c
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '95348e6056455b90163343fff93867a4'}, trace_id:95348e6056455b90163343fff93867a4
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '4bf30edc48e113397323dd2ce3b9e72a'}, trace_id:4bf30edc48e113397323dd2ce3b9e72a
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '36d59dd8fb4f0a27e7a75744def46460'}, trace_id:36d59dd8fb4f0a27e7a75744def46460
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '96e30f748885683c56bd86c94a11265c'}, trace_id:96e30f748885683c56bd86c94a11265c
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+--- state（data/state-forge-1_21_5-e2e.json） ---
+{
+  "version": 1,
+  "qq": {
+    "msg_seq": 7
+  },
+  "servers": {
+    "forge": {
+      "log_offset": 12822,
+      "log_size": 12822,
+      "log_inode": "24739765",
+      "health_online": true,
+      "health_changed_at": 1792310111.8224823
+    }
+  }
+}
+########## C8 S6 日志轮转（重命名 latest.log → 期望 [警告] 日志文件缩小 + 偏移重置） ##########
+run-rot exit=1
+
+########## C9 停服 → RCON 连接被拒（机器人侧可观测错误） ##########
+check(停服后) exit=1
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25722 失败: [Errno 111] Connect call failed ('127.0.0.1', 25722)
+[配置] OK config-forge-1_21_5.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 5192s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON forge] FAIL 无法连接 127.0.0.1:25722: 连接 127.0.0.1:25722 失败: [Errno 111] Connect call failed ('127.0.0.1', 25722)
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.5/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 1 条
+FAIL
+
+########## 制品归档与清理 ##########
+清理后磁盘: /dev/mapper/rlm-root   17G   16G  1.1G   94% /
+bind.txt
+check-down.txt
+check.txt
+client-e2e.txt
+client.txt
+console.txt
+inject.txt
+latest-after-rotation.txt
+latest.log.txt
+meta.txt
+pattern-default.txt
+pattern-derived.txt
+pattern-negative.txt
+real-lines.txt
+run-e2e.txt
+run-rot.txt
+run.txt
+server.properties.txt
+state-e2e.txt
+status.txt
+===== 版本 1.21.5 测试结束 =====
+RESULT 1.21.5 install=0 test=0 2026-10-18 15:55:38
+
+############################# 1.21.6 (Forge 56.0.9, slot 3) #############################
+install rc=0
+[实例] 游戏端口    = 25623     RCON 端口 = 25723
+[实例] online-mode = false
+[实例] 日志        = /home/hermes/mc-test/forge/1.21.6/logs/latest.log
+[实例] 元数据      = . /home/hermes/mc-test/forge/1.21.6/instance.env
+[启动] tmux new -d -s mc-forge-1_21_6 "cd /home/hermes/mc-test/forge/1.21.6 && ./start.sh 2>&1 | tee -a console.out.log"
+[停止] tmux send-keys -t mc-forge-1_21_6 'stop' Enter
+===== 版本 1.21.6 / Forge 56.0.9 / slot 3 / 端口 25623,25723 =====
+Java: /home/hermes/jdk-21
+
+########## C1 服务端启动（首次启动生成配置目录） ##########
+[资源] MemAvailable=1958MB 磁盘可用=1043MB —— 可以启动
+--- Done 行 ---
+[1810月2026 15:59:51.988] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (13.433s)! For help, type "help"
+--- 端口 ---
+LISTEN 0      4096               *:25623            *:*   
+LISTEN 0      50                 *:25723            *:*   
+--- 目录 ---
+banned-ips.json banned-players.json config defaultconfigs eula.txt forge-1.21.6-56.0.9-installer.jar forge-1.21.6-56.0.9-installer.jar.log forge-1.21.6-56.0.9-shim.jar instance.env libraries logs mods ops.json README.txt run.bat run.sh server.properties start.sh usercache.json user_jvm_args.txt whitelist.json world 
+--- 新生成的 config/ ---
+fml.toml
+forge-common.toml
+--- 日志前 3 行（真实格式） ---
+[1810月2026 15:59:27.974] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[1810月2026 15:59:27.976] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS
+[1810月2026 15:59:27.976] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.2.4 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+
+########## C2 S1 自检 check（QQ 真探活 + 真 RCON + 真日志路径） ##########
+[配置] OK config-forge-1_21_6.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 4936s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 未配置（MC→QQ 方向禁用）
+[RCON forge] OK /list -> There are 0 of a max of 20 players online:
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.6/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+check exit=0
+
+########## C3 S2 QQ→MC：真 RCON 注入 + /status 真往返 ##########
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-forge-1_21_6.toml)
+[RCON forge] tellraw @a {"text":"[QQ] Steve: 你好"}
+[RCON forge] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+
+########## C4 无头客户端真进服/聊天/退服 ##########
+client exit=0
+真实日志前缀 = [1810月2026 15:59:38.219] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+客户端可用 = 1
+join 行 = [1810月2026 15:59:56.988] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+chat 行 = [1810月2026 15:59:59.785] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+quit 行 = [1810月2026 16:00:01.327] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+
+########## C5a 默认模板 A/B（项目 config.example.toml 的默认 join/quit/chat） ##########
+--- 默认 join 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[join] exit=1
+--- 默认 quit 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[quit] exit=1
+--- 默认 chat 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[chat] exit=1
+
+########## C5b 由真行推导模板（只改配置，不改代码）后重测 ##########
+推导模板 join = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) joined the game
+推导模板 quit = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) left the game
+推导模板 chat = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)
+--- 推导 join 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[join] exit=0
+--- 推导 quit 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[quit] exit=0
+--- 推导 chat 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[chat] exit=0
+--- 普通聊天（应忽略） ---
+[忽略] 聊天非 # 开头，不转发
+--- 回环行（应忽略） ---
+[忽略] 回环防护：命中 ignored_chat_prefixes
+--- 群消息非触发前缀（应忽略） ---
+[忽略] 非触发前缀
+
+########## C6 run 常驻：真连 QQ 网关 + SIGTERM 优雅退出 ##########
+run exit=0
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: forge
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 4921
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[忽略] 聊天非 # 开头，不转发
+[RCON forge] /list
+[停止] 收到退出信号
+[停止] 正在关闭…
+[停止] 已退出
+run exit=0
+
+########## C7 MC→QQ 生产链路（假 group_openid，真跑到平台） ##########
+run-e2e exit=0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'a603d7f264b89abd907697358755505d'}, trace_id:a603d7f264b89abd907697358755505d
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '72fb0ee76bc9b4a92f2fcae5113151dc'}, trace_id:72fb0ee76bc9b4a92f2fcae5113151dc
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'aa3b2e0b5e5e47ca4406d9866da88df0'}, trace_id:aa3b2e0b5e5e47ca4406d9866da88df0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'c58bc1ebdc01b9c202b903f50674cc36'}, trace_id:c58bc1ebdc01b9c202b903f50674cc36
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '861ec724a925c781ff868fb9e8283dd0'}, trace_id:861ec724a925c781ff868fb9e8283dd0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '71409ed393799fd6781e3d06e0048d1a'}, trace_id:71409ed393799fd6781e3d06e0048d1a
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '0c4c8b78310a8413dc863af6935e9e81'}, trace_id:0c4c8b78310a8413dc863af6935e9e81
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+--- state（data/state-forge-1_21_6-e2e.json） ---
+{
+  "version": 1,
+  "qq": {
+    "msg_seq": 7
+  },
+  "servers": {
+    "forge": {
+      "log_offset": 12537,
+      "log_size": 12537,
+      "log_inode": "40122140",
+      "health_online": true,
+      "health_changed_at": 1792310433.4424353
+    }
+  }
+}
+########## C8 S6 日志轮转（重命名 latest.log → 期望 [警告] 日志文件缩小 + 偏移重置） ##########
+run-rot exit=0
+[群消息] Steve进入了forge
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[警告] 日志文件缩小（size=111 < offset=12829），偏移重置为 0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+
+########## C9 停服 → RCON 连接被拒（机器人侧可观测错误） ##########
+check(停服后) exit=1
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25723 失败: [Errno 111] Connect call failed ('127.0.0.1', 25723)
+[配置] OK config-forge-1_21_6.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 4870s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON forge] FAIL 无法连接 127.0.0.1:25723: 连接 127.0.0.1:25723 失败: [Errno 111] Connect call failed ('127.0.0.1', 25723)
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.6/logs/latest.log 可读，偏移 111 字节
+[绑定] OK 1 条
+FAIL
+
+########## 制品归档与清理 ##########
+清理后磁盘: /dev/mapper/rlm-root   17G   16G  1.1G   94% /
+bind.txt
+check-down.txt
+check.txt
+client-e2e.txt
+client.txt
+console.txt
+inject.txt
+latest-after-rotation.txt
+latest.log.txt
+meta.txt
+pattern-default.txt
+pattern-derived.txt
+pattern-negative.txt
+real-lines.txt
+run-e2e.txt
+run-rot.txt
+run.txt
+server.properties.txt
+state-e2e.txt
+status.txt
+===== 版本 1.21.6 测试结束 =====
+RESULT 1.21.6 install=0 test=0 2026-10-18 16:01:01
+
+############################# 1.21.7 (Forge 57.0.3, slot 4) #############################
+install rc=0
+[实例] 游戏端口    = 25624     RCON 端口 = 25724
+[实例] online-mode = false
+[实例] 日志        = /home/hermes/mc-test/forge/1.21.7/logs/latest.log
+[实例] 元数据      = . /home/hermes/mc-test/forge/1.21.7/instance.env
+[启动] tmux new -d -s mc-forge-1_21_7 "cd /home/hermes/mc-test/forge/1.21.7 && ./start.sh 2>&1 | tee -a console.out.log"
+[停止] tmux send-keys -t mc-forge-1_21_7 'stop' Enter
+===== 版本 1.21.7 / Forge 57.0.3 / slot 4 / 端口 25624,25724 =====
+Java: /home/hermes/jdk-21
+
+########## C1 服务端启动（首次启动生成配置目录） ##########
+[资源] MemAvailable=1272MB 磁盘可用=990MB —— 可以启动
+--- Done 行 ---
+[1810月2026 16:03:56.452] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (13.628s)! For help, type "help"
+--- 端口 ---
+LISTEN 0      4096               *:25624            *:*   
+LISTEN 0      50                 *:25724            *:*   
+--- 目录 ---
+banned-ips.json banned-players.json config defaultconfigs eula.txt forge-1.21.7-57.0.3-installer.jar forge-1.21.7-57.0.3-installer.jar.log forge-1.21.7-57.0.3-shim.jar instance.env libraries logs mods ops.json README.txt run.bat run.sh server.properties start.sh usercache.json user_jvm_args.txt whitelist.json world 
+--- 新生成的 config/ ---
+fml.toml
+forge-common.toml
+--- 日志前 3 行（真实格式） ---
+[1810月2026 16:03:32.229] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[1810月2026 16:03:32.232] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS
+[1810月2026 16:03:32.233] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.2.4 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+
+########## C2 S1 自检 check（QQ 真探活 + 真 RCON + 真日志路径） ##########
+[配置] OK config-forge-1_21_7.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 4693s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 未配置（MC→QQ 方向禁用）
+[RCON forge] OK /list -> There are 0 of a max of 20 players online:
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.7/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+check exit=0
+
+########## C3 S2 QQ→MC：真 RCON 注入 + /status 真往返 ##########
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-forge-1_21_7.toml)
+[RCON forge] tellraw @a {"text":"[QQ] Steve: 你好"}
+[RCON forge] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+
+########## C4 无头客户端真进服/聊天/退服 ##########
+client exit=0
+真实日志前缀 = [1810月2026 16:03:42.526] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+客户端可用 = 1
+join 行 = [1810月2026 16:04:00.818] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+chat 行 = [1810月2026 16:04:03.614] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+quit 行 = [1810月2026 16:04:05.144] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+
+########## C5a 默认模板 A/B（项目 config.example.toml 的默认 join/quit/chat） ##########
+--- 默认 join 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[join] exit=1
+--- 默认 quit 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[quit] exit=1
+--- 默认 chat 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[chat] exit=1
+
+########## C5b 由真行推导模板（只改配置，不改代码）后重测 ##########
+推导模板 join = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) joined the game
+推导模板 quit = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) left the game
+推导模板 chat = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)
+--- 推导 join 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[join] exit=0
+--- 推导 quit 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[quit] exit=0
+--- 推导 chat 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[chat] exit=0
+--- 普通聊天（应忽略） ---
+[忽略] 聊天非 # 开头，不转发
+--- 回环行（应忽略） ---
+[忽略] 回环防护：命中 ignored_chat_prefixes
+--- 群消息非触发前缀（应忽略） ---
+[忽略] 非触发前缀
+
+########## C6 run 常驻：真连 QQ 网关 + SIGTERM 优雅退出 ##########
+run exit=0
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: forge
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 4680
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[忽略] 聊天非 # 开头，不转发
+[RCON forge] /list
+[停止] 收到退出信号
+[停止] 正在关闭…
+[停止] 已退出
+run exit=0
+
+########## C7 MC→QQ 生产链路（假 group_openid，真跑到平台） ##########
+run-e2e exit=0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '3d37d9383173ee676d05c3526d997aaa'}, trace_id:3d37d9383173ee676d05c3526d997aaa
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'cdc8c68fd972e09d5aa04df06efcef81'}, trace_id:cdc8c68fd972e09d5aa04df06efcef81
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'f65ab24d0740e956a32d3b7c03853b22'}, trace_id:f65ab24d0740e956a32d3b7c03853b22
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '4919789e385fa422164c6b0bd9aba940'}, trace_id:4919789e385fa422164c6b0bd9aba940
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '84d52c74e637ec5a14fc347920dd5d92'}, trace_id:84d52c74e637ec5a14fc347920dd5d92
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '7023c42ed02c0e09b4c92a4a80f3568e'}, trace_id:7023c42ed02c0e09b4c92a4a80f3568e
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '62be2d2515478767b83646a36894517d'}, trace_id:62be2d2515478767b83646a36894517d
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+--- state（data/state-forge-1_21_7-e2e.json） ---
+{
+  "version": 1,
+  "qq": {
+    "msg_seq": 7
+  },
+  "servers": {
+    "forge": {
+      "log_offset": 12538,
+      "log_size": 12538,
+      "log_inode": "55582865",
+      "health_online": true,
+      "health_changed_at": 1792310675.1766849
+    }
+  }
+}
+########## C8 S6 日志轮转（重命名 latest.log → 期望 [警告] 日志文件缩小 + 偏移重置） ##########
+run-rot exit=0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[警告] 日志文件缩小（size=111 < offset=12830），偏移重置为 0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+
+########## C9 停服 → RCON 连接被拒（机器人侧可观测错误） ##########
+check(停服后) exit=1
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25724 失败: [Errno 111] Connect call failed ('127.0.0.1', 25724)
+[配置] OK config-forge-1_21_7.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 4629s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON forge] FAIL 无法连接 127.0.0.1:25724: 连接 127.0.0.1:25724 失败: [Errno 111] Connect call failed ('127.0.0.1', 25724)
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.7/logs/latest.log 可读，偏移 111 字节
+[绑定] OK 1 条
+FAIL
+
+########## 制品归档与清理 ##########
+清理后磁盘: /dev/mapper/rlm-root   17G   16G  1.3G   93% /
+bind.txt
+check-down.txt
+check.txt
+client-e2e.txt
+client.txt
+console.txt
+inject.txt
+latest-after-rotation.txt
+latest.log.txt
+meta.txt
+pattern-default.txt
+pattern-derived.txt
+pattern-negative.txt
+real-lines.txt
+run-e2e.txt
+run-rot.txt
+run.txt
+server.properties.txt
+state-e2e.txt
+status.txt
+===== 版本 1.21.7 测试结束 =====
+RESULT 1.21.7 install=0 test=0 2026-10-18 16:05:01
+
+############################# 1.21.8 (Forge 58.1.0, slot 5) #############################
+install rc=0
+[实例] 游戏端口    = 25625     RCON 端口 = 25725
+[实例] online-mode = false
+[实例] 日志        = /home/hermes/mc-test/forge/1.21.8/logs/latest.log
+[实例] 元数据      = . /home/hermes/mc-test/forge/1.21.8/instance.env
+[启动] tmux new -d -s mc-forge-1_21_8 "cd /home/hermes/mc-test/forge/1.21.8 && ./start.sh 2>&1 | tee -a console.out.log"
+[停止] tmux send-keys -t mc-forge-1_21_8 'stop' Enter
+===== 版本 1.21.8 / Forge 58.1.0 / slot 5 / 端口 25625,25725 =====
+Java: /home/hermes/jdk-21
+
+########## C1 服务端启动（首次启动生成配置目录） ##########
+[资源] MemAvailable=2150MB 磁盘可用=1142MB —— 可以启动
+--- Done 行 ---
+[1810月2026 16:07:57.667] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (14.511s)! For help, type "help"
+--- 端口 ---
+LISTEN 0      4096               *:25625            *:*   
+LISTEN 0      50                 *:25725            *:*   
+--- 目录 ---
+banned-ips.json banned-players.json config defaultconfigs eula.txt forge-1.21.8-58.1.0-installer.jar forge-1.21.8-58.1.0-installer.jar.log forge-1.21.8-58.1.0-shim.jar instance.env libraries logs mods ops.json README.txt run.bat run.sh server.properties start.sh usercache.json user_jvm_args.txt whitelist.json world 
+--- 新生成的 config/ ---
+fml.toml
+forge-common.toml
+--- 日志前 3 行（真实格式） ---
+[1810月2026 16:07:32.744] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[1810月2026 16:07:32.746] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS
+[1810月2026 16:07:32.746] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.2.4 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+
+########## C2 S1 自检 check（QQ 真探活 + 真 RCON + 真日志路径） ##########
+[配置] OK config-forge-1_21_8.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 4452s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 未配置（MC→QQ 方向禁用）
+[RCON forge] OK /list -> There are 0 of a max of 20 players online:
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.8/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+check exit=0
+
+########## C3 S2 QQ→MC：真 RCON 注入 + /status 真往返 ##########
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-forge-1_21_8.toml)
+[RCON forge] tellraw @a {"text":"[QQ] Steve: 你好"}
+[RCON forge] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+
+########## C4 无头客户端真进服/聊天/退服 ##########
+client exit=0
+真实日志前缀 = [1810月2026 16:07:42.845] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+客户端可用 = 1
+join 行 = [1810月2026 16:08:01.593] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+chat 行 = [1810月2026 16:08:04.414] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+quit 行 = [1810月2026 16:08:05.921] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+
+########## C5a 默认模板 A/B（项目 config.example.toml 的默认 join/quit/chat） ##########
+--- 默认 join 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[join] exit=1
+--- 默认 quit 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[quit] exit=1
+--- 默认 chat 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[chat] exit=1
+
+########## C5b 由真行推导模板（只改配置，不改代码）后重测 ##########
+推导模板 join = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) joined the game
+推导模板 quit = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) left the game
+推导模板 chat = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)
+--- 推导 join 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[join] exit=0
+--- 推导 quit 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[quit] exit=0
+--- 推导 chat 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[chat] exit=0
+--- 普通聊天（应忽略） ---
+[忽略] 聊天非 # 开头，不转发
+--- 回环行（应忽略） ---
+[忽略] 回环防护：命中 ignored_chat_prefixes
+--- 群消息非触发前缀（应忽略） ---
+[忽略] 非触发前缀
+
+########## C6 run 常驻：真连 QQ 网关 + SIGTERM 优雅退出 ##########
+run exit=1
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: forge
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 4439
+请求超时，请求连接: https://api.sgroup.qq.com/users/@me
+[错误] QQ 网关异常退出: 'NoneType' object has no attribute 'get'
+[错误] QQ 网关启动失败: QQ 网关启动失败: 'NoneType' object has no attribute 'get'
+[停止] 正在关闭…
+[停止] 已退出
+run exit=1
+
+########## C7 MC→QQ 生产链路（假 group_openid，真跑到平台） ##########
+run-e2e exit=0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'a1efc746ebd622bb765db13039a9f985'}, trace_id:a1efc746ebd622bb765db13039a9f985
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'e53b4b46bcdc668ade8186da148da2fa'}, trace_id:e53b4b46bcdc668ade8186da148da2fa
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '8477e6e957399b9132d5fbcb0ad24822'}, trace_id:8477e6e957399b9132d5fbcb0ad24822
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '60139a17ae21fa81bdd34c937decd366'}, trace_id:60139a17ae21fa81bdd34c937decd366
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '08348d3d4f4f0e90990e746e64a82655'}, trace_id:08348d3d4f4f0e90990e746e64a82655
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'e7dee7b8d1770df4f702cb394aa84eae'}, trace_id:e7dee7b8d1770df4f702cb394aa84eae
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '61dee5e18604e0d5d4a212f889a9d01e'}, trace_id:61dee5e18604e0d5d4a212f889a9d01e
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+--- state（data/state-forge-1_21_8-e2e.json） ---
+{
+  "version": 1,
+  "qq": {
+    "msg_seq": 7
+  },
+  "servers": {
+    "forge": {
+      "log_offset": 12681,
+      "log_size": 12681,
+      "log_inode": "51620242",
+      "health_online": true,
+      "health_changed_at": 1792310916.7858899
+    }
+  }
+}
+########## C8 S6 日志轮转（重命名 latest.log → 期望 [警告] 日志文件缩小 + 偏移重置） ##########
+run-rot exit=0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[警告] 日志文件缩小（size=111 < offset=12973），偏移重置为 0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+
+########## C9 停服 → RCON 连接被拒（机器人侧可观测错误） ##########
+check(停服后) exit=1
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25725 失败: [Errno 111] Connect call failed ('127.0.0.1', 25725)
+[配置] OK config-forge-1_21_8.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 4388s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON forge] FAIL 无法连接 127.0.0.1:25725: 连接 127.0.0.1:25725 失败: [Errno 111] Connect call failed ('127.0.0.1', 25725)
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.8/logs/latest.log 可读，偏移 111 字节
+[绑定] OK 1 条
+FAIL
+
+########## 制品归档与清理 ##########
+清理后磁盘: /dev/mapper/rlm-root   17G   16G  1.3G   93% /
+bind.txt
+check-down.txt
+check.txt
+client-e2e.txt
+client.txt
+console.txt
+inject.txt
+latest-after-rotation.txt
+latest.log.txt
+meta.txt
+pattern-default.txt
+pattern-derived.txt
+pattern-negative.txt
+real-lines.txt
+run-e2e.txt
+run-rot.txt
+run.txt
+server.properties.txt
+state-e2e.txt
+status.txt
+===== 版本 1.21.8 测试结束 =====
+RESULT 1.21.8 install=0 test=0 2026-10-18 16:09:02
+
+############################# 1.21.9 (Forge 59.0.5, slot 6) #############################
+install rc=0
+[实例] 游戏端口    = 25626     RCON 端口 = 25726
+[实例] online-mode = false
+[实例] 日志        = /home/hermes/mc-test/forge/1.21.9/logs/latest.log
+[实例] 元数据      = . /home/hermes/mc-test/forge/1.21.9/instance.env
+[启动] tmux new -d -s mc-forge-1_21_9 "cd /home/hermes/mc-test/forge/1.21.9 && ./start.sh 2>&1 | tee -a console.out.log"
+[停止] tmux send-keys -t mc-forge-1_21_9 'stop' Enter
+===== 版本 1.21.9 / Forge 59.0.5 / slot 6 / 端口 25626,25726 =====
+Java: /home/hermes/jdk-21
+
+########## C1 服务端启动（首次启动生成配置目录） ##########
+[资源] MemAvailable=1248MB 磁盘可用=992MB —— 可以启动
+--- Done 行 ---
+[1810月2026 16:12:09.160] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (14.231s)! For help, type "help"
+--- 端口 ---
+LISTEN 0      4096               *:25626            *:*   
+LISTEN 0      50                 *:25726            *:*   
+--- 目录 ---
+banned-ips.json banned-players.json config defaultconfigs eula.txt forge-1.21.9-59.0.5-installer.jar forge-1.21.9-59.0.5-installer.jar.log forge-1.21.9-59.0.5-shim.jar instance.env libraries logs mods ops.json README.txt run.bat run.sh server.properties start.sh usercache.json user_jvm_args.txt whitelist.json world 
+--- 新生成的 config/ ---
+fml.toml
+forge-common.toml
+--- 日志前 3 行（真实格式） ---
+[1810月2026 16:11:42.915] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[1810月2026 16:11:42.922] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS
+[1810月2026 16:11:42.923] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.2.4 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+
+########## C2 S1 自检 check（QQ 真探活 + 真 RCON + 真日志路径） ##########
+[配置] OK config-forge-1_21_9.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 4199s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 未配置（MC→QQ 方向禁用）
+[RCON forge] OK /list -> There are 0 of a max of 20 players online:
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.9/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+check exit=0
+
+########## C3 S2 QQ→MC：真 RCON 注入 + /status 真往返 ##########
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-forge-1_21_9.toml)
+[RCON forge] tellraw @a {"text":"[QQ] Steve: 你好"}
+[RCON forge] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+
+########## C4 无头客户端真进服/聊天/退服 ##########
+client exit=0
+真实日志前缀 = [1810月2026 16:11:54.656] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+客户端可用 = 1
+join 行 = [1810月2026 16:12:24.971] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+chat 行 = [1810月2026 16:12:27.802] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+quit 行 = [1810月2026 16:12:29.337] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+
+########## C5a 默认模板 A/B（项目 config.example.toml 的默认 join/quit/chat） ##########
+--- 默认 join 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[join] exit=1
+--- 默认 quit 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[quit] exit=1
+--- 默认 chat 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[chat] exit=1
+
+########## C5b 由真行推导模板（只改配置，不改代码）后重测 ##########
+推导模板 join = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) joined the game
+推导模板 quit = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) left the game
+推导模板 chat = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)
+--- 推导 join 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[join] exit=0
+--- 推导 quit 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[quit] exit=0
+--- 推导 chat 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[chat] exit=0
+--- 普通聊天（应忽略） ---
+[忽略] 聊天非 # 开头，不转发
+--- 回环行（应忽略） ---
+[忽略] 回环防护：命中 ignored_chat_prefixes
+--- 群消息非触发前缀（应忽略） ---
+[忽略] 非触发前缀
+
+########## C6 run 常驻：真连 QQ 网关 + SIGTERM 优雅退出 ##########
+run exit=0
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: forge
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 4175
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[忽略] 聊天非 # 开头，不转发
+[RCON forge] /list
+[停止] 收到退出信号
+[停止] 正在关闭…
+[停止] 已退出
+run exit=0
+
+########## C7 MC→QQ 生产链路（假 group_openid，真跑到平台） ##########
+run-e2e exit=0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '468e80c86e2e9e72e640b417b76d3fb2'}, trace_id:468e80c86e2e9e72e640b417b76d3fb2
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '827aeedb62851e5b01ac00ac6e36c30b'}, trace_id:827aeedb62851e5b01ac00ac6e36c30b
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'cac20a27804f87a14c0d5a78258fc2ec'}, trace_id:cac20a27804f87a14c0d5a78258fc2ec
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '07c4c7393e3953949fcd7e326924f30d'}, trace_id:07c4c7393e3953949fcd7e326924f30d
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '9de7b6f1454777863983ca41443f1d0d'}, trace_id:9de7b6f1454777863983ca41443f1d0d
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'd21c18f18831e586a3646a319c66870a'}, trace_id:d21c18f18831e586a3646a319c66870a
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '93c340aa12daa33db3caf9faf55f2b50'}, trace_id:93c340aa12daa33db3caf9faf55f2b50
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+--- state（data/state-forge-1_21_9-e2e.json） ---
+{
+  "version": 1,
+  "qq": {
+    "msg_seq": 7
+  },
+  "servers": {
+    "forge": {
+      "log_offset": 11304,
+      "log_size": 11304,
+      "log_inode": "7095876",
+      "health_online": true,
+      "health_changed_at": 1792311181.5471432
+    }
+  }
+}
+########## C8 S6 日志轮转（重命名 latest.log → 期望 [警告] 日志文件缩小 + 偏移重置） ##########
+run-rot exit=0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[警告] 日志文件缩小（size=111 < offset=11596），偏移重置为 0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+
+########## C9 停服 → RCON 连接被拒（机器人侧可观测错误） ##########
+check(停服后) exit=1
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25726 失败: [Errno 111] Connect call failed ('127.0.0.1', 25726)
+[配置] OK config-forge-1_21_9.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 4122s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON forge] FAIL 无法连接 127.0.0.1:25726: 连接 127.0.0.1:25726 失败: [Errno 111] Connect call failed ('127.0.0.1', 25726)
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.9/logs/latest.log 可读，偏移 111 字节
+[绑定] OK 1 条
+FAIL
+
+########## 制品归档与清理 ##########
+清理后磁盘: /dev/mapper/rlm-root   17G   16G  1.2G   94% /
+bind.txt
+check-down.txt
+check.txt
+client-e2e.txt
+client.txt
+console.txt
+inject.txt
+latest-after-rotation.txt
+latest.log.txt
+meta.txt
+pattern-default.txt
+pattern-derived.txt
+pattern-negative.txt
+real-lines.txt
+run-e2e.txt
+run-rot.txt
+run.txt
+server.properties.txt
+state-e2e.txt
+status.txt
+===== 版本 1.21.9 测试结束 =====
+RESULT 1.21.9 install=0 test=0 2026-10-18 16:13:28
+
+############################# 1.21.10 (Forge 60.1.0, slot 7) #############################
+install rc=0
+[实例] 游戏端口    = 25627     RCON 端口 = 25727
+[实例] online-mode = false
+[实例] 日志        = /home/hermes/mc-test/forge/1.21.10/logs/latest.log
+[实例] 元数据      = . /home/hermes/mc-test/forge/1.21.10/instance.env
+[启动] tmux new -d -s mc-forge-1_21_10 "cd /home/hermes/mc-test/forge/1.21.10 && ./start.sh 2>&1 | tee -a console.out.log"
+[停止] tmux send-keys -t mc-forge-1_21_10 'stop' Enter
+===== 版本 1.21.10 / Forge 60.1.0 / slot 7 / 端口 25627,25727 =====
+Java: /home/hermes/jdk-21
+
+########## C1 服务端启动（首次启动生成配置目录） ##########
+[资源] MemAvailable=2111MB 磁盘可用=1122MB —— 可以启动
+--- Done 行 ---
+[1810月2026 16:16:56.562] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (7.543s)! For help, type "help"
+--- 端口 ---
+LISTEN 0      4096               *:25627            *:*   
+LISTEN 0      50                 *:25727            *:*   
+--- 目录 ---
+banned-ips.json banned-players.json config defaultconfigs eula.txt forge-1.21.10-60.1.0-installer.jar forge-1.21.10-60.1.0-installer.jar.log forge-1.21.10-60.1.0-shim.jar instance.env libraries logs mods ops.json README.txt run.bat run.sh server.properties start.sh usercache.json user_jvm_args.txt whitelist.json world 
+--- 新生成的 config/ ---
+fml.toml
+forge-common.toml
+--- 日志前 3 行（真实格式） ---
+[1810月2026 16:16:38.707] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[1810月2026 16:16:38.710] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS
+[1810月2026 16:16:38.711] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.2.4 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+
+########## C2 S1 自检 check（QQ 真探活 + 真 RCON + 真日志路径） ##########
+[配置] OK config-forge-1_21_10.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 3912s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 未配置（MC→QQ 方向禁用）
+[RCON forge] OK /list -> There are 0 of a max of 20 players online:
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.10/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+check exit=0
+
+########## C3 S2 QQ→MC：真 RCON 注入 + /status 真往返 ##########
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-forge-1_21_10.toml)
+[RCON forge] tellraw @a {"text":"[QQ] Steve: 你好"}
+[RCON forge] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+
+########## C4 无头客户端真进服/聊天/退服 ##########
+client exit=0
+真实日志前缀 = [1810月2026 16:16:48.863] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+客户端可用 = 1
+join 行 = [1810月2026 16:17:07.199] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+chat 行 = [1810月2026 16:17:10.022] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+quit 行 = [1810月2026 16:17:11.519] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+
+########## C5a 默认模板 A/B（项目 config.example.toml 的默认 join/quit/chat） ##########
+--- 默认 join 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[join] exit=1
+--- 默认 quit 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[quit] exit=1
+--- 默认 chat 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[chat] exit=1
+
+########## C5b 由真行推导模板（只改配置，不改代码）后重测 ##########
+推导模板 join = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) joined the game
+推导模板 quit = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) left the game
+推导模板 chat = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)
+--- 推导 join 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[join] exit=0
+--- 推导 quit 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[quit] exit=0
+--- 推导 chat 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[chat] exit=0
+--- 普通聊天（应忽略） ---
+[忽略] 聊天非 # 开头，不转发
+--- 回环行（应忽略） ---
+[忽略] 回环防护：命中 ignored_chat_prefixes
+--- 群消息非触发前缀（应忽略） ---
+[忽略] 非触发前缀
+
+########## C6 run 常驻：真连 QQ 网关 + SIGTERM 优雅退出 ##########
+run exit=0
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: forge
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 3893
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[忽略] 聊天非 # 开头，不转发
+[RCON forge] /list
+[停止] 收到退出信号
+[停止] 正在关闭…
+[停止] 已退出
+run exit=0
+
+########## C7 MC→QQ 生产链路（假 group_openid，真跑到平台） ##########
+run-e2e exit=0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '6072a08983d8d7aae1dda3a228255524'}, trace_id:6072a08983d8d7aae1dda3a228255524
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'a2227e97bd45ef844c4c978996c65e49'}, trace_id:a2227e97bd45ef844c4c978996c65e49
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '554aa4445f35c0c00e4bcf864e8ea564'}, trace_id:554aa4445f35c0c00e4bcf864e8ea564
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '38edd0030467797fcc0ac00c75369858'}, trace_id:38edd0030467797fcc0ac00c75369858
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'b9ed74ed4c6a5d1cc892e79cb61c4c28'}, trace_id:b9ed74ed4c6a5d1cc892e79cb61c4c28
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '69d8236762421869d32dda758825c804'}, trace_id:69d8236762421869d32dda758825c804
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'e57e5f76ca935c28cdd97ba86e34d097'}, trace_id:e57e5f76ca935c28cdd97ba86e34d097
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+--- state（data/state-forge-1_21_10-e2e.json） ---
+{
+  "version": 1,
+  "qq": {
+    "msg_seq": 7
+  },
+  "servers": {
+    "forge": {
+      "log_offset": 11315,
+      "log_size": 11315,
+      "log_inode": "42059637",
+      "health_online": true,
+      "health_changed_at": 1792311462.4707546
+    }
+  }
+}
+########## C8 S6 日志轮转（重命名 latest.log → 期望 [警告] 日志文件缩小 + 偏移重置） ##########
+run-rot exit=0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[警告] 日志文件缩小（size=111 < offset=11607），偏移重置为 0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+
+########## C9 停服 → RCON 连接被拒（机器人侧可观测错误） ##########
+check(停服后) exit=1
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25727 失败: [Errno 111] Connect call failed ('127.0.0.1', 25727)
+[配置] OK config-forge-1_21_10.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 3842s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON forge] FAIL 无法连接 127.0.0.1:25727: 连接 127.0.0.1:25727 失败: [Errno 111] Connect call failed ('127.0.0.1', 25727)
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.10/logs/latest.log 可读，偏移 111 字节
+[绑定] OK 1 条
+FAIL
+
+########## 制品归档与清理 ##########
+清理后磁盘: /dev/mapper/rlm-root   17G   16G  1.3G   93% /
+bind.txt
+check-down.txt
+check.txt
+client-e2e.txt
+client.txt
+console.txt
+inject.txt
+latest-after-rotation.txt
+latest.log.txt
+meta.txt
+pattern-default.txt
+pattern-derived.txt
+pattern-negative.txt
+real-lines.txt
+run-e2e.txt
+run-rot.txt
+run.txt
+server.properties.txt
+state-e2e.txt
+status.txt
+===== 版本 1.21.10 测试结束 =====
+RESULT 1.21.10 install=0 test=0 2026-10-18 16:18:08
+
+############################# 26.1 (Forge 62.0.9, slot 9) #############################
+install rc=1
+  Downloading library from https://maven.minecraftforge.net/trove/trove/1.0.2/trove-1.0.2.jar
+    Download completed: Checksum validated.
+These libraries failed to download. Try again.
+
+com.google.code.gson:gson:2.10.1
+There was an error during installation
+[错误] 实例不存在: /home/hermes/mc-test/forge/26.1
+RESULT 26.1 install=1 test=2 2026-10-18 16:20:09
+
+############################# 26.2 (Forge 65.1.0, slot 0) #############################
+install rc=0
+[实例] 游戏端口    = 25620     RCON 端口 = 25720
+[实例] online-mode = false
+[实例] 日志        = /home/hermes/mc-test/forge/26.2/logs/latest.log
+[实例] 元数据      = . /home/hermes/mc-test/forge/26.2/instance.env
+[启动] tmux new -d -s mc-forge-26_2 "cd /home/hermes/mc-test/forge/26.2 && ./start.sh 2>&1 | tee -a console.out.log"
+[停止] tmux send-keys -t mc-forge-26_2 'stop' Enter
+===== 版本 26.2 / Forge 65.1.0 / slot 0 / 端口 25620,25720 =====
+Java: /home/hermes/jdk-25
+
+########## C1 服务端启动（首次启动生成配置目录） ##########
+[资源] MemAvailable=2108MB 磁盘可用=1031MB —— 可以启动
+--- Done 行 ---
+[1810月2026 16:22:18.273] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (8.458s)! For help, type "help"
+--- 端口 ---
+LISTEN 0      4096               *:25620            *:*   
+LISTEN 0      50                 *:25720            *:*   
+--- 目录 ---
+banned-ips.json banned-players.json config defaultconfigs eula.txt forge-26.2-65.1.0-installer.jar forge-26.2-65.1.0-installer.jar.log forge-26.2-65.1.0-shim.jar instance.env libraries logs mods ops.json README.txt run.bat run.sh server.properties start.sh usercache.json user_jvm_args.txt whitelist.json world 
+--- 新生成的 config/ ---
+fml.toml
+forge-common.toml
+--- 日志前 3 行（真实格式） ---
+[1810月2026 16:22:00.347] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[1810月2026 16:22:00.349] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 25.0.4.1+1-LTS
+[1810月2026 16:22:00.350] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.2.6 starting: java version 25.0.4.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+
+########## C2 S1 自检 check（QQ 真探活 + 真 RCON + 真日志路径） ##########
+[配置] OK config-forge-26_2.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 3590s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 未配置（MC→QQ 方向禁用）
+[RCON forge] OK /list -> There are 0 of a max of 20 players online:
+[日志 forge] OK /home/hermes/mc-test/forge/26.2/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+check exit=0
+
+########## C3 S2 QQ→MC：真 RCON 注入 + /status 真往返 ##########
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-forge-26_2.toml)
+[RCON forge] tellraw @a {"text":"[QQ] Steve: 你好"}
+[RCON forge] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+
+########## C4 无头客户端真进服/聊天/退服 ##########
+mineflayer（minecraft-data）不支持 26.2，本版本跳过真实客户端
+真实日志前缀 = [1810月2026 16:22:09.594] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+客户端可用 = 0
+join 行 = [1810月2026 16:22:09.594] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Steve joined the game（合成：真前缀 + PLAN 样式内容）
+chat 行 = [1810月2026 16:22:09.594] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）（合成：真前缀 + PLAN 样式内容）
+quit 行 = [1810月2026 16:22:09.594] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Steve left the game（合成：真前缀 + PLAN 样式内容）
+
+########## C5a 默认模板 A/B（项目 config.example.toml 的默认 join/quit/chat） ##########
+--- 默认 join 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[join] exit=1
+--- 默认 quit 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[quit] exit=1
+--- 默认 chat 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[chat] exit=1
+
+########## C5b 由真行推导模板（只改配置，不改代码）后重测 ##########
+推导模板 join = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) joined the game
+推导模板 quit = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) left the game
+推导模板 chat = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)
+--- 推导 join 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[join] exit=0
+--- 推导 quit 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[quit] exit=0
+--- 推导 chat 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[chat] exit=0
+--- 普通聊天（应忽略） ---
+[忽略] 聊天非 # 开头，不转发
+--- 回环行（应忽略） ---
+[忽略] 回环防护：命中 ignored_chat_prefixes
+--- 群消息非触发前缀（应忽略） ---
+[忽略] 非触发前缀
+
+########## C6 run 常驻：真连 QQ 网关 + SIGTERM 优雅退出 ##########
+run exit=0
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: forge
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 3584
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[RCON forge] /list
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[停止] 收到退出信号
+[停止] 正在关闭…
+[停止] 已退出
+run exit=0
+
+########## C7 MC→QQ 生产链路（假 group_openid，真跑到平台） ##########
+run-e2e exit=0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '768028cd709e2fcd7a471e97a81a165a'}, trace_id:768028cd709e2fcd7a471e97a81a165a
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '6ce3db3687d66057d143b2b016d32252'}, trace_id:6ce3db3687d66057d143b2b016d32252
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '2e7b1bb79366f5c8ac3a8eae5c7c02f7'}, trace_id:2e7b1bb79366f5c8ac3a8eae5c7c02f7
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+--- state（data/state-forge-26_2-e2e.json） ---
+{
+  "version": 1,
+  "qq": {
+    "msg_seq": 3
+  },
+  "servers": {
+    "forge": {
+      "log_offset": 10724,
+      "log_size": 10724,
+      "log_inode": "24720091",
+      "health_online": true,
+      "health_changed_at": 1792311772.0343118
+    }
+  }
+}
+########## C8 S6 日志轮转（重命名 latest.log → 期望 [警告] 日志文件缩小 + 偏移重置） ##########
+run-rot exit=0
+[警告] 日志文件缩小（size=121 < offset=10776），偏移重置为 0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+
+########## C9 停服 → RCON 连接被拒（机器人侧可观测错误） ##########
+check(停服后) exit=1
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25720 失败: [Errno 111] Connect call failed ('127.0.0.1', 25720)
+[配置] OK config-forge-26_2.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 3536s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON forge] FAIL 无法连接 127.0.0.1:25720: 连接 127.0.0.1:25720 失败: [Errno 111] Connect call failed ('127.0.0.1', 25720)
+[日志 forge] OK /home/hermes/mc-test/forge/26.2/logs/latest.log 可读，偏移 121 字节
+[绑定] OK 1 条
+FAIL
+
+########## 制品归档与清理 ##########
+清理后磁盘: /dev/mapper/rlm-root   17G   16G  1.2G   93% /
+bind.txt
+check-down.txt
+check.txt
+client.txt
+console.txt
+inject.txt
+latest-after-rotation.txt
+latest.log.txt
+meta.txt
+pattern-default.txt
+pattern-derived.txt
+pattern-negative.txt
+real-lines.txt
+run-e2e.txt
+run-rot.txt
+run.txt
+server.properties.txt
+state-e2e.txt
+status.txt
+===== 版本 26.2 测试结束 =====
+RESULT 26.2 install=0 test=0 2026-10-18 16:23:15
+
+############################# 26.3 (Forge 66.0.13, slot 1) #############################
+install rc=0
+[实例] 游戏端口    = 25621     RCON 端口 = 25721
+[实例] online-mode = false
+[实例] 日志        = /home/hermes/mc-test/forge/26.3/logs/latest.log
+[实例] 元数据      = . /home/hermes/mc-test/forge/26.3/instance.env
+[启动] tmux new -d -s mc-forge-26_3 "cd /home/hermes/mc-test/forge/26.3 && ./start.sh 2>&1 | tee -a console.out.log"
+[停止] tmux send-keys -t mc-forge-26_3 'stop' Enter
+===== 版本 26.3 / Forge 66.0.13 / slot 1 / 端口 25621,25721 =====
+Java: /home/hermes/jdk-25
+
+########## C1 服务端启动（首次启动生成配置目录） ##########
+[资源] MemAvailable=2155MB 磁盘可用=1021MB —— 可以启动
+--- Done 行 ---
+[1810月2026 16:25:09.010] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (3.673s)! For help, type "help"
+--- 端口 ---
+LISTEN 0      4096               *:25621            *:*   
+LISTEN 0      50                 *:25721            *:*   
+--- 目录 ---
+banned-ips.json banned-players.json config defaultconfigs eula.txt forge-26.3-66.0.13-installer.jar forge-26.3-66.0.13-installer.jar.log forge-26.3-66.0.13-shim.jar instance.env libraries logs mods ops.json README.txt run.bat run.sh server.properties start.sh usercache.json user_jvm_args.txt whitelist.json world 
+--- 新生成的 config/ ---
+fml.toml
+forge-common.toml
+--- 日志前 3 行（真实格式） ---
+[1810月2026 16:24:55.940] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[1810月2026 16:24:55.942] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 25.0.4.1+1-LTS
+[1810月2026 16:24:55.943] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.2.6 starting: java version 25.0.4.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+
+########## C2 S1 自检 check（QQ 真探活 + 真 RCON + 真日志路径） ##########
+[配置] OK config-forge-26_3.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 3421s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 未配置（MC→QQ 方向禁用）
+[RCON forge] OK /list -> There are 0 of a max of 20 players online:
+[日志 forge] OK /home/hermes/mc-test/forge/26.3/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+check exit=0
+
+########## C3 S2 QQ→MC：真 RCON 注入 + /status 真往返 ##########
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-forge-26_3.toml)
+[RCON forge] tellraw @a {"text":"[QQ] Steve: 你好"}
+[RCON forge] /list
+[群消息] [服务器状态]
+[群消息] 在线: 0/20
+[群消息] 玩家: 无
+
+########## C4 无头客户端真进服/聊天/退服 ##########
+mineflayer（minecraft-data）不支持 26.3，本版本跳过真实客户端
+真实日志前缀 = [1810月2026 16:25:05.060] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+客户端可用 = 0
+join 行 = [1810月2026 16:25:05.060] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Steve joined the game（合成：真前缀 + PLAN 样式内容）
+chat 行 = [1810月2026 16:25:05.060] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）（合成：真前缀 + PLAN 样式内容）
+quit 行 = [1810月2026 16:25:05.060] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Steve left the game（合成：真前缀 + PLAN 样式内容）
+
+########## C5a 默认模板 A/B（项目 config.example.toml 的默认 join/quit/chat） ##########
+--- 默认 join 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[join] exit=1
+--- 默认 quit 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[quit] exit=1
+--- 默认 chat 模板 + 真行 ---
+[警告] 日志行未匹配任何模板
+[chat] exit=1
+
+########## C5b 由真行推导模板（只改配置，不改代码）后重测 ##########
+推导模板 join = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) joined the game
+推导模板 quit = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?P<player>\w+) left the game
+推导模板 chat = \[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\] (?:\[[^\]]+/\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)
+--- 推导 join 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[join] exit=0
+--- 推导 quit 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[quit] exit=0
+--- 推导 chat 模板 + 真行 ---
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[chat] exit=0
+--- 普通聊天（应忽略） ---
+[忽略] 聊天非 # 开头，不转发
+--- 回环行（应忽略） ---
+[忽略] 回环防护：命中 ignored_chat_prefixes
+--- 群消息非触发前缀（应忽略） ---
+[忽略] 非触发前缀
+
+########## C6 run 常驻：真连 QQ 网关 + SIGTERM 优雅退出 ##########
+run exit=0
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: forge
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 3415
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[RCON forge] /list
+[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用（消息不发送）
+[停止] 收到退出信号
+[停止] 正在关闭…
+[停止] 已退出
+run exit=0
+
+########## C7 MC→QQ 生产链路（假 group_openid，真跑到平台） ##########
+run-e2e exit=1
+[错误] QQ 网关异常退出: 'NoneType' object is not subscriptable
+[错误] QQ 网关启动失败: QQ 网关启动失败: 'NoneType' object is not subscriptable
+--- state（data/state-forge-26_3-e2e.json） ---
+{
+  "version": 1,
+  "qq": {
+    "msg_seq": 0
+  },
+  "servers": {}
+}
+########## C8 S6 日志轮转（重命名 latest.log → 期望 [警告] 日志文件缩小 + 偏移重置） ##########
+run-rot exit=0
+[警告] 日志文件缩小（size=121 < offset=10216），偏移重置为 0
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+
+########## C9 停服 → RCON 连接被拒（机器人侧可观测错误） ##########
+check(停服后) exit=1
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25721 失败: [Errno 111] Connect call failed ('127.0.0.1', 25721)
+[配置] OK config-forge-26_3.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 3367s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON forge] FAIL 无法连接 127.0.0.1:25721: 连接 127.0.0.1:25721 失败: [Errno 111] Connect call failed ('127.0.0.1', 25721)
+[日志 forge] OK /home/hermes/mc-test/forge/26.3/logs/latest.log 可读，偏移 121 字节
+[绑定] OK 1 条
+FAIL
+
+########## 制品归档与清理 ##########
+清理后磁盘: /dev/mapper/rlm-root   17G   16G  1.2G   93% /
+bind.txt
+check-down.txt
+check.txt
+client.txt
+console.txt
+inject.txt
+latest-after-rotation.txt
+latest.log.txt
+meta.txt
+pattern-default.txt
+pattern-derived.txt
+pattern-negative.txt
+real-lines.txt
+run-e2e.txt
+run-rot.txt
+run.txt
+server.properties.txt
+state-e2e.txt
+status.txt
+===== 版本 26.3 测试结束 =====
+RESULT 26.3 install=0 test=0 2026-10-18 16:26:04
+############ Forge 矩阵结束 2026-10-18 16:26:04 ############
+RESULT 1.21.11 install=0 test=0 2026-10-18 15:08:00
+RESULT 1.21.11 install=0 test=0 2026-10-18 15:36:35
+RESULT 1.21.3 install=0 test=0 2026-10-18 15:47:03
+RESULT 1.21.4 install=0 test=0 2026-10-18 15:51:26
+RESULT 1.21.5 install=0 test=0 2026-10-18 15:55:38
+RESULT 1.21.6 install=0 test=0 2026-10-18 16:01:01
+RESULT 1.21.7 install=0 test=0 2026-10-18 16:05:01
+RESULT 1.21.8 install=0 test=0 2026-10-18 16:09:02
+RESULT 1.21.9 install=0 test=0 2026-10-18 16:13:28
+RESULT 1.21.10 install=0 test=0 2026-10-18 16:18:08
+RESULT 26.1 install=1 test=2 2026-10-18 16:20:09
+RESULT 26.2 install=0 test=0 2026-10-18 16:23:15
+RESULT 26.3 install=0 test=0 2026-10-18 16:26:04

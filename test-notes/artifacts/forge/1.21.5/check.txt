@@ -1,0 +1,6 @@
+[配置] OK config-forge-1_21_5.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 5256s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 未配置（MC→QQ 方向禁用）
+[RCON forge] OK /list -> There are 0 of a max of 20 players online:
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.5/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK

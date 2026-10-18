@@ -1,0 +1,34 @@
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: forge
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 6373
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '19bd12c38638fc9c343eae298ac3d439'}, trace_id:19bd12c38638fc9c343eae298ac3d439
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[忽略] 聊天非 # 开头，不转发
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'c1e190b638e7dccec46d8b7c7e6c8669'}, trace_id:c1e190b638e7dccec46d8b7c7e6c8669
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '1455363ccb6a7226283c9916d46eb5e8'}, trace_id:1455363ccb6a7226283c9916d46eb5e8
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'd7299059ca795b107741d8d17621c786'}, trace_id:d7299059ca795b107741d8d17621c786
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[忽略] 聊天非 # 开头，不转发
+[RCON forge] /list
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '13fefd3b4ca276ae7985761db413fc9d'}, trace_id:13fefd3b4ca276ae7985761db413fc9d
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '6a82e9f54dc912476fec5ca6a3016565'}, trace_id:6a82e9f54dc912476fec5ca6a3016565
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '38d4e4ca9c5f4f4676461e24161b4c55'}, trace_id:38d4e4ca9c5f4f4676461e24161b4c55
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[停止] 收到退出信号
+[停止] 正在关闭…
+[停止] 已退出
+run-e2e exit=0

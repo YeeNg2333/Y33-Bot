@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "qq": {
+    "msg_seq": 0
+  },
+  "servers": {}
+}

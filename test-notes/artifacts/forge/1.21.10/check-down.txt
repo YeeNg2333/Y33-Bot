@@ -1,0 +1,8 @@
+[警告] RCON forge 命令失败: 连接 127.0.0.1:25727 失败: [Errno 111] Connect call failed ('127.0.0.1', 25727)
+[配置] OK config-forge-1_21_10.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 3842s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON forge] FAIL 无法连接 127.0.0.1:25727: 连接 127.0.0.1:25727 失败: [Errno 111] Connect call failed ('127.0.0.1', 25727)
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.10/logs/latest.log 可读，偏移 111 字节
+[绑定] OK 1 条
+FAIL
+check(停服后) exit=1

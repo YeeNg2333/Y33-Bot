@@ -1,0 +1,77 @@
+install rc=0
+===== 重跑 1.21.3（Forge 53.1.0，RCON 25720） 2026-10-18 16:43:30 =====
+[1810月2026 16:43:55.412] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (13.038s)! For help, type "help"
+真前缀 = [1810月2026 16:43:42.158] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+--- C7 重跑（生产链路） ---
+C7 重跑退出码=0
+[启动] QQ 网关已连接
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'fdfc96d1ac876afacf160ed2470feb57'}, trace_id:fdfc96d1ac876afacf160ed2470feb57
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '1ec2045c034763cb23edda253ca2ea16'}, trace_id:1ec2045c034763cb23edda253ca2ea16
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '775b639b66660386486a95fd6d049ed7'}, trace_id:775b639b66660386486a95fd6d049ed7
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+--- C8 重跑（日志轮转） ---
+C8 重跑退出码=0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '75f90effbf485e512826947ed291108f'}, trace_id:75f90effbf485e512826947ed291108f
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[警告] 日志文件缩小（size=121 < offset=10062），偏移重置为 0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '203b61e681d3141f0e733552f681aa4c'}, trace_id:203b61e681d3141f0e733552f681aa4c
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+===== 1.21.3 重跑结束 2026-10-18 16:44:40 磁盘 1273MB =====
+install rc=0
+===== 重跑 1.21.5（Forge 55.1.0，RCON 25722） 2026-10-18 16:46:38 =====
+[1810月2026 16:47:01.268] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (11.257s)! For help, type "help"
+真前缀 = [1810月2026 16:46:49.744] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+--- C7 重跑（生产链路） ---
+C7 重跑退出码=0
+[启动] QQ 网关已连接
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'c78af880f290ec58d567c041ccf0885d'}, trace_id:c78af880f290ec58d567c041ccf0885d
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '3dd9471ee711e1f1b269cfa4afc39f1c'}, trace_id:3dd9471ee711e1f1b269cfa4afc39f1c
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '575d275fd14c4f7b2627612abfb7756f'}, trace_id:575d275fd14c4f7b2627612abfb7756f
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+--- C8 重跑（日志轮转） ---
+C8 重跑退出码=0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'e84dfbad5914183a4f6eced31fd9ae7a'}, trace_id:e84dfbad5914183a4f6eced31fd9ae7a
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[警告] 日志文件缩小（size=121 < offset=8550），偏移重置为 0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'f7e719b2b6b6a20e8cb49ef7fb1e62d1'}, trace_id:f7e719b2b6b6a20e8cb49ef7fb1e62d1
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+===== 1.21.5 重跑结束 2026-10-18 16:47:44 磁盘 1268MB =====
+install rc=0
+===== 重跑 1.21.8（Forge 58.1.0，RCON 25725） 2026-10-18 16:50:42 =====
+[1810月2026 16:51:08.393] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (13.549s)! For help, type "help"
+真前缀 = [1810月2026 16:50:54.518] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+--- C7 重跑（生产链路） ---
+C7 重跑退出码=0
+[启动] QQ 网关已连接
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '2c4bd53826496085489585fb81cb5dde'}, trace_id:2c4bd53826496085489585fb81cb5dde
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+--- C8 重跑（日志轮转） ---
+C8 重跑退出码=1
+[错误] QQ 网关异常退出: 'NoneType' object is not subscriptable
+[错误] QQ 网关启动失败: QQ 网关启动失败: 'NoneType' object is not subscriptable
+===== 1.21.8 重跑结束 2026-10-18 16:51:52 磁盘 1260MB =====
+install rc=0
+===== 重跑 26.3（Forge 66.0.13，RCON 25721） 2026-10-18 16:53:13 =====
+[1810月2026 16:53:27.848] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (3.366s)! For help, type "help"
+真前缀 = [1810月2026 16:53:24.223] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: 
+--- C7 重跑（生产链路） ---
+C7 重跑退出码=0
+[启动] QQ 网关已连接
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '5e41499d276300e2fd097908f18fc401'}, trace_id:5e41499d276300e2fd097908f18fc401
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '2bd112c6bc4bedbafccde840da5cbcee'}, trace_id:2bd112c6bc4bedbafccde840da5cbcee
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '5491d8a39299e68dea60784b046632ec'}, trace_id:5491d8a39299e68dea60784b046632ec
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+--- C8 重跑（日志轮转） ---
+C8 重跑退出码=0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'ce14fdf4d451e0db55df02fee3a784da'}, trace_id:ce14fdf4d451e0db55df02fee3a784da
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[警告] 日志文件缩小（size=121 < offset=7626），偏移重置为 0
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '2500d44971b22a2378a362f907c39614'}, trace_id:2500d44971b22a2378a362f907c39614
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+===== 26.3 重跑结束 2026-10-18 16:54:10 磁盘 1266MB =====

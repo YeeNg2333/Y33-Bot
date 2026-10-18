@@ -1,0 +1,1 @@
+[RCON forge] tellraw @a {"text":"[QQ] Steve: 你好"}
