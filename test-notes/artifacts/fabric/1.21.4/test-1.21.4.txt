@@ -1,0 +1,221 @@
+########## Fabric 1.21.4 完整测试流程 开始 2026-10-18 15:00:27 ##########
+--- 实例静态信息 ---
+  export MC_VERSION="1.21.4"
+  export MC_FAMILY="fabric"
+  export MC_DIR="/home/hermes/mc-test/fabric/1.21.4"
+  export MC_GAME_PORT=25611
+  export MC_RCON_PORT=25711
+  export MC_TMUX="mc-fabric-1_21_4"
+  export MC_LOADER="0.19.5"
+  export MC_FAPI="0.119.4+1.21.4"
+  export JAVA_HOME="/home/hermes/jdk-21"
+  export MC_LOG="/home/hermes/mc-test/fabric/1.21.4/logs/latest.log"
+  java: openjdk version "21.0.12.1" 2026-08-18 LTS
+--- 配置 ---
+  group_openid = "E2E_DUMMY_GROUP_OPENID"   # 假群：让 MC→QQ 真的走到平台（预期被平台拒），验证完整链路
+  bindings = "data/bindings-fabric-1.21.4.toml"
+  state = "data/state-fabric-1.21.4.json"
+  name = "fab1214"
+  port = 25711
+  log_path = "/home/hermes/mc-test/fabric/1.21.4/logs/latest.log"
+  chat = '\[\d{2}:\d{2}:\d{2}\] \[Async Chat Thread - #\d+/INFO\]: <(?P<player>\w+)> (?P<message>.+)'
+
+===================== T0 启动服务端（游戏 25611 / RCON 25711，tmux mc-fabric-1_21_4） =====================
+
+等待轮次=15 就绪=1
+1:[15:00:38] [main/INFO]: Loading Minecraft 1.21.4 with Fabric Loader 0.19.5
+3:[15:00:38] [main/INFO]: Loading 42 mods:
+77:[15:01:08] [Server thread/INFO]: Done (14.891s)! For help, type "help"
+80:[15:01:08] [Server thread/INFO]: RCON running on 0.0.0.0:25711
+LISTEN 0      4096               *:25611            *:*   
+LISTEN 0      50                 *:25711            *:*   
+>>> [RESULT] start_ok=1
+
+===================== T1 (S1) check 自检：真 QQ 探活 + 真 RCON /list =====================
+
+[配置] OK config-fabric-1.21.4.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 1266s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON fab1214] OK /list -> There are 0 of a max of 20 players online:
+[日志 fab1214] OK /home/hermes/mc-test/fabric/1.21.4/logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+OK
+>>> [RESULT] check_exit=0
+
+===================== T2 (S2) QQ→MC：绑定 + 真 RCON tellraw 注入（真客户端核对可见性） =====================
+
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-fabric-1.21.4.toml)
+bind exit=0
+[绑定] 1A2B3C4D -> Steve
+[hold] 连接 127.0.0.1:25611 用户名 Watcher 保持 30s
+[hold] 已 spawn（进服成功），版本协商: 1.21.4
+[RCON fab1214] tellraw @a {"text":"[QQ] Steve: 你好"}
+>>> [RESULT] tellraw_exit=0
+>>> [RESULT] client_saw_tellraw=yes
+3:[hold 07:01:24] 收到: [QQ] Steve: 你好
+
+===================== T3 (S2) QQ→MC：/status 真往返（服务端真 /list 响应解析） =====================
+
+[RCON fab1214] /list
+[群消息] [服务器状态]
+[群消息] 在线: 1/20
+[群消息] 玩家: Watcher
+>>> [RESULT] status_exit=0
+
+===================== T4 (S3) MC→QQ：真玩家进服/聊天（普通+#）/退服 → 真实日志行 =====================
+
+84:[15:01:13] [Server thread/INFO]: Watcher joined the game
+client exit=0
+[client] 连接 127.0.0.1:25611 用户名 Steve
+[client] 已 spawn（进服成功），版本协商: 1.21.4
+[client] 已发送普通聊天
+[client] 已发送 # 聊天
+[client] 主动退出
+[client] 连接结束
+--- 真聊天行（带 #） ---
+[15:01:33] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+--- 真聊天行（普通） ---
+[15:01:32] [Server thread/INFO]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+--- 真进服行 ---
+[15:01:30] [Server thread/INFO]: Steve joined the game
+--- 真退服行 ---
+[15:01:35] [Server thread/INFO]: Steve left the game
+
+===================== T4a 默认 join 模板对真进服行 =====================
+
+[群消息] Steve进入了fab1214
+>>> [RESULT] join_template_match=yes
+
+===================== T4b 默认 quit 模板对真退服行 =====================
+
+[群消息] Steve退出了fab1214
+>>> [RESULT] quit_template_match=yes
+
+===================== T4c 默认 chat 模板对真 # 聊天行（项目默认模板是否匹配该版本日志格式） =====================
+
+[警告] 日志行未匹配任何模板
+>>> [RESULT] chat_template_match=no
+
+===================== T4d 默认 chat 模板对真普通聊天行（匹配时应输出「非 # 开头，不转发」） =====================
+
+[警告] 日志行未匹配任何模板
+>>> [RESULT] chatplain_template_match=no
+
+===================== T4e 回环防护（用真行格式的 [QQ] 注入文本） =====================
+
+[警告] 日志行未匹配任何模板
+>>> [RESULT] loop_guard_tested=yes
+
+===================== T6 (S4) 健康翻转：离线→重复离线→上线 =====================
+
+[RCON fab1214] /list
+[警告] RCON fab1214 命令失败: 假 RCON 服务器离线: 127.0.0.1:25711
+[群消息] [服务器状态] fab1214 离线
+[RCON fab1214] /list
+[警告] RCON fab1214 命令失败: 假 RCON 服务器离线: 127.0.0.1:25711
+[忽略] 状态未变化，不重复提示
+[RCON fab1214] /list
+[群消息] [服务器状态] fab1214 上线
+>>> [RESULT] health_flip_tested=yes
+
+===================== T7 (S5) 常驻 run：真 QQ 网关 + 运行期真玩家 → MC→QQ 真链路 =====================
+
+--- run 启动阶段 ---
+9:[启动] QQ 网关已连接
+110:[启动] QQ 网关就绪
+112:[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+115:[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+118:[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+121:[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+--- 运行期真客户端输出 ---
+[client] 连接 127.0.0.1:25611 用户名 Steve2
+[client] 已 spawn（进服成功），版本协商: 1.21.4
+[client] 已发送普通聊天
+[client] 已发送 # 聊天
+[client] 主动退出
+[client] 连接结束
+--- run 中与 MC→QQ 相关的行 ---
+96:[忽略] 日志行未匹配任何模板: [15:01:24] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+97:[忽略] 日志行未匹配任何模板: [15:01:24] [RCON Client /127.0.0.1 #3/INFO]: Thread RCON Client /127.0.0.1 shutting down
+98:[忽略] 日志行未匹配任何模板: [15:01:28] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+99:[忽略] 日志行未匹配任何模板: [15:01:28] [RCON Client /127.0.0.1 #4/INFO]: Thread RCON Client /127.0.0.1 shutting down
+100:[忽略] 日志行未匹配任何模板: [15:01:30] [Server thread/INFO]: Steve[/127.0.0.1:44124] logged in with entity id 156 at (-273.5, 78.0, -572.5)
+101:[忽略] 日志行未匹配任何模板: [15:01:32] [Server thread/INFO]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+102:[忽略] 日志行未匹配任何模板: [15:01:33] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+103:[忽略] 日志行未匹配任何模板: [15:01:35] [Server thread/INFO]: Steve lost connection: Disconnected
+104:[忽略] 日志行未匹配任何模板: [15:01:42] [Server thread/INFO]: Watcher lost connection: Disconnected
+105:[忽略] 日志行未匹配任何模板: [15:01:42] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+112:[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+115:[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+118:[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+121:[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+123:[忽略] 日志行未匹配任何模板: [15:01:57] [Server thread/INFO]: Steve2[/127.0.0.1:52582] logged in with entity id 170 at (-271.5, 86.0, -569.5)
+126:[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+128:[忽略] 日志行未匹配任何模板: [15:01:58] [Server thread/INFO]: [Not Secure] <Steve2> 大家好，这是普通聊天（不该被转发）
+129:[忽略] 日志行未匹配任何模板: [15:01:59] [Server thread/INFO]: [Not Secure] <Steve2> #大家好，这是带井号的聊天（应被转发）
+130:[忽略] 日志行未匹配任何模板: [15:02:01] [Server thread/INFO]: Steve2 lost connection: Disconnected
+133:[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+
+===================== T8 (S6) 日志轮转：运行中清空 latest.log 再写入真实进服行 =====================
+
+日志已清空（清空前大小 6773 字节），当前大小 0
+--- 轮转相关行 ---
+135:[警告] 日志文件缩小（size=0 < offset=6773），偏移重置为 0
+>>> [RESULT] rotation_tested=yes
+
+===================== T7b run 收尾：SIGTERM → 退出码 =====================
+
+>>> [RESULT] run_exit=0
+--- run 尾部 ---
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-1.21.4.json
+[忽略] 日志行未匹配任何模板: [15:01:57] [Server thread/INFO]: Steve2[/127.0.0.1:52582] logged in with entity id 170 at (-271.5, 86.0, -569.5)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-1.21.4.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'f04b23a71c304d1f9553e29c7ac5419e'}, trace_id:f04b23a71c304d1f9553e29c7ac5419e
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-1.21.4.json
+[忽略] 日志行未匹配任何模板: [15:01:58] [Server thread/INFO]: [Not Secure] <Steve2> 大家好，这是普通聊天（不该被转发）
+[忽略] 日志行未匹配任何模板: [15:01:59] [Server thread/INFO]: [Not Secure] <Steve2> #大家好，这是带井号的聊天（应被转发）
+[忽略] 日志行未匹配任何模板: [15:02:01] [Server thread/INFO]: Steve2 lost connection: Disconnected
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-1.21.4.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '0138e2d4d87d2e37f66815137f33dea7'}, trace_id:0138e2d4d87d2e37f66815137f33dea7
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-1.21.4.json
+[警告] 日志文件缩小（size=0 < offset=6773），偏移重置为 0
+[RCON fab1214] /list
+[忽略] 状态未变化，不重复提示
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-1.21.4.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '3c78f9d04cdfb923cdef8bfb0c0e131d'}, trace_id:3c78f9d04cdfb923cdef8bfb0c0e131d
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-1.21.4.json
+[停止] 收到退出信号
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-fabric-1.21.4.json
+[停止] 已退出
+
+===================== T9 优雅停服 =====================
+
+停服等待轮次=2
+(端口已释放)
+mc-vanilla-1_21_6: 1 windows (created Sun Oct 18 15:01:10 2026)
+  总用量 96
+  -rw-r--r-- 1 hermes hermes    66 10月 18 15:02 bindings-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes   211 10月 18 15:01 client-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes   495 10月 18 15:01 client-hold-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes   212 10月 18 15:02 client-run-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes 16405 10月 18 15:02 console-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes  7765 10月 18 15:02 latest-log-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes  6773 10月 18 15:02 latest-log-before-rotate-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes   110 10月 18 15:01 real-chat-line-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes   216 10月 18 15:01 real-chat-lines-raw-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes   106 10月 18 15:01 real-chatplain-line-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes    55 10月 18 15:01 real-join-line-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes    53 10月 18 15:01 real-quit-line-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes   251 10月 18 15:02 results-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes 14934 10月 18 15:02 run-1.21.4.txt
+  -rw-r--r-- 1 hermes hermes   244 10月 18 15:02 state-1.21.4.txt
+已清理 libraries/world/logs（保留 server.jar + 制品）
+/dev/mapper/rlm-root   17G   16G  1.6G   91% /
+               total        used        free      shared  buff/cache   available
+Mem:            2679        1638         852           1         346        1040
+>>> [RESULT] conclusion_1.21.4=已跑完（见 /home/hermes/mc-test/fabric/1.21.4/artifacts/results-1.21.4.txt 上方各标记与 artifacts 原始制品）
+########## Fabric 1.21.4 完整测试流程 结束 2026-10-18 15:02:26 ##########

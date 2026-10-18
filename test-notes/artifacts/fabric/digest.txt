@@ -1,0 +1,131 @@
+================ 1.21.2 ================
+1:[14:56:18] [main/INFO]: Loading Minecraft 1.21.2 with Fabric Loader 0.19.5
+[14:56:56] [Server thread/INFO]: Done (22.228s)! For help, type "help"
+[配置] OK config-fabric-1.21.2.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 1517s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[绑定] OK 1 条
+OK
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-fabric-1.21.2.toml)
+[绑定] 1A2B3C4D -> Steve
+--- 真聊天行（#) ---
+[14:57:20] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+--- 真进服行 ---
+[14:57:17] [Server thread/INFO]: Steve joined the game
+--- RESULTS ---
+start_ok=1 check_exit=0 tellraw_exit=0 client_saw_tellraw=yes status_exit=0 join_template_match=yes quit_template_match=yes chat_template_match=no chatplain_template_match=no loop_guard_tested=yes health_flip_tested=yes rotation_tested=yes run_exit=0 conclusion_1.21.2=已跑完（见 /home/hermes/mc-test/fabric/1.21.2/artifacts/results-1.21.2.txt 上方各标记与 artifacts 原始制品） 
+================ 1.21.4 ================
+1:[15:00:38] [main/INFO]: Loading Minecraft 1.21.4 with Fabric Loader 0.19.5
+[15:01:08] [Server thread/INFO]: Done (14.891s)! For help, type "help"
+[配置] OK config-fabric-1.21.4.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 1266s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[绑定] OK 0 条
+OK
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-fabric-1.21.4.toml)
+[绑定] 1A2B3C4D -> Steve
+--- 真聊天行（#) ---
+[15:01:33] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+--- 真进服行 ---
+[15:01:30] [Server thread/INFO]: Steve joined the game
+--- RESULTS ---
+start_ok=1 check_exit=0 tellraw_exit=0 client_saw_tellraw=yes status_exit=0 join_template_match=yes quit_template_match=yes chat_template_match=no chatplain_template_match=no loop_guard_tested=yes health_flip_tested=yes rotation_tested=yes run_exit=0 conclusion_1.21.4=已跑完（见 /home/hermes/mc-test/fabric/1.21.4/artifacts/results-1.21.4.txt 上方各标记与 artifacts 原始制品） 
+================ 1.21.5 ================
+1:[15:04:26] [main/INFO]: Loading Minecraft 1.21.5 with Fabric Loader 0.19.5
+[15:05:11] [Server thread/INFO]: Done (24.758s)! For help, type "help"
+[配置] OK config-fabric-1.21.5.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 1022s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[绑定] OK 0 条
+OK
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-fabric-1.21.5.toml)
+[绑定] 1A2B3C4D -> Steve
+--- 真聊天行（#) ---
+[15:05:36] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+--- 真进服行 ---
+[15:05:33] [Server thread/INFO]: Steve joined the game
+--- RESULTS ---
+start_ok=1 check_exit=0 tellraw_exit=0 client_saw_tellraw=yes status_exit=0 join_template_match=yes quit_template_match=yes chat_template_match=no chatplain_template_match=no loop_guard_tested=yes health_flip_tested=yes rotation_tested=yes run_exit=0 conclusion_1.21.5=已跑完（见 /home/hermes/mc-test/fabric/1.21.5/artifacts/results-1.21.5.txt 上方各标记与 artifacts 原始制品） 
+================ 1.21.6 ================
+1:[15:07:54] [main/INFO]: Loading Minecraft 1.21.6 with Fabric Loader 0.19.5
+[15:08:21] [Server thread/INFO]: Done (15.512s)! For help, type "help"
+[配置] OK config-fabric-1.21.6.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 835s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[绑定] OK 0 条
+OK
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-fabric-1.21.6.toml)
+[绑定] 1A2B3C4D -> Steve
+--- 真聊天行（#) ---
+[15:08:42] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+--- 真进服行 ---
+[15:08:39] [Server thread/INFO]: Steve joined the game
+--- RESULTS ---
+start_ok=1 check_exit=0 tellraw_exit=0 client_saw_tellraw=yes status_exit=0 join_template_match=yes quit_template_match=yes chat_template_match=no chatplain_template_match=no loop_guard_tested=yes health_flip_tested=yes rotation_tested=yes run_exit=0 conclusion_1.21.6=已跑完（见 /home/hermes/mc-test/fabric/1.21.6/artifacts/results-1.21.6.txt 上方各标记与 artifacts 原始制品） 
+================ 1.21.9 ================
+1:[15:11:38] [main/INFO]: Loading Minecraft 1.21.9 with Fabric Loader 0.19.5
+[15:11:57] [Server thread/INFO]: Done (7.833s)! For help, type "help"
+[配置] OK config-fabric-1.21.9.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 618s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[绑定] OK 0 条
+OK
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-fabric-1.21.9.toml)
+[绑定] 1A2B3C4D -> Steve
+--- 真聊天行（#) ---
+[15:12:19] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+--- 真进服行 ---
+[15:12:17] [Server thread/INFO]: Steve joined the game
+--- RESULTS ---
+start_ok=1 check_exit=0 tellraw_exit=0 client_saw_tellraw=yes status_exit=0 join_template_match=yes quit_template_match=yes chat_template_match=no chatplain_template_match=no loop_guard_tested=yes health_flip_tested=yes rotation_tested=yes run_exit=0 conclusion_1.21.9=已跑完（见 /home/hermes/mc-test/fabric/1.21.9/artifacts/results-1.21.9.txt 上方各标记与 artifacts 原始制品） 
+================ 1.21.11 ================
+1:[15:14:06] [main/INFO]: Loading Minecraft 1.21.11 with Fabric Loader 0.19.5
+[15:14:28] [Server thread/INFO]: Done (10.441s)! For help, type "help"
+[配置] OK config-fabric-1.21.11.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 465s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[绑定] OK 0 条
+OK
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-fabric-1.21.11.toml)
+[绑定] 1A2B3C4D -> Steve
+--- 真聊天行（#) ---
+[15:14:55] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+--- 真进服行 ---
+[15:14:52] [Server thread/INFO]: Steve joined the game
+--- RESULTS ---
+start_ok=1 check_exit=0 tellraw_exit=0 client_saw_tellraw=no status_exit=0 join_template_match=yes quit_template_match=yes chat_template_match=no chatplain_template_match=no loop_guard_tested=yes health_flip_tested=yes rotation_tested=yes run_exit=0 conclusion_1.21.11=已跑完（见 /home/hermes/mc-test/fabric/1.21.11/artifacts/results-1.21.11.txt 上方各标记与 artifacts 原始制品） 
+================ 26.1 ================
+1:[15:21:50] [main/INFO]: Loading Minecraft 26.1 with Fabric Loader 0.19.5
+[15:22:08] [Server thread/INFO]: Done (7.180s)! For help, type "help"
+[配置] OK config-fabric-26.1.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 7200s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[绑定] OK 0 条
+OK
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-fabric-26.1.toml)
+[绑定] 1A2B3C4D -> Steve
+--- 真聊天行（#) ---
+[15:22:31] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+--- 真进服行 ---
+[15:22:28] [Server thread/INFO]: Steve joined the game
+--- RESULTS ---
+start_ok=1 check_exit=0 tellraw_exit=0 client_saw_tellraw=yes status_exit=0 join_template_match=yes quit_template_match=yes chat_template_match=no chatplain_template_match=no loop_guard_tested=yes health_flip_tested=yes rotation_tested=yes run_exit=0 conclusion_26.1=已跑完（见 /home/hermes/mc-test/fabric/26.1/artifacts/results-26.1.txt 上方各标记与 artifacts 原始制品） 
+================ 26.2 ================
+1:[15:26:55] [main/INFO]: Loading Minecraft 26.2 with Fabric Loader 0.19.5
+[15:27:26] [Server thread/INFO]: Done (12.183s)! For help, type "help"
+[配置] OK config-fabric-26.2.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 6883s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[绑定] OK 0 条
+OK
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-fabric-26.2.toml)
+[绑定] 1A2B3C4D -> Steve
+--- 真聊天行（#) ---
+--- 真进服行 ---
+--- RESULTS ---
+start_ok=1 check_exit=0 tellraw_exit=0 status_exit=0 real_client=unsupported_version chat_template_match=unverified(no_real_line) join_template_match=unverified(no_real_line) quit_template_match=unverified(no_real_line) health_flip_tested=yes rotation_tested=yes run_exit=0 conclusion_26.2=已跑完（见 /home/hermes/mc-test/fabric/26.2/artifacts/results-26.2.txt 上方各标记与 artifacts 原始制品） 
+================ 26.3 ================
+1:[15:30:36] [main/INFO]: Loading Minecraft 26.3 with Fabric Loader 0.19.5
+[15:31:16] [Server thread/INFO]: Done (9.175s)! For help, type "help"
+[配置] OK config-fabric-26.3.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 6652s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[绑定] OK 0 条
+OK
+[绑定] 已写入 1A2B3C4D -> Steve (data/bindings-fabric-26.3.toml)
+[绑定] 1A2B3C4D -> Steve
+--- 真聊天行（#) ---
+--- 真进服行 ---
+--- RESULTS ---
+start_ok=1 check_exit=0 tellraw_exit=0 status_exit=0 real_client=unsupported_version chat_template_match=unverified(no_real_line) join_template_match=unverified(no_real_line) quit_template_match=unverified(no_real_line) health_flip_tested=yes rotation_tested=yes run_exit=0 conclusion_26.3=已跑完（见 /home/hermes/mc-test/fabric/26.3/artifacts/results-26.3.txt 上方各标记与 artifacts 原始制品） 
