@@ -1,0 +1,92 @@
+[32m[16:18:47] [main/INFO] [ne.ne.fm.st.Entrypoint/]: JVM Uptime at startup: 71ms
+[m[32m[16:18:47] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Starting FancyModLoader version 10.0.32 (DEDICATED_SERVER in PROD)
+[m[32m[16:18:47] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Game directory: /home/hermes/mc-test/neoforge/1.21.10
+[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.EarlyServiceDiscovery/]: Found 2 early service jars (out of 73) in 31ms
+[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Loading FML Early Services:
+[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]:  - libraries/net/neoforged/fancymodloader/earlydisplay/10.0.32/earlydisplay-10.0.32.jar
+[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]:  - libraries/net/neoforged/fancymodloader/loader/10.0.32/loader-10.0.32.jar
+[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.ImmediateWindowHandler/]: Not loading early display in headless mode.
+[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.mo.lo.GameLocator/]: Failed to find common Minecraft classes and resources on the classpath. Assuming we're launching production.
+[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.mo.lo.JarInJarDependencyLocator/]: Found 2 dependencies adding them to mods collection
+[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.mo.ModDiscoverer/]: 
+     Mod List:
+		Name Version (Mod Id)
+
+		Minecraft 1.21.10 (minecraft)
+		NeoForge 21.10.64 (neoforge)
+[m[32m[16:18:48] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/hermes/mc-test/neoforge/1.21.10/libraries/net/fabricmc/sponge-mixin/0.16.5+mixin.0.8.7/sponge-mixin-0.16.5+mixin.0.8.7.jar Service=FML Env=SERVER
+[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Loading FML Plugins:
+[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]:  - ~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar > net.neoforged.neoforge-coremods-21.10.64.jar
+[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Building game content classloader:
+ - minecraft (jar(~libraries/net/neoforged/minecraft-server-patched/21.10.64/minecraft-server-patched-21.10.64.jar))
+ - mixinextras.neoforge (jar(~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar > mixinextras-neoforge-0.5.0.jar))
+ - neoforge (jar(~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar))
+ - net.neoforged.fml.generated (empty(VirtualJar/net.neoforged.fml.generated))
+[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Built game content classloader in 27ms
+[m[32m[16:18:49] [main/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.0).
+[m[32m[16:18:55] [modloading-worker-0/INFO] [ne.ne.ne.co.NeoForgeMod/NEOFORGE-MOD]: NeoForge mod loading, version 21.10.64, for MC 1.21.10
+[m[32m[16:18:55] [main/INFO] [mojang/YggdrasilAuthenticationService]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[m[32m[16:18:57] [main/INFO] [minecraft/Main]: No existing world data, creating new world
+[m[32m[16:18:58] [main/INFO] [minecraft/RecipeManager]: Loaded 1461 recipes
+[m[32m[16:18:58] [main/INFO] [minecraft/AdvancementTree]: Loaded 1574 advancements
+[m[32m[16:18:58] [main/INFO] [ne.ne.ne.co.cr.RecipePriorityManager/]: Loaded 0 recipe priority overrides
+[m[32m[16:18:58] [Server thread/INFO] [minecraft/DedicatedServer]: Starting minecraft server version 1.21.10
+[m[32m[16:18:58] [Server thread/INFO] [minecraft/DedicatedServer]: Loading properties
+[m[32m[16:18:58] [Server thread/INFO] [minecraft/DedicatedServer]: Default game type: SURVIVAL
+[m[32m[16:18:58] [Server thread/INFO] [minecraft/MinecraftServer]: Generating keypair
+[m[?1h=[?2004h> [K[32m[16:18:58] [Server thread/INFO] [minecraft/DedicatedServer]: Starting Minecraft server on *:25633
+[m> [K[32m[16:18:58] [Server thread/INFO] [minecraft/ServerConnectionListener]: Using epoll channel type
+[m> [K[33m[16:18:58] [Server thread/WARN] [minecraft/DedicatedServer]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[m> [K[33m[16:18:58] [Server thread/WARN] [minecraft/DedicatedServer]: The server will make no attempt to authenticate usernames. Beware.
+[m> [K[33m[16:18:58] [Server thread/WARN] [minecraft/DedicatedServer]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[m> [K[33m[16:18:58] [Server thread/WARN] [minecraft/DedicatedServer]: To change this, set "online-mode" to "true" in the server.properties file.
+[m> [K[32m[16:18:58] [Server thread/INFO] [minecraft/DedicatedServer]: Preparing level "world"
+[m> [K[32m[16:18:59] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Selecting global world spawn...
+[m> [K[32m[16:19:07] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Loading 0 persistent chunks...
+[m> [K[32m[16:19:07] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Preparing spawn area: 100%
+[m> [K[32m[16:19:07] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Time elapsed: 8056 ms
+[m> [K[32m[16:19:07] [Server thread/INFO] [minecraft/DedicatedServer]: Done (8.423s)! For help, type "help"
+[m> [K[32m[16:19:07] [Server thread/INFO] [minecraft/DedicatedServer]: Starting remote control listener
+[m> [K[32m[16:19:07] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener started
+[m> [K[32m[16:19:07] [Server thread/INFO] [minecraft/RconThread]: RCON running on 0.0.0.0:25733
+[m> [K[32m[16:19:07] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler
+[m> [K[32m[16:19:08] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[m> [K[32m[16:19:09] [RCON Client /127.0.0.1 #2/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[m> [K[32m[16:19:17] [Server thread/INFO] [minecraft/PlayerList]: Watcher[/127.0.0.1:56028] logged in with entity id 51 at (-0.5, 142.0, 2.5)
+[m> [K[32m[16:19:17] [Server thread/INFO] [minecraft/MinecraftServer]: Watcher joined the game
+[m> [K[32m[16:19:22] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[m> [K[32m[16:19:22] [RCON Client /127.0.0.1 #3/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[m> [K[32m[16:19:25] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[m> [K[32m[16:19:26] [RCON Client /127.0.0.1 #4/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[m> [K[32m[16:19:27] [Server thread/INFO] [minecraft/PlayerList]: Steve[/127.0.0.1:58874] logged in with entity id 199 at (-7.5, 139.0, -1.5)
+[m> [K[32m[16:19:27] [Server thread/INFO] [minecraft/MinecraftServer]: Steve joined the game
+[m> [K[32m[16:19:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[m> [K[32m[16:19:31] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[m> [K[32m[16:19:32] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Steve lost connection: Disconnected
+[m> [K[32m[16:19:32] [Server thread/INFO] [minecraft/MinecraftServer]: Steve left the game
+[m> [K[32m[16:19:39] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[m> [K[32m[16:19:40] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Watcher lost connection: Disconnected
+[m> [K[32m[16:19:40] [Server thread/INFO] [minecraft/MinecraftServer]: Watcher left the game
+[m> [K[32m[16:19:55] [Server thread/INFO] [minecraft/PlayerList]: Steve2[/127.0.0.1:42046] logged in with entity id 323 at (4.5, 143.0, 10.5)
+[m> [K[32m[16:19:55] [Server thread/INFO] [minecraft/MinecraftServer]: Steve2 joined the game
+[m> [K[32m[16:19:56] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve2> 大家好，这是普通聊天（不该被转发）
+[m> [K[32m[16:19:58] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve2> #大家好，这是带井号的聊天（应被转发）
+[m> [K[32m[16:19:59] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Steve2 lost connection: Disconnected
+[m> [K[32m[16:19:59] [Server thread/INFO] [minecraft/MinecraftServer]: Steve2 left the game
+[m> [K[32m[16:20:21] [RCON Client /127.0.0.1 #5/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[m> stop
+[?1l>[?1000l[?2004l[?1h=[?2004h> [K[32m[16:20:21] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping the server
+[m> [K[32m[16:20:21] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping server
+[m> [K[32m[16:20:21] [Server thread/INFO] [minecraft/MinecraftServer]: Saving players
+[m> [K[32m[16:20:21] [Server thread/INFO] [minecraft/MinecraftServer]: Saving worlds
+[m> [K[32m[16:20:21] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[m> [K[32m[16:20:21] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[m> [K[32m[16:20:21] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[m> [K[32m[16:20:21] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[m> [K[32m[16:20:21] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[m> [K[32m[16:20:21] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[m> [K[32m[16:20:21] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage: All dimensions are saved
+[m> [K[32m[16:20:21] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener stopped
+[m> [K[32m[16:20:21] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Closing FML Loader 61e8db06
+[m> [K[32m[16:20:21] [main/INFO] [ne.ne.fm.ModLoader/]: Clearing ModLoader
+[m> 

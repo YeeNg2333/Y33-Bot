@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "qq": {
+    "msg_seq": 1
+  },
+  "servers": {
+    "nf263": {
+      "log_offset": 55,
+      "log_size": 55,
+      "log_inode": "24729785",
+      "health_online": true,
+      "health_changed_at": 1792309392.8660705
+    }
+  }
+}

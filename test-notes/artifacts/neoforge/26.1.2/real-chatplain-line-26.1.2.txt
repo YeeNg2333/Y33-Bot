@@ -1,0 +1,1 @@
+[1810月2026 15:47:06.229] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）

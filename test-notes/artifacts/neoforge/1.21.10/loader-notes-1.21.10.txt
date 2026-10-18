@@ -1,0 +1,13 @@
+2:[m[32m[16:18:47] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Starting FancyModLoader version 10.0.32 (DEDICATED_SERVER in PROD)
+3:[m[32m[16:18:47] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Game directory: /home/hermes/mc-test/neoforge/1.21.10
+5:[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Loading FML Early Services:
+6:[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]:  - libraries/net/neoforged/fancymodloader/earlydisplay/10.0.32/earlydisplay-10.0.32.jar
+7:[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]:  - libraries/net/neoforged/fancymodloader/loader/10.0.32/loader-10.0.32.jar
+17:[m[32m[16:18:48] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/hermes/mc-test/neoforge/1.21.10/libraries/net/fabricmc/sponge-mixin/0.16.5+mixin.0.8.7/sponge-mixin-0.16.5+mixin.0.8.7.jar Service=FML Env=SERVER
+18:[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Loading FML Plugins:
+19:[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]:  - ~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar > net.neoforged.neoforge-coremods-21.10.64.jar
+20:[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Building game content classloader:
+22: - mixinextras.neoforge (jar(~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar > mixinextras-neoforge-0.5.0.jar))
+25:[m[32m[16:18:48] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Built game content classloader in 27ms
+26:[m[32m[16:18:49] [main/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.0).
+90:[m> [K[32m[16:20:21] [main/INFO] [ne.ne.fm.lo.FMLLoader/]: Closing FML Loader 61e8db06

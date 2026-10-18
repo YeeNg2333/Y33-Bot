@@ -1,0 +1,94 @@
+[16:00:15] [main/INFO]: ModLauncher running: args [--launchTarget, neoforgeserver, --fml.neoForgeVersion, 21.8.57, --fml.fmlVersion, 9.0.18, --fml.mcVersion, 1.21.8, --fml.neoFormVersion, 20250717.133445, nogui]
+[16:00:15] [main/INFO]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS
+[16:00:15] [main/INFO]: ModLauncher 9.0 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+[16:00:15] [main/INFO]: ImmediateWindowProvider not loading because launch target is neoforgeserver
+[16:00:15] [main/INFO]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=union:/home/hermes/mc-test/neoforge/1.21.8/libraries/net/fabricmc/sponge-mixin/0.15.2+mixin.0.8.7/sponge-mixin-0.15.2+mixin.0.8.7.jar%2388!/ Service=ModLauncher Env=SERVER
+[16:00:16] [main/INFO]: Found mod file "server-1.21.8-20250717.133445-srg.jar" [locator: production server provider +net.neoforged:neoforge:21.8.57:server]
+[16:00:16] [main/INFO]: Found mod file "neoforge-21.8.57-universal.jar" [locator: PathBasedLocator[name=neoforge, paths=[libraries/net/neoforged/neoforge/21.8.57/neoforge-21.8.57-universal.jar]], reader: mod manifest]
+[16:00:16] [main/INFO]: Found 2 dependencies adding them to mods collection
+[16:00:16] [main/INFO]: Found gamelibrary file "mixinextras-neoforge-0.5.3.jar" [parent: neoforge-21.8.57-universal.jar, locator: jarinjar, reader: mod manifest]
+[16:00:16] [main/INFO]: Found library file "net.neoforged.neoforge-coremods-21.8.57.jar" [parent: neoforge-21.8.57-universal.jar, locator: jarinjar, reader: mod manifest]
+[16:00:16] [main/INFO]: 
+     Mod List:
+		Name Version (Mod Id)
+
+		Minecraft 1.21.8 (minecraft)
+		NeoForge 21.8.57 (neoforge)
+[16:00:16] [main/INFO]: Launching target 'neoforgeserver' with arguments [nogui]
+[32m[16:00:17] [main/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.3).
+[m[32m[16:00:24] [modloading-worker-0/INFO] [ne.ne.ne.co.NeoForgeMod/NEOFORGE-MOD]: NeoForge mod loading, version 21.8.57, for MC 1.21.8
+[m[32m[16:00:24] [main/INFO] [mojang/YggdrasilAuthenticationService]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[m[33m[16:00:25] [main/WARN] [minecraft/VanillaPackResourcesBuilder]: Assets URL 'union:/home/hermes/mc-test/neoforge/1.21.8/libraries/net/minecraft/server/1.21.8-20250717.133445/server-1.21.8-20250717.133445-srg.jar%23143!/assets/.mcassetsroot' uses unexpected schema
+[m[33m[16:00:25] [main/WARN] [minecraft/VanillaPackResourcesBuilder]: Assets URL 'union:/home/hermes/mc-test/neoforge/1.21.8/libraries/net/minecraft/server/1.21.8-20250717.133445/server-1.21.8-20250717.133445-srg.jar%23143!/data/.mcassetsroot' uses unexpected schema
+[m[32m[16:00:26] [main/INFO] [minecraft/Main]: No existing world data, creating new world
+[m[32m[16:00:27] [main/INFO] [minecraft/RecipeManager]: Loaded 1407 recipes
+[m[32m[16:00:27] [main/INFO] [minecraft/AdvancementTree]: Loaded 1520 advancements
+[m[32m[16:00:27] [main/INFO] [ne.ne.ne.co.cr.RecipePriorityManager/]: Loaded 0 recipe priority overrides
+[m[32m[16:00:27] [Server thread/INFO] [minecraft/DedicatedServer]: Starting minecraft server version 1.21.8
+[m[32m[16:00:27] [Server thread/INFO] [minecraft/DedicatedServer]: Loading properties
+[m[32m[16:00:27] [Server thread/INFO] [minecraft/DedicatedServer]: Default game type: SURVIVAL
+[m[32m[16:00:27] [Server thread/INFO] [minecraft/MinecraftServer]: Generating keypair
+[m[32m[16:00:27] [Server thread/INFO] [minecraft/DedicatedServer]: Starting Minecraft server on *:25632
+[m[?1h=[?2004h> [K[32m[16:00:27] [Server thread/INFO] [minecraft/ServerConnectionListener]: Using epoll channel type
+[m> [K[33m[16:00:27] [Server thread/WARN] [minecraft/DedicatedServer]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[m> [K[33m[16:00:27] [Server thread/WARN] [minecraft/DedicatedServer]: The server will make no attempt to authenticate usernames. Beware.
+[m> [K[33m[16:00:27] [Server thread/WARN] [minecraft/DedicatedServer]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[m> [K[33m[16:00:27] [Server thread/WARN] [minecraft/DedicatedServer]: To change this, set "online-mode" to "true" in the server.properties file.
+[m> [K[32m[16:00:27] [Server thread/INFO] [minecraft/DedicatedServer]: Preparing level "world"
+[m> [K[32m[16:00:40] [Server thread/INFO] [minecraft/MinecraftServer]: Preparing start region for dimension minecraft:overworld
+[m> [K[32m[16:00:40] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[m> [K[32m[16:00:41] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[m> [K[32m[16:00:41] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[m> [K[32m[16:00:42] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[m> [K[32m[16:00:42] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[m> [K[32m[16:00:43] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[m> [K[32m[16:00:43] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[m> [K[32m[16:00:44] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[m> [K[32m[16:00:44] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[m> [K[32m[16:00:45] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[m> [K[32m[16:00:45] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[m> [K[32m[16:00:46] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 2%
+[m> [K[32m[16:00:46] [Server thread/INFO] [minecraft/LoggerChunkProgressListener]: Time elapsed: 5638 ms
+[m> [K[32m[16:00:46] [Server thread/INFO] [minecraft/DedicatedServer]: Done (18.419s)! For help, type "help"
+[m> [K[32m[16:00:46] [Server thread/INFO] [minecraft/DedicatedServer]: Starting remote control listener
+[m> [K[32m[16:00:46] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener started
+[m> [K[32m[16:00:46] [Server thread/INFO] [minecraft/RconThread]: RCON running on 0.0.0.0:25732
+[m> [K[32m[16:00:46] [Server thread/INFO] [ne.ne.ne.se.pe.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler
+[m> [K[32m[16:00:47] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[m> [K[32m[16:00:48] [RCON Client /127.0.0.1 #2/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[m> [K[32m[16:00:49] [Server thread/INFO] [minecraft/PlayerList]: Watcher[/127.0.0.1:50354] logged in with entity id 21 at (454.5, 75.0, -27.5)
+[m> [K[32m[16:00:49] [Server thread/INFO] [minecraft/MinecraftServer]: Watcher joined the game
+[m> [K[32m[16:01:01] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[m> [K[32m[16:01:01] [RCON Client /127.0.0.1 #3/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[m> [K[32m[16:01:04] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[m> [K[32m[16:01:05] [RCON Client /127.0.0.1 #4/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[m> [K[32m[16:01:06] [Server thread/INFO] [minecraft/PlayerList]: Steve[/127.0.0.1:53616] logged in with entity id 177 at (454.5, 69.0, -41.5)
+[m> [K[32m[16:01:06] [Server thread/INFO] [minecraft/MinecraftServer]: Steve joined the game
+[m> [K[32m[16:01:07] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[m> [K[32m[16:01:08] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[m> [K[32m[16:01:10] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Steve lost connection: Disconnected
+[m> [K[32m[16:01:10] [Server thread/INFO] [minecraft/MinecraftServer]: Steve left the game
+[m> [K[32m[16:01:17] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[m> [K[32m[16:01:19] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Watcher lost connection: Disconnected
+[m> [K[32m[16:01:19] [Server thread/INFO] [minecraft/MinecraftServer]: Watcher left the game
+[m> [K[32m[16:01:32] [Server thread/INFO] [minecraft/PlayerList]: Steve2[/127.0.0.1:35286] logged in with entity id 183 at (455.5, 68.0, -29.5)
+[m> [K[32m[16:01:32] [Server thread/INFO] [minecraft/MinecraftServer]: Steve2 joined the game
+[m> [K[32m[16:01:33] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve2> 大家好，这是普通聊天（不该被转发）
+[m> [K[32m[16:01:35] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve2> #大家好，这是带井号的聊天（应被转发）
+[m> [K[32m[16:01:36] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Steve2 lost connection: Disconnected
+[m> [K[32m[16:01:36] [Server thread/INFO] [minecraft/MinecraftServer]: Steve2 left the game
+[m> [K[32m[16:01:59] [RCON Client /127.0.0.1 #5/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[m> stop
+[?1l>[?1000l[?2004l[?1h=[?2004h> [K[32m[16:01:59] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping the server
+[m> [K[32m[16:01:59] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping server
+[m> [K[32m[16:01:59] [Server thread/INFO] [minecraft/MinecraftServer]: Saving players
+[m> [K[32m[16:01:59] [Server thread/INFO] [minecraft/MinecraftServer]: Saving worlds
+[m> [K[32m[16:02:00] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[m> [K[32m[16:02:00] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[m> [K[32m[16:02:00] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[m> [K[32m[16:02:00] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[m> [K[32m[16:02:00] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[m> [K[32m[16:02:00] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[m> [K[32m[16:02:00] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage: All dimensions are saved
+[m> [K[32m[16:02:00] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener stopped
+[m> 

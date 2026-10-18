@@ -1,0 +1,25 @@
+Extract: data/run.bat
+         /home/hermes/mc-test/neoforge/26.3/./run.bat
+Extract: data/user_jvm_args.txt
+         /home/hermes/mc-test/neoforge/26.3/./user_jvm_args.txt
+Extract: data/win_args.txt
+         /home/hermes/mc-test/neoforge/26.3/./libraries/net/neoforged/neoforge/26.3.0.89/win_args.txt
+Extract: data/unix_args.txt
+         /home/hermes/mc-test/neoforge/26.3/./libraries/net/neoforged/neoforge/26.3.0.89/unix_args.txt
+Exec:    /home/hermes/mc-test/neoforge/26.3/./run.sh
+===============================================================================
+Processor: net.neoforged.installertools:installertools -> PROCESS_MINECRAFT_JAR
+  MainClass: net.neoforged.installertools.ConsoleTool
+  Classpath:
+    /home/hermes/mc-test/neoforge/26.3/./libraries/net/neoforged/installertools/installertools/4.0.17/installertools-4.0.17-fatjar.jar
+    /home/hermes/mc-test/neoforge/26.3/./libraries/net/neoforged/installertools/installertools/4.0.17/installertools-4.0.17-fatjar.jar
+  Args: --task, PROCESS_MINECRAFT_JAR, --no-mod-manifest, --input, /home/hermes/mc-test/neoforge/26.3/./libraries/net/minecraft/server/26.3/server-26.3.jar, --output, /home/hermes/mc-test/neoforge/26.3/./libraries/net/neoforged/minecraft-server-patched/26.3.0.89/minecraft-server-patched-26.3.0.89.jar, --extract-libraries-to, /home/hermes/mc-test/neoforge/26.3/./libraries/, --apply-patches, /tmp/neoforge_installer15857889881504839399/data/client.lzma
+Task: PROCESS_MINECRAFT_JAR
+Using dedicated worker thread for processing
+load input zip [533ms]
+load patch bundle [351ms]
+applying patches [208ms]
+write output file [1322ms]
+overall work [2428ms]
+The server installed successfully
+You can delete this installer file now if you wish

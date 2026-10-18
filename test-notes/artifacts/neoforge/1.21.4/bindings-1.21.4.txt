@@ -1,0 +1,3 @@
+bindings = [
+    { qq_openid = "1A2B3C4D", game_id = "Steve" },
+]
