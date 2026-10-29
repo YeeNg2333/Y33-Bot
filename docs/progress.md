@@ -68,6 +68,8 @@
 - 本轮**没有机制变化**：`[log_patterns]`、看门狗、`check` 的语义与 `PLAN.md` §7.3/§7.4 登记的一致，
   故 `PLAN.md` 未动（无 §7.5 需要写）。
 - 收尾：四族服务端均已停服（端口无监听、无 tmux 会话），可用内存 1583 → 1569 MB，磁盘余量 884 MB 未缩水。
+- 载体：分支 `docs/regress-summary-four-families` → **PR #8**（https://github.com/YeeNg2333/Y33-Bot/pull/8），
+  未直推 `main`；PR 正文含验收清单与四族实测表。
 
 ## 2026-10-29（真机回归 Forge 1.21.11：新出厂模板 14/14 命中 + `check` 三态 + 看门狗，BUG-002/003/004）
 
