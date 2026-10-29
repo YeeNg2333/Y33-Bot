@@ -96,6 +96,24 @@ async def test_startup_checks_all_green(app: App) -> None:
     assert all(item.ok for item in results)
 
 
+async def test_startup_checks_keeps_template_item_next_to_each_server_log(two_server_app: App) -> None:
+    """`[日志模板 <name>]` 逐服紧跟在**本服**的 `[日志 <name>]` 之后（多服不串位）。"""
+
+    service = make_service(two_server_app, pool=two_server_app.make_pool())
+    results = await service.startup_checks()
+    assert [item.label for item in results] == [
+        "配置",
+        "QQ",
+        "RCON main",
+        "RCON world2",
+        "日志 main",
+        "日志模板 main",
+        "日志 world2",
+        "日志模板 world2",
+        "绑定",
+    ]
+
+
 async def test_startup_checks_reports_unusable_credentials(app: App) -> None:
     """BUG-001 的 R5：凭据「填了但不可用」必须 FAIL（旧行为是照样打印 `[QQ] OK`）。"""
 

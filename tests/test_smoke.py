@@ -241,7 +241,7 @@ def test_check_fails_without_secrets(
 
     assert cli.main(["check", "--config", str(config_path)]) == 1
     lines = capsys.readouterr().out.splitlines()
-    assert "[QQ] FAIL 环境变量 QQ_BOT_APP_ID 未设置" in lines
+    assert check_item(lines, "QQ") == "[QQ] FAIL 环境变量 QQ_BOT_APP_ID 未设置"
     assert lines[-1] == "FAIL"
 
 
@@ -266,8 +266,8 @@ def test_check_reports_missing_config(tmp_path: Path, capsys: pytest.CaptureFixt
     missing = tmp_path / "missing.toml"
     assert cli.main(["check", "--config", str(missing)]) == 1
     lines = capsys.readouterr().out.splitlines()
-    assert lines[0].startswith("[配置] FAIL")
-    assert lines[-1] == "FAIL"
+    assert check_item(lines, "配置") == f"[配置] FAIL 配置文件不存在: {missing}"
+    assert lines == [f"[配置] FAIL 配置文件不存在: {missing}", "FAIL"]
 
 
 # ------------------------------------------------------------------ run / 子命令
