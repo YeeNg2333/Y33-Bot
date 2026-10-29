@@ -16,9 +16,18 @@ from y33bot.rcon.fakes import FakeRconTransport
 from y33bot.rcon.pool import RconPool
 from y33bot.state import StateStore
 
-JOIN_TEMPLATE = r"\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) joined the game"
-QUIT_TEMPLATE = r"\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) left the game"
-CHAT_TEMPLATE = r"\[\d{2}:\d{2}:\d{2}\] \[Async Chat Thread - #\d+/INFO\]: <(?P<player>\w+)> (?P<message>.+)"
+JOIN_TEMPLATE = (
+    r"\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\]"
+    r"(?: \[[^\]]+\])?: (?P<player>\w+) joined the game"
+)
+QUIT_TEMPLATE = (
+    r"\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\]"
+    r"(?: \[[^\]]+\])?: (?P<player>\w+) left the game"
+)
+CHAT_TEMPLATE = (
+    r"\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\]"
+    r"(?: \[[^\]]+\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)"
+)
 
 DEFAULT_ENV = {
     "QQ_BOT_APP_ID": "102000000",
