@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ..models import MCLogEvent
-from .patterns import CompiledPatterns, compile_patterns, parse_line
+from .patterns import CompiledPatterns, compile_patterns, looks_like_event, parse_line
 
 if TYPE_CHECKING:
     from ..config import LogPatterns, MCServerConfig
@@ -21,6 +21,9 @@ __all__ = ["LogWatcher", "MAX_BUFFER_BYTES"]
 
 #: 残行缓冲上限：防止「永不含换行」的畸形文件把内存吃光
 MAX_BUFFER_BYTES = 64 * 1024
+
+#: 零事件看门狗阈值：连续多少条**候选**事件行全部未命中才告警一次（BUG-004）
+_MISSED_EVENT_WARN_AFTER = 3
 
 
 class LogWatcher:
@@ -40,6 +43,8 @@ class LogWatcher:
         self._compiled: CompiledPatterns = compile_patterns(patterns)
         self._buffer: bytes = b""
         self._missing_warned = False
+        self._unmatched_event_lines = 0
+        self._unmatched_warned = False
 
     @property
     def server(self) -> MCServerConfig:
@@ -112,9 +117,37 @@ class LogWatcher:
             event = parse_line(self._compiled, text)
             if event is None:
                 self._logger.debug("[忽略] 日志行未匹配任何模板: %s", text)
+                self._note_unmatched_line(text)
                 continue
+            self._reset_unmatched_lines()
             events.append(replace(event, server=self._server.name))
         return events
+
+    # ------------------------------------------------------------ 零事件看门狗
+    def _note_unmatched_line(self, text: str) -> None:
+        """只对**候选**事件行计未命中，连续 `_MISSED_EVENT_WARN_AFTER` 条告警一次（BUG-004）。
+
+        为什么不按「连续 N 行未匹配」计数：正确模板下服务端的启动 INFO、mod 列表、
+        RCON 线程行本来就全部未命中，安静服会立刻误报。候选行按载荷特征判定
+        （`looks_like_event`），非候选行既不累加也不清零。
+        """
+
+        if looks_like_event(text) is None:
+            return
+        self._unmatched_event_lines += 1
+        if self._unmatched_event_lines >= _MISSED_EVENT_WARN_AFTER and not self._unmatched_warned:
+            self._logger.warning(
+                "[警告] 疑似事件行连续 %d 条未匹配 [log_patterns]（%s）：MC→QQ 方向可能失效，请按 README §13 调整模板",
+                _MISSED_EVENT_WARN_AFTER,
+                self._server.name,
+            )
+            self._unmatched_warned = True
+
+    def _reset_unmatched_lines(self) -> None:
+        """命中任一事件：计数归零并重新武装（不刷屏，后续回归还能再报一次）。"""
+
+        self._unmatched_event_lines = 0
+        self._unmatched_warned = False
 
     # ------------------------------------------------------------------ 内部
     def _split_lines(self, chunk: bytes) -> list[bytes]:

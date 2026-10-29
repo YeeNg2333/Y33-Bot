@@ -438,7 +438,11 @@ python -m y33bot simulate health --server <name> --online|--offline
 - 输出行前缀固定：`[群消息] `（要发到 QQ 群的文本）、`[RCON <server>] `（实际执行的命令）、`[指令] `（`commands` 输出的管理端清单）、`[忽略] `（未触发规则的原因）、`[警告] `/`[错误] `。
 - `simulate` 默认使用**真实 RCON 连接**（验收要看游戏内注入）；`--dry-run` 用 `rcon.fakes.FakeRconTransport`，只打印 `[RCON <server>] <命令>`，不做任何网络 IO（CI 用）。
 - `simulate` 的 QQ 侧统一使用 `qq.fakes.FakeQQGateway`，绝不连 QQ。
-- `check` 输出逐项结果行：`[配置] OK …`、`[QQ] OK|FAIL …`、`[RCON <name>] OK|FAIL …`、`[日志 <name>] OK|FAIL …`、`[绑定] OK N 条`，最后一行 `OK`（退出码 0）或 `FAIL`（退出码 1）。
+- `check` 输出逐项结果行：`[配置] OK …`、`[QQ] OK|FAIL …`、`[RCON <name>] OK|FAIL …`、`[日志 <name>] OK|FAIL …`、`[日志模板 <name>] OK|FAIL …`（逐服紧跟在 `[日志 <name>]` 之后）、`[绑定] OK N 条`，最后一行 `OK`（退出码 0）或 `FAIL`（退出码 1）。
+- `check` 的 **`[日志模板 <name>]`**（BUG-004）拿 `latest.log` 末尾样例行（末 200 行）反过来验证现行 `[log_patterns]` 还能不能用：先用与日志布局无关的载荷特征挑出「本该是事件」的候选行，再逐条 `parse_line()`——
+  - 有候选且全部命中 → `[日志模板 <name>] OK 样例行 <N> 条全部命中（join <a> / quit <b> / chat <c>）`（只列出现过的类型）；
+  - 有候选但 0 命中 / 部分命中 → `[日志模板 <name>] FAIL …：请按 README §13 调整 [log_patterns]`（参与退出码，末行 `FAIL`）；
+  - 没有候选（含 `latest.log` 缺失 / 读不出来）→ `[日志模板 <name>] OK 未找到可判定的样例行，跳过`（安静服务端不误报，不影响退出码）。
 - `check` 的 **QQ 项默认真探活**（§7.2）：向 `https://bots.qq.com/app/getAppAccessToken` 取一次 `access_token`——
   - 成功 → `[QQ] OK access_token 获取成功（有效期 <N>s），app_id 已设置 (env <变量名>)，group_openid 已配置`；
   - 失败（凭据无效 / 平台报错 / 网络不可达）→ `[QQ] FAIL access_token 获取失败: <原因>`，末行随之 `FAIL`；
@@ -586,12 +590,13 @@ $ python -m y33bot check --config config.toml
 [QQ] OK access_token 获取成功（有效期 7200s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
 [RCON main] FAIL 无法连接 127.0.0.1:25575: ...
 [日志 main] OK D:/mc/.../latest.log 可读，偏移 0 字节
+[日志模板 main] OK 样例行 3 条全部命中（join 2 / chat 1）
 [绑定] OK 0 条
 FAIL
 $ echo $?
 1
 ```
-把 MC 服起起来（或把 `host/port` 指向可达 RCON）后，`[RCON main] OK /list -> ...` 且末行为 `OK`、退出码 0。缺失 `QQ_BOT_APP_SECRET` 时 `[QQ] FAIL 环境变量 QQ_BOT_APP_SECRET 未设置`。
+把 MC 服起起来（或把 `host/port` 指向可达 RCON）后，`[RCON main] OK /list -> ...` 且末行为 `OK`、退出码 0。缺失 `QQ_BOT_APP_SECRET` 时 `[QQ] FAIL 环境变量 QQ_BOT_APP_SECRET 未设置`。`[日志模板 main]` 在日志里挑不出「本该是事件」的样例行（安静服务端 / 日志刚清空）时打印 `[日志模板 main] OK 未找到可判定的样例行，跳过`——不算失败；模板写坏导致 0 命中或部分命中时是 `FAIL`，并提示按 README §13 调 `[log_patterns]`。
 
 QQ 项自 §7.2 起默认**真探活**（真取一次 `access_token`，需要能访问 `bots.qq.com`），因此：
 - 凭据无效/网络不通 → `[QQ] FAIL access_token 获取失败: <原因>`，末行 `FAIL`、退出码 1（实测样例见 `docs/acceptance.md` §9.1）；

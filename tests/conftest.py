@@ -189,3 +189,30 @@ def app(tmp_path: Path) -> App:
 @pytest.fixture
 def two_server_app(tmp_path: Path) -> App:
     return App(tmp_path, second_server=True)
+
+
+# ------------------------------------------------------------------ check 输出断言
+def check_items(lines: list[str], labels: list[str]) -> dict[str, str]:
+    """按 `[<label>] ` 前缀取 `check` 的输出行，并断言「各出现一次 + 顺序与给定一致」。
+
+    `check` 的行序是契约（PLAN.md §3.4），但行号会随自检项增减而位移，
+    所以断言一律按前缀取行，不硬编码索引（`[日志 main]` 与 `[日志模板 main]`
+    靠标签末尾的空格区分，互不误配）。
+    """
+
+    found: dict[str, str] = {}
+    cursor = 0
+    for label in labels:
+        prefix = f"[{label}] "
+        positions = [index for index, line in enumerate(lines) if line.startswith(prefix)]
+        assert len(positions) == 1, f"期望恰好一行以 {prefix!r} 开头，实际 {positions!r}；完整输出：{lines!r}"
+        assert positions[0] >= cursor, f"顺序错：{prefix!r} 落在第 {positions[0]} 行；完整输出：{lines!r}"
+        cursor = positions[0] + 1
+        found[label] = lines[positions[0]]
+    return found
+
+
+def check_item(lines: list[str], label: str) -> str:
+    """单个自检项的输出行（`check_items` 的单标签简写）。"""
+
+    return check_items(lines, [label])[label]

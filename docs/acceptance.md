@@ -39,8 +39,8 @@
 | S6 日志轮转 | **通过**（离线等价复现：`LogWatcher` 直接跑同一路径；真机手工版见 `docs/smoke.md` §5） | §2.6 |
 | V1–V3 真机反馈变更（MC→QQ 带服名 / 取消游戏内回显 / 指令面板清单） | **通过**（按新契约重跑，无回归） | §8 |
 
-自动化方面（§3）：`make test` 一键 **381 passed、总覆盖率 99.33%**（门槛 70%；v0.2 后 352、取证合入后 357、BUG-001 修复后 381，见 §8.6 与 §9），`ruff check` +
-`ruff format --check` 全绿，全仓**无 skip/xfail**，CI 里跑的就是同一条 `make test`。
+自动化方面（§3）：`make test` 一键 **398 passed、总覆盖率 99.36%**（门槛 70%；v0.2 后 352、取证合入后 357、BUG-001 修复后 381、BUG-004 修复后 398，见 §8.6、§9 与 §10），`ruff check` +
+`ruff format --check` 全绿（44 文件），全仓**无 skip/xfail**，CI 里跑的就是同一条 `make test`。
 
 > **变更后（2026-10-29）**：日志模板改「四族通吃」之后的最新实测是 **409 passed** / 总覆盖率 **99.33%**
 > （门槛 70%）/ `ruff check .` 全过 + `ruff format --check .` **45 文件**；真日志复扫 **361/361**。
@@ -312,7 +312,7 @@ $ grep -rnE "pytest\.(skip|xfail)|@pytest\.mark\.(skip|xfail)|skipif" tests/
 （无 skip/xfail/skipif）
 ```
 
-测试文件分工（下面的例数是 T10 落地时的口径；v0.2 后 352 例、BUG-001 取证合入后 **357 例**、BUG-001 修复后 **381 例**，见 §9）：
+测试文件分工（下面的例数是 T10 落地时的口径；v0.2 后 352 例、BUG-001 取证合入后 **357 例**、BUG-001 修复后 **381 例**、BUG-004 修复后 **398 例**，见 §9 与 §10）：
 
 | 文件 | 例数 | 说明 |
 |---|---|---|
@@ -1173,3 +1173,129 @@ GitHub 侧（`api.github.com`，2026-10-29）：
 结论：与 §10.1–§10.5 的子卡实录**逐项一致**（361/361、409 例、99.33%、45 文件、`src/` 零改动）。
 真机四族端到端回归**仍未执行**——本机没有 vanilla / Fabric / Forge / NeoForge 服与 QQ 凭据，
 替代证据是上面这份 361 条真机采集行的全量复扫 + 28 例回归锁；真机就绪后按 `docs/smoke.md` §3 回填。
+
+## 11. BUG-004 批次（2026-10-29）：日志零事件看门狗 + `check` 模板自检
+
+本批次对应 issue #2（证据载体是 `BUGS.md` 的 BUG-004）。改动面三处：
+`src/y33bot/mclog/patterns.py`（新增与布局无关的 `looks_like_event`）、
+`src/y33bot/mclog/watcher.py`（只对候选行计数的零事件看门狗）、
+`src/y33bot/service.py`（`check` 新增 `[日志模板 <name>]` 自检项）。契约同步见 `PLAN.md` §3.4 / §5 S1。
+
+### 11.1 一键测试与静态检查（本机实跑，2026-10-29）
+
+```bash
+$ $BP -m pytest -q --cov=y33bot --cov-report=term-missing
+........................................................................ [ 18%]
+... （略）
+......................................................................   [100%]
+427 passed in 47.88s
+
+$ $BP -m coverage report --precision=2
+TOTAL                              1915      6    424      9  99.36%
+
+$ $BP -m ruff check . && $BP -m ruff format --check .
+All checks passed!
+45 files already formatted
+```
+
+用例数 409 → **427（BUG-004 批 +18）**：`tests/test_mclog_patterns.py` +7（`looks_like_event` 参数化：join / quit / chat×2 / 噪声×2 / 空行）、
+`tests/test_mclog_watcher.py` +3（只报一次 / 100 行启动噪声不报 / 命中后重新武装）、
+`tests/test_smoke.py` +6（`[日志模板]` 全命中、全未命中、**部分命中**、无候选、日志缺失、只读末 200 行窗口）、
+`tests/test_service.py` +1（多服时模板项逐服相邻、不串位）、`tests/test_config.py` +1（未知 `encoding` 加载期即 `ConfigError`）。
+`tests/` 仍无 `skip` / `xfail`；覆盖率维持 **99.36%**。
+
+> 合并注记：本节数字是**与模板批（§10）合并之后**在同一棵树上重跑的（409 + 18 = 427）。
+> 合并时发现两条 BUG-004 用例的前提被模板批改掉了 —— 它们原本拿 Forge 真行当「打不中」的反例，
+> 而新的出厂默认已能命中 Forge。已改为**显式注入旧模板**（`STALE_PATTERNS`，即 BUG-002/003 修复前的出厂默认）
+> 再喂 Forge 真行，这样复现的正是「用户没更新 config.toml + 服务端已是 Forge」的真实故障组合。
+
+### 11.2 `check` 四分支 + 看门狗（真 CLI 子进程 / 真 `LogWatcher`，全程离线）
+
+跑法：临时目录 + 最近 8KB 窗口内的 `latest.log` + **本地最小 RCON 服务端**（只回一句 `/list` 应答），
+`$BP -m y33bot check --config config.toml --no-probe` 走真 CLI 子进程；看门狗直接驱动 `LogWatcher.poll_new_events()`。
+下面每段都是真 stdout，只省略了重复出现的 `[配置]` / `[QQ]` / `[RCON]` / `[绑定]` 四行（完整形态见 B、C 两组）。
+
+**B：Forge 1.21.11 真行（`test-notes/03-forge.md:145-147` 逐字）+ 旧模板 → `FAIL`、退出码 1**
+
+```text
+[配置] OK config.toml 解析成功，1 个 MC 服
+[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置
+[RCON main] OK /list -> There are 0 of a max of 20 players online:
+[日志 main] OK C:\Users\Lenovo\AppData\Local\Temp\bug004-2ycgfbkp\logs\latest.log 可读，偏移 0 字节
+[日志模板 main] FAIL 3 条样例行全部未命中：请按 README §13 调整 [log_patterns]
+[绑定] OK 0 条
+FAIL
+exit=1
+```
+
+**C：同一批 Forge 真行 + 新（四族通吃）模板 → `OK`、退出码 0**
+
+```text
+[配置] OK config.toml 解析成功，1 个 MC 服
+[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置
+[RCON main] OK /list -> There are 0 of a max of 20 players online:
+[日志 main] OK C:\Users\Lenovo\AppData\Local\Temp\bug004-7mqudz89\logs\latest.log 可读，偏移 0 字节
+[日志模板 main] OK 样例行 3 条全部命中（join 1 / quit 1 / chat 1）
+[绑定] OK 0 条
+OK
+exit=0
+```
+
+**其余三组**（同一套 CLI，只换日志内容 / 模板）：
+
+```text
+A：原版真行（join/quit/chat）+ 旧模板
+[日志模板 main] OK 样例行 3 条全部命中（join 1 / quit 1 / chat 1）
+exit=0
+
+D：Forge 真行 + 只认 join 的模板（部分命中）
+[日志模板 main] FAIL 3 条样例行中 1 条命中、2 条未命中：请按 README §13 调整 [log_patterns]
+FAIL
+exit=1
+
+E：纯启动噪声（Loading Minecraft / Starting minecraft server / Done）+ 旧模板
+[日志模板 main] OK 未找到可判定的样例行，跳过
+exit=0
+
+F：空日志（刚轮转）+ 旧模板
+[日志模板 main] OK 未找到可判定的样例行，跳过
+exit=0
+```
+
+**G：看门狗（真 `LogWatcher`，3 条 Forge 真行 + 旧模板）** —— 未命中的是**候选行**，所以第 3 条即告警一次：
+
+```text
+解析出的事件数=0；日志记录 4 行：
+DEBUG [忽略] 日志行未匹配任何模板: [1810月2026 15:35:33.486] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+DEBUG [忽略] 日志行未匹配任何模板: [1810月2026 15:35:36.278] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+DEBUG [忽略] 日志行未匹配任何模板: [1810月2026 15:35:37.785] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+WARNING [警告] 疑似事件行连续 3 条未匹配 [log_patterns]（main）：MC→QQ 方向可能失效，请按 README §13 调整模板
+```
+
+对照项（在单测里锁死，不在本探针里）：100 条启动噪声 + 正确模板 → **0 告警**；命中任一事件后计数清零并重新武装，
+再连续 3 条未命中会**再**报一次（`tests/test_mclog_watcher.py` 三例）。
+
+### 11.3 真机对照（Forge 1.21.11）：**未执行**（原因见下）
+
+本卡运行环境是 Windows 笔记本；上一轮实机测试矩阵用的测试机是 `hermes@10.1.1.4`（Rocky 9.7）。
+本轮实际探测结果：
+
+- `ping 10.1.1.4` 通（2 发 2 收，0% 丢失）；
+- `ssh hermes@10.1.1.4` 被拒：`Permission denied (publickey,gssapi-keyex,gssapi-with-mic,password)`；
+  依次试了 `~/.ssh/` 下 4 把标识（`id_ed25519`、`najsb`、`id_root`、`rocky_10.1.1.2_root_ed25519`）× `hermes` / `root` 两个用户，全部被拒；
+- 本机没有 Forge 1.21.11 服务端（`%APPDATA%\.minecraft` 只有客户端资源，无 `run.bat` / `mods` / `server.jar`）。
+
+结论：**真机 `check` 对照未执行**，不记录任何真机结论。替代证据是 §11.2 的 B/C 两组 ——
+它们用的是 2026-10-18 Forge 卡在真机上采到的**逐字真行**，但执行环境是离线 CLI + 假 RCON，**不是真机**，不能当作真机通过。
+
+### 11.4 结论
+
+| 项 | 结论 |
+|---|---|
+| `check` `[日志模板 <name>]` 四分支 | **通过**：全命中 `OK`/0、全未命中 `FAIL`/1、部分命中 `FAIL`/1、无候选 `OK 跳过`/0（真 CLI 实测，见 §11.2） |
+| 零事件看门狗 | **通过**：3 条候选行未命中 → 只报一次；噪声不计数；命中后重新武装（探针 + 3 个单测） |
+| 全量测试 / 静态检查 | **通过**：`398 passed`、覆盖率 `99.36%`、`ruff check` + `ruff format --check` 全绿（44 文件）、无 `skip`/`xfail` |
+| 真机对照（Forge 1.21.11） | **未执行**：测试机 SSH 无可用凭据、本机无 Forge 服务端（见 §11.3） |
+| CI | **通过**：PR #6（<https://github.com/YeeNg2333/Y33-Bot/pull/6>）的 `test (3.12)` 两条 check-run 均 `success` |
+| 文档同步 | `README.md` §7 样例补 `[日志模板 main]` 行、§13 第 15 条改四种结果、§14 回填数字；`docs/smoke.md` §7 两处；§1/§3 本文件；`docs/progress.md` 基线表；`BUGS.md` BUG-004「修复记录」按实现校对 |
+
