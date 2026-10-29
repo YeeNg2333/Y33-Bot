@@ -47,6 +47,8 @@
 - 真机对照（Forge 1.21.11）：**未执行** —— 测试机 `hermes@10.1.1.4` ping 通但 SSH 公钥认证全被拒
   （`~/.ssh` 下 4 把 key × `hermes`/`root` 均 `Permission denied`），本机只有 `.minecraft` 客户端、无 Forge 服务端。
   替代证据（Forge 真机逐字真行 + 离线真 CLI：旧模板 FAIL/exit=1 → 新模板 OK/exit=0）见 `docs/acceptance.md` §10.2 B/C，**不当作真机结论**。
+- 已完成：PR **#6** —— <https://github.com/YeeNg2333/Y33-Bot/pull/6>，标题
+  `feat(observability): 日志零事件看门狗 + check 模板自检`，正文首行 `Closes #2`；开 PR 时 CI `test (3.12)` 两条 check-run 均 `success`。
 - 进行中：无。
 - 阻塞 / 待办：① issue #1 的出厂模板改动仍在独立分支 `wt/t_2a31fd67`（未合 main），本 PR 不含它；
   ② 真机对照需具备 `10.1.1.4` 凭据的会话补跑一次。

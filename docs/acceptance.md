@@ -1083,5 +1083,6 @@ WARNING [警告] 疑似事件行连续 3 条未匹配 [log_patterns]（main）�
 | 零事件看门狗 | **通过**：3 条候选行未命中 → 只报一次；噪声不计数；命中后重新武装（探针 + 3 个单测） |
 | 全量测试 / 静态检查 | **通过**：`398 passed`、覆盖率 `99.36%`、`ruff check` + `ruff format --check` 全绿（44 文件）、无 `skip`/`xfail` |
 | 真机对照（Forge 1.21.11） | **未执行**：测试机 SSH 无可用凭据、本机无 Forge 服务端（见 §10.3） |
+| CI | **通过**：PR #6（<https://github.com/YeeNg2333/Y33-Bot/pull/6>）的 `test (3.12)` 两条 check-run 均 `success` |
 | 文档同步 | `README.md` §7 样例补 `[日志模板 main]` 行、§13 第 15 条改四种结果、§14 回填数字；`docs/smoke.md` §7 两处；§1/§3 本文件；`docs/progress.md` 基线表；`BUGS.md` BUG-004「修复记录」按实现校对 |
 
