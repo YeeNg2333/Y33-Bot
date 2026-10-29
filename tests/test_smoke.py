@@ -331,6 +331,61 @@ async def test_check_template_item_all_miss_fails(
     assert lines[-1] == "FAIL"
 
 
+async def test_check_template_item_partial_hit_fails(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], ready_env: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """部分命中也是 FAIL：3 条候选里 2 条命中、1 条未命中，仍要指向 README §13 并退出 1。"""
+
+    monkeypatch.chdir(tmp_path)
+    log_path = tmp_path / "latest.log"
+    log_path.write_text(
+        "[12:00:04] [Server thread/INFO]: Steve joined the game\n"
+        "[12:00:05] [Server thread/INFO]: Steve left the game\n"
+        # 加载器换了布局：载荷还是 join，但 vanilla 模板打不中
+        "[1810月2026 15:35:33.486] [Server thread/INFO] "
+        "[net.minecraft.server.MinecraftServer/]: Alex joined the game\n",
+        encoding="utf-8",
+    )
+
+    async with MiniRconServer() as server:
+        config_path = _write_config(tmp_path, port=server.port, log_path=log_path)
+        exit_code, lines = await _check_output(config_path, capsys)
+
+    assert exit_code == 1
+    assert "[日志模板 main] FAIL 3 条样例行中 2 条命中、1 条未命中：请按 README §13 调整 [log_patterns]" in lines
+    assert lines[-1] == "FAIL"
+
+
+async def test_check_template_item_only_reads_the_tail_window(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], ready_env: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """只看末尾 200 行：窗口外的老行不参与判定（也顺带覆盖尾部按 8KB 块回读的截断分支）。"""
+
+    monkeypatch.chdir(tmp_path)
+    log_path = tmp_path / "latest.log"
+    # 窗口外的 Forge 行（vanilla 模板打不中）：若实现读全文件，本用例会变成「部分命中」而变红
+    head = (
+        "[1810月2026 15:35:33.486] [Server thread/INFO] "
+        "[net.minecraft.server.MinecraftServer/]: Steve joined the game\n"
+    )
+    noise = "".join(f"[12:00:00] [Server thread/INFO]: Tick {index}\n" for index in range(400))
+    tail = (
+        "[12:00:04] [Server thread/INFO]: Steve joined the game\n"
+        "[12:00:05] [Server thread/INFO]: Steve left the game\n"
+        "[12:00:01] [Async Chat Thread - #0/INFO]: <Steve> #hi\n"
+    )
+    log_path.write_text(head + noise + tail, encoding="utf-8")
+    assert log_path.stat().st_size > 2 * 8192  # 需要多次按块回读
+
+    async with MiniRconServer() as server:
+        config_path = _write_config(tmp_path, port=server.port, log_path=log_path)
+        exit_code, lines = await _check_output(config_path, capsys)
+
+    assert exit_code == 0
+    assert "[日志模板 main] OK 样例行 3 条全部命中（join 1 / quit 1 / chat 1）" in lines
+    assert lines[-1] == "OK"
+
+
 async def test_check_template_item_skips_without_candidates(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], ready_env: None, monkeypatch: pytest.MonkeyPatch
 ) -> None:
