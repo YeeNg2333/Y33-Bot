@@ -42,6 +42,10 @@
 自动化方面（§3）：`make test` 一键 **381 passed、总覆盖率 99.33%**（门槛 70%；v0.2 后 352、取证合入后 357、BUG-001 修复后 381，见 §8.6 与 §9），`ruff check` +
 `ruff format --check` 全绿，全仓**无 skip/xfail**，CI 里跑的就是同一条 `make test`。
 
+> **变更后（2026-10-29）**：日志模板改「四族通吃」之后的最新实测是 **409 passed** / 总覆盖率 **99.33%**
+> （门槛 70%）/ `ruff check .` 全过 + `ruff format --check .` **45 文件**；真日志复扫 **361/361**。
+> 上段与 §3 的 381 / 348 是**变更前记录**（数字不改写），最新证据见 **§10.4**。
+
 ---
 
 ## 2. 逐条场景记录
@@ -265,6 +269,10 @@ $ $BP -m pytest tests/test_mclog_watcher.py::test_rotation_resets_offset tests/e
 ---
 
 ## 3. 自动化测试、覆盖率与静态检查
+
+> **变更前记录**（2026-10-13 的实测，原文不改写）：本节命令输出里的 `348 passed` / `40 files` 是模板变更之前的数字。
+> 模板改「四族通吃」之后的最新一次实跑（2026-10-29）：**409 passed** / `Total coverage: 99.33%` /
+> `ruff check .` 全过 / `ruff format --check .` **45 files**，见 **§10.4**。
 
 一键入口（本地与 CI 同一条命令）：
 
@@ -1106,3 +1114,62 @@ ruff 合规文件 **45**（2026-10-15 那轮记录的是 43，期间新增了测
 | 产品代码 | **零改动**：`git diff main..HEAD -- src/` 为空 |
 | 真机回归 | **未执行**：本机没有四族 MC 服；真行取自 `test-notes/artifacts/` 的矩阵制品，不是本轮新采的真机日志。恢复真机后按 `docs/smoke.md` §3 回填 |
 | 历史记录 | §0–§9 **原文未改**，仅加「变更前记录」标注；本轮数字全部落在 §10 |
+
+### 10.6 根卡终局复核（2026-10-29，看板卡 `t_13b9be2a`，PR #5）
+
+子卡把模板 / 夹具 / 回归锁 / 文档 / `BUGS.md` 分别落地后，根卡在自己的 worktree 上把
+`wt/t_e7da5bef`（PR #5 的 head `60db1aa`）合并进来做一次**独立复核**，不引用子卡结论，全部重跑：
+
+```bash
+$ git merge --no-ff 60db1aa        # 合并树：e6efc29
+ 11 files changed, 706 insertions(+), 36 deletions(-)
+
+$ git diff --stat 73400e0..HEAD -- src/          # 产品代码
+（空）
+$ git diff --stat 73400e0..HEAD -- IDEA.md 需求1.txt AGENTS.md
+（空）
+
+$ .venv/Scripts/python.exe -m pytest -q --cov=y33bot --cov-fail-under=70
+TOTAL                              1839      6    400      9    99%
+Required test coverage of 70% reached. Total coverage: 99.33%
+409 passed in 49.13s
+
+$ .venv/Scripts/python.exe -m ruff check .
+All checks passed!
+$ .venv/Scripts/python.exe -m ruff format --check .
+45 files already formatted
+```
+
+离线复扫（同一批 `test-notes/artifacts/**` 真行，脚本在仓库外，模板取自本 worktree 的 `config.example.toml`）：
+
+```text
+== 出货默认 == sweep 脚本候选A ==
+  join: True  quit: True  chat: True
+== 出货默认（config.example.toml）逐族命中 ==
+  00-env     join=1/1  quit=1/1  chat=2/2
+  fabric     join=23/23  quit=22/22  chat=28/28
+  forge      join=36/36  quit=24/24  chat=48/48
+  neoforge   join=22/22  quit=21/21  chat=28/28
+  vanilla    join=27/27  quit=26/26  chat=52/52
+  合计 361/361
+  MISS 数: 0
+== ≤1.21.1 旧形态（文档样例行）==
+  旧形态全部命中: True
+```
+
+改前同一批行的对照（模板取自 `git show main:config.example.toml`）：`合计 101/361`
+（forge join 0/36、quit 0/24、chat 0/48；neoforge join 1/22、quit 0/21、chat 0/28；
+vanilla / fabric chat 0/52、0/28）。
+
+GitHub 侧（`api.github.com`，2026-10-29）：
+
+| 项 | 实测 |
+|---|---|
+| PR | [#5](https://github.com/YeeNg2333/Y33-Bot/pull/5) `fix(log_patterns): 出厂默认模板兼容 1.21.2+ 与 Forge/NeoForge 布局`，正文首行 `Closes #1` |
+| PR 状态 | `state=open`、`merged=false`、`mergeable_state=clean`、`changed_files=797`（含 origin/main 落后的既有提交，见卡片遗留项） |
+| CI | head `60db1aa` 的 `test (3.12)` 两次运行均 `completed / success` |
+| issue #1 | `state=open`（合并 PR 后由 `Closes #1` 自动关闭，本轮未手动关闭） |
+
+结论：与 §10.1–§10.5 的子卡实录**逐项一致**（361/361、409 例、99.33%、45 文件、`src/` 零改动）。
+真机四族端到端回归**仍未执行**——本机没有 vanilla / Fabric / Forge / NeoForge 服与 QQ 凭据，
+替代证据是上面这份 361 条真机采集行的全量复扫 + 28 例回归锁；真机就绪后按 `docs/smoke.md` §3 回填。
