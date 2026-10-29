@@ -1,0 +1,20 @@
+# fabric 旧模板逐行重放（日志 /home/hermes/mc-test/fabric/1.21.11/logs/latest.log，按出现顺序）
+# 命中 = simulate 输出 [群消息]/[忽略]；未命中 = [警告] 日志行未匹配任何模板
+ 1  HIT             [20:06:16] [Server thread/INFO]: Steve joined the game
+ 2  MISS(连续第 1 条)  [20:06:17] [Server thread/INFO]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+ 3  MISS(连续第 2 条)  [20:06:19] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+ 4  HIT             [20:06:20] [Server thread/INFO]: Steve left the game
+ 5  HIT             [20:06:42] [Server thread/INFO]: Alex joined the game
+ 6  MISS(连续第 1 条)  [20:06:43] [Server thread/INFO]: [Not Secure] <Alex> 普通聊天第 1 条（旧模板下应未命中）
+ 7  MISS(连续第 2 条)  [20:06:44] [Server thread/INFO]: [Not Secure] <Alex> 普通聊天第 2 条（旧模板下应未命中）
+ 8  MISS(连续第 3 条)  [20:06:45] [Server thread/INFO]: [Not Secure] <Alex> 普通聊天第 3 条（旧模板下应未命中）
+   └─ 段 1 结束：连续未命中 3 条，起始行 = [20:06:43] [Server thread/INFO]: [Not Secure] <Alex> 普通聊天第 1 条（旧模板下应未命中）
+ 9  HIT             [20:06:47] [Server thread/INFO]: Alex left the game
+10  HIT             [20:07:55] [Server thread/INFO]: Zoe joined the game
+11  MISS(连续第 1 条)  [20:07:56] [Server thread/INFO]: [Not Secure] <Zoe> 普通聊天第 1 条（旧模板下应未命中）
+12  MISS(连续第 2 条)  [20:07:57] [Server thread/INFO]: [Not Secure] <Zoe> 普通聊天第 2 条（旧模板下应未命中）
+13  MISS(连续第 3 条)  [20:07:58] [Server thread/INFO]: [Not Secure] <Zoe> 普通聊天第 3 条（旧模板下应未命中）
+   └─ 段 2 结束：连续未命中 3 条，起始行 = [20:07:56] [Server thread/INFO]: [Not Secure] <Zoe> 普通聊天第 1 条（旧模板下应未命中）
+14  HIT             [20:08:00] [Server thread/INFO]: Zoe left the game
+
+候选行 14 条：命中 6 / 未命中 8；≥3 条的独立连续未命中段 = 2 段

@@ -1,0 +1,8 @@
+[警告] RCON vanilla 命令失败: 连接 127.0.0.1:25700 失败: [Errno 111] Connect call failed ('127.0.0.1', 25700)
+[配置] OK config-regress-vanilla-1_21_11-new.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 3184s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON vanilla] FAIL 无法连接 127.0.0.1:25700: 连接 127.0.0.1:25700 失败: [Errno 111] Connect call failed ('127.0.0.1', 25700)
+[日志 vanilla] OK /home/hermes/mc-test/vanilla/1.21.11/logs/latest.log 可读，偏移 5151 字节
+[日志模板 vanilla] OK 样例行 18 条全部命中（join 4 / quit 4 / chat 10）
+[绑定] OK 0 条
+FAIL

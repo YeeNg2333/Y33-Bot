@@ -1,0 +1,42 @@
+# 取自本卡终端捕获：rsh.py -r '~/mc-test/harness/regress_start.sh neoforge 1.21.11 new'（2026-10-29 20:43）
+# 说明：脚本自身 tee 的 check-new.txt 随后被 e2e_family.sh 第 5 步覆写，故此处按终端输出逐字转录。
+# 启动结果行（"成功 耗时 21s"）与 Done 行 / 端口是真证据；脚本的起服判定本身有缺陷，见 README §7。
+
+===== 实例 =====
+家族=neoforge 版本=1.21.11 Forge/Neo=21.11.48 目录=/home/hermes/mc-test/neoforge/1.21.11
+端口 游戏=25634 RCON=25734 tmux=mc-neoforge-1_21_11
+日志=/home/hermes/mc-test/neoforge/1.21.11/logs/latest.log
+配置=/home/hermes/Y33-Bot/config-regress-neoforge-1_21_11-new.toml（模板=new）
+
+===== 配置里的模板段 =====
+[log_patterns]
+join = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?P<player>\w+) joined the game'
+quit = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?P<player>\w+) left the game'
+chat = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)'
+encoding = "utf-8"
+
+===== 起服 =====
+启动结果: 成功 耗时 21s
+--- Done 行 ---
+[2910月2026 20:43:20.142] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (7.286s)! For help, type "help"
+--- 端口 ---
+LISTEN 0      50                 *:25734            *:*  
+LISTEN 0      4096               *:25634            *:*  
+--- 真实日志前 3 行 ---
+[2910月2026 20:43:02.175] [main/INFO] [net.neoforged.fml.startup.Entrypoint/]: JVM Uptime at startup: 67ms
+[2910月2026 20:43:02.184] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Starting FancyModLoader version 10.0.36 (DEDICATED_SERVER in PROD)
+[2910月2026 20:43:02.184] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Game directory: /home/hermes/mc-test/neoforge/1.21.11
+
+===== check（含 [日志模板 neoforge] 自检）=====
+[配置] OK config-regress-neoforge-1_21_11-new.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 4235s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON neoforge] OK /list -> There are 0 of a max of 20 players online:
+[日志 neoforge] OK /home/hermes/mc-test/neoforge/1.21.11/logs/latest.log 可读，偏移 0 字节
+[日志模板 neoforge] OK 未找到可判定的样例行，跳过
+[绑定] OK 0 条
+OK
+check exit=0
+
+===== 磁盘 =====
+/dev/mapper/rlm-root   17G   17G  889M   95% /
+Mem:            2679        1811         165          12         891         867

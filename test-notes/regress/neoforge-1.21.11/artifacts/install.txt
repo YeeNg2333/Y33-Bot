@@ -1,0 +1,35 @@
+=== 原版 jar sha1（复用，免 54MB 下载）===
+64bb6d763bed0a9f1d632ec347938594144943ed  /home/hermes/mc-test/vanilla/1.21.11/server.jar
+64bb6d763bed0a9f1d632ec347938594144943ed  /home/hermes/mc-test/neoforge/1.21.11/minecraft_server.1.21.11.jar
+
+=== 离线补丁安装器命令行 ===
+JAVA_HOME=$HOME/jdk-21 java -jar ~/mc-test/neoforge/tools/nf-21.11.48-installer-patched.jar --installServer /home/hermes/mc-test/neoforge/1.21.11
+
+=== 安装器日志尾部（nf-21.11.48-installer-patched.jar.log）===
+Adding Libraries to Inheritance
+Processor: net.neoforged.installertools:installertools -> PROCESS_MINECRAFT_JAR: Processing entries
+Adding input to inheritance map
+Processing 14729 entries
+Adding extras
+Sorting
+deobfuscate jar [10766ms]
+applying patches [244ms]
+write output file [1226ms]
+overall work [14662ms]
+The server installed successfully
+You can delete this installer file now if you wish
+
+=== 成功标志：unix_args.txt ===
+总用量 3760
+drwxr-xr-x 2 hermes hermes      86 10月 29 20:42 .
+drwxr-xr-x 3 hermes hermes      22 10月 29 20:42 ..
+-rw-r--r-- 1 hermes hermes 3833335 10月 29 20:42 neoforge-21.11.48-universal.jar
+-rw-r--r-- 1 hermes hermes    5244 10月 29 20:42 unix_args.txt
+-rw-r--r-- 1 hermes hermes    5244 10月 29 20:42 win_args.txt
+
+=== libraries 体量 ===
+134M	/home/hermes/mc-test/neoforge/1.21.11/libraries
+65M	/home/hermes/mc-test/neoforge/1.21.11
+
+=== 磁盘 ===
+/dev/mapper/rlm-root   17G   17G  881M   95% /

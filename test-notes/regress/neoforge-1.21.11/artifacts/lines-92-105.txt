@@ -1,0 +1,14 @@
+[2910月2026 20:50:17.794] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Rex[/127.0.0.1:34030] logged in with entity id 461 at (42.5, 75.0, -32.5)
+[2910月2026 20:50:17.817] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Rex joined the game
+[2910月2026 20:50:19.316] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Rex> 普通聊天第 1 条（旧模板下应未命中）
+[2910月2026 20:50:20.219] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Rex> 普通聊天第 2 条（旧模板下应未命中）
+[2910月2026 20:50:21.119] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Rex> 普通聊天第 3 条（旧模板下应未命中）
+[2910月2026 20:50:22.832] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Rex lost connection: Disconnected
+[2910月2026 20:50:22.833] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Rex left the game
+[2910月2026 20:50:36.736] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Nia[/127.0.0.1:52848] logged in with entity id 614 at (35.5, 80.0, -36.5)
+[2910月2026 20:50:36.738] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Nia joined the game
+[2910月2026 20:50:38.173] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Nia> 普通聊天第 1 条（旧模板下应未命中）
+[2910月2026 20:50:39.075] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Nia> 普通聊天第 2 条（旧模板下应未命中）
+[2910月2026 20:50:39.983] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Nia> 普通聊天第 3 条（旧模板下应未命中）
+[2910月2026 20:50:41.686] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Nia lost connection: Disconnected
+[2910月2026 20:50:41.687] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Nia left the game

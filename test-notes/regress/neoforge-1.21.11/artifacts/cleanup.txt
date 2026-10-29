@@ -1,0 +1,22 @@
+# 取自本卡终端捕获：2026-10-29 20:52 收尾停服（tmux send-keys -t mc-neoforge-1_21_11 "stop" Enter）
+
+端口已消失（第 1 次检查，约 1s）
+--- 端口 ---
+(无监听)
+--- tmux ---
+no server running on /tmp/tmux-1002/default
+--- free ---
+               total        used        free      shared  buff/cache   available
+Mem:            2679        1114        1020          11         733        1564
+Swap:           2047         131        1916
+--- df ---
+/dev/mapper/rlm-root   17G   17G  884M   95% /
+--- 日志尾部 ---
+[2910月2026 20:52:07.303] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage: All dimensions are saved
+[2910月2026 20:52:07.317] [Server thread/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread RCON Listener stopped
+[2910月2026 20:52:07.318] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Closing FML Loader 7150f3ad
+[2910月2026 20:52:07.318] [main/INFO] [net.neoforged.fml.ModLoader/]: Clearing ModLoader
+
+# 对照：起服前的可用内存 1577 MB（free -m available），停服后 1564 MB；
+# 磁盘起服前 1.1 GB 余量 → 恢复 NeoForge 运行环境（libraries 134 MB + 实例其余约 65 MB）后 884 MB，
+# 本轮新增文本产物 ≈ 15 KB（本目录 artifacts/），停服后未继续缩水。

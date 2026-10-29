@@ -1,0 +1,12 @@
+[群消息] Steve进入了forge
+[群消息] Steve@forge: 大家好，这是带井号的聊天（应被转发）
+[忽略] 聊天非 # 开头，不转发
+[群消息] Steve退出了forge
+[群消息] Steve进入了forge
+[群消息] Steve@forge: 大家好，这是带井号的聊天（应被转发）
+[忽略] 聊天非 # 开头，不转发
+[群消息] Steve退出了forge
+[群消息] Steve进入了forge
+[群消息] Steve@forge: 大家好，这是带井号的聊天（应被转发）
+[忽略] 聊天非 # 开头，不转发
+[群消息] Steve退出了forge

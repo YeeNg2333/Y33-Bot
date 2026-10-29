@@ -1,0 +1,26 @@
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: neoforge
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 3829
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[RCON neoforge] /list
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 404, 返回内容: {'message': '请求Query参数group_id无效', 'code': 11321, 'err_code': 40011036, 'trace_id': '90f1a6723c1040c460fab714073510d4'}, trace_id:90f1a6723c1040c460fab714073510d4
+[错误] QQ 发送失败（不重试）: 请求Query参数group_id无效
+[警告] 疑似事件行连续 3 条未匹配 [log_patterns]（neoforge）：MC→QQ 方向可能失效，请按 README §13 调整模板
+[RCON neoforge] /list
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 404, 返回内容: {'message': '请求Query参数group_id无效', 'code': 11321, 'err_code': 40011036, 'trace_id': '300c3d2607726c9c5d4dbf988e6b2bd7'}, trace_id:300c3d2607726c9c5d4dbf988e6b2bd7
+[错误] QQ 发送失败（不重试）: 请求Query参数group_id无效
+[RCON neoforge] /list
+[警告] 疑似事件行连续 3 条未匹配 [log_patterns]（neoforge）：MC→QQ 方向可能失效，请按 README §13 调整模板
+[RCON neoforge] /list
+[停止] 收到退出信号
+[停止] 正在关闭…
+[停止] 已退出
