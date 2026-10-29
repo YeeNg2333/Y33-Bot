@@ -60,6 +60,23 @@ def _free_port() -> int:
         return int(probe.getsockname()[1])
 
 
+# 出厂默认的三条模板（与 config.example.toml / tests/conftest.py 逐字一致）。
+# 直接作为「已处理好转义的正则」插进下面的 f-string：TOML 单引号字面量原样保留反斜杠，
+# 所以这里用 raw 字符串写，落到 config.toml 里的就是与出厂默认相同的单反斜杠形态。
+_TOML_JOIN = (
+    r"\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\]"
+    r"(?: \[[^\]]+\])?: (?P<player>\w+) joined the game"
+)
+_TOML_QUIT = (
+    r"\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\]"
+    r"(?: \[[^\]]+\])?: (?P<player>\w+) left the game"
+)
+_TOML_CHAT = (
+    r"\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\]"
+    r"(?: \[[^\]]+\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)"
+)
+
+
 def _write_config(tmp_path: Path, *, port: int, log_path: Path) -> Path:
     """按 PLAN.md §3.5 的结构生成一份临时 config.toml（模板带命名组，符合 §4.1）。"""
 
@@ -90,9 +107,9 @@ connect_timeout = 1.0
 command_timeout = 1.0
 
 [log_patterns]
-join = '\\[\\d{{2}}:\\d{{2}}:\\d{{2}}\\] \\[Server thread/INFO\\]: (?P<player>\\w+) joined the game'
-quit = '\\[\\d{{2}}:\\d{{2}}:\\d{{2}}\\] \\[Server thread/INFO\\]: (?P<player>\\w+) left the game'
-chat = '\\[\\d{{2}}:\\d{{2}}:\\d{{2}}\\] \\[Async Chat Thread - #\\d+/INFO\\]: <(?P<player>\\w+)> (?P<message>.+)'
+join = '{_TOML_JOIN}'
+quit = '{_TOML_QUIT}'
+chat = '{_TOML_CHAT}'
 encoding = "utf-8"
 """
     path = tmp_path / "config.toml"

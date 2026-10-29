@@ -35,7 +35,10 @@ def test_compile_adds_anchors() -> None:
 
 def test_anchors_are_not_duplicated() -> None:
     compiled = compile_patterns(_patterns(join="^" + JOIN_TEMPLATE + "$"))
-    assert compiled.join.pattern.count("^") == 1
+    # 模板里允许出现 `[^...]` 这类字符类，所以不能数 `^` 的个数来判重，
+    # 直接断言「除自带的一个 `^`/`$` 外没有再加锚点」。
+    assert compiled.join.pattern == "^" + JOIN_TEMPLATE + "$"
+    assert not compiled.join.pattern.startswith("^^")
     assert compiled.join.pattern.endswith("$")
     assert not compiled.join.pattern.endswith("$$")
 
