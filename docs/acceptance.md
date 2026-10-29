@@ -42,9 +42,10 @@
 自动化方面（§3）：`make test` 一键 **398 passed、总覆盖率 99.36%**（门槛 70%；v0.2 后 352、取证合入后 357、BUG-001 修复后 381、BUG-004 修复后 398，见 §8.6、§9 与 §10），`ruff check` +
 `ruff format --check` 全绿（44 文件），全仓**无 skip/xfail**，CI 里跑的就是同一条 `make test`。
 
-> **变更后（2026-10-29）**：日志模板改「四族通吃」之后的最新实测是 **409 passed** / 总覆盖率 **99.33%**
-> （门槛 70%）/ `ruff check .` 全过 + `ruff format --check .` **45 文件**；真日志复扫 **361/361**。
-> 上段与 §3 的 381 / 348 是**变更前记录**（数字不改写），最新证据见 **§10.4**。
+> **变更后（2026-10-29，三批合并树）**：日志模板改「四族通吃」+ BUG-004 看门狗/自检 + BUG-005 文案与启动探活之后，
+> 最新实测是 **453 passed** / 总覆盖率 **99.33%**（门槛 70%）/ `ruff check .` 全过 + `ruff format --check .` **46 文件**；
+> 真日志复扫 **361/361**。上段与 §3 的 381 / 348 是**变更前记录**（数字不改写），
+> 最新证据依次见 **§10.4**（模板批）/ **§11.1**（BUG-004 批）/ **§12.1**（BUG-005 批，合并树）。
 
 ---
 
@@ -312,7 +313,7 @@ $ grep -rnE "pytest\.(skip|xfail)|@pytest\.mark\.(skip|xfail)|skipif" tests/
 （无 skip/xfail/skipif）
 ```
 
-测试文件分工（下面的例数是 T10 落地时的口径；v0.2 后 352 例、BUG-001 取证合入后 **357 例**、BUG-001 修复后 **381 例**、BUG-004 修复后 **398 例**，见 §9 与 §10）：
+测试文件分工（下面的例数是 T10 落地时的口径；v0.2 后 352 例、BUG-001 取证合入后 **357 例**、BUG-001 修复后 **381 例**、模板批后 **409 例**、BUG-004 批后 **427 例**、BUG-005 批后 **453 例**，见 §9、§10、§11 与 §12）：
 
 | 文件 | 例数 | 说明 |
 |---|---|---|
@@ -321,7 +322,8 @@ $ grep -rnE "pytest\.(skip|xfail)|@pytest\.mark\.(skip|xfail)|skipif" tests/
 | `tests/e2e/test_entrypoint.py` | 10 | **本卡新增**：**真子进程**跑 `python -m y33bot …`，逐条断言 S1/S2/S3/S4 的 stdout 与退出码（含用法错误退出码 2） |
 | `tests/e2e/test_acceptance.py` | 7 | T8 产出：同进程内按 §5 文案逐条断言（S1–S4、S6） |
 | `tests/test_bug001_reconnect.py` | 2 | **BUG-001 取证新增**（卡 `t_6cc56405`）：用真 SDK 的 `ConnectionSession` 复刻「`multi_run` 一次性」与「网关协程返回后 `Service.run()` 仍存活」 |
-| 其余 13 个逐模块文件 | 207（+3） | T8 产出：常规路径 + 关键分支；`+3` 为 BUG-001 取证新增（`test_gateway.py` 2 例、`test_service.py` 1 例） |
+| `tests/test_gateway_errors.py` | 9 | **BUG-005 新增**（卡 `t_f43e4dc9`）：两种 `NoneType` 超时翻成可读文案且保留原文、其余异常原样透传、`start()` 去双前缀、启动探活失败只试一次即退出（全离线替身） |
+| 其余 13 个逐模块文件 | 250 | T8 产出：常规路径 + 关键分支；T10 时 204（`+3` 后 207，`+3` 为 BUG-001 取证新增：`test_gateway.py` 2 例、`test_service.py` 1 例），后续批次涨到 237；**BUG-005 后 237 → 250**（`test_gateway.py` +5、`test_service.py` +8，见 §10） |
 
 设计取舍：新增的失败分支用例都断言**可观测结果**（异常类型与文案、日志、退出码、落盘文件），
 不使用 `pytest.skip`/`xfail` 掩盖任何用例；需要外部资源（真 QQ/真 MC）的场景一律留在文档里，
@@ -1299,3 +1301,64 @@ WARNING [警告] 疑似事件行连续 3 条未匹配 [log_patterns]（main）�
 | CI | **通过**：PR #6（<https://github.com/YeeNg2333/Y33-Bot/pull/6>）的 `test (3.12)` 两条 check-run 均 `success` |
 | 文档同步 | `README.md` §7 样例补 `[日志模板 main]` 行、§13 第 15 条改四种结果、§14 回填数字；`docs/smoke.md` §7 两处；§1/§3 本文件；`docs/progress.md` 基线表；`BUGS.md` BUG-004「修复记录」按实现校对 |
 
+
+## 12. BUG-005 修复落地后的复验（2026-10-29，收口卡 `t_1372eacc`）
+
+### 12.0 执行环境与前置
+
+| 项 | 值 |
+|---|---|
+| 日期 | 2026-10-29 |
+| 机器 | Y33NG-LAPTOP（Windows 11 + git-bash／MSYS），Python 3.12.10（`E:/…/Y33-Bot/.venv`） |
+| 工作树 | `.worktrees/t_1372eacc`，分支 `wt/t_1372eacc`；worktree 内无 `.venv`，用主仓那份解释器，`pyproject.toml` 的 `pythonpath = ["src"]` 让它指向**本 worktree** 的 `src/`（不是主仓） |
+| 合成来源 | main `73400e0` + 本批四个卡分支：`t_d9445453` @ `89bba1e`（gateway 文案可读化）、`t_1600b504` @ `e371613`（`run` 启动前一次性探活）、`t_f43e4dc9` @ `6c2da59`（`tests/test_gateway_errors.py`）、`t_8688cbf6` @ `4396aff`（`PLAN.md` §7.4 / `README.md` §13 / `BUGS.md`） |
+| 本批范围 | issue #3 / BUG-005：错误文案可读化 + 去 `start()` 双前缀 + `run` 启动前一次性探活；**不做启动期重试/退避**（`PLAN.md:85` N7 与 `PLAN.md:498` 口径不变，§5 S5 期望值未改） |
+
+### 12.1 一键测试与静态检查（CI 同一条命令，合并树实跑）
+
+```bash
+$ $BP -m pytest -q --cov=y33bot --cov-report=term-missing --cov-fail-under=70
+…
+TOTAL                              1951      7    434      9    99%
+Required test coverage of 70% reached. Total coverage: 99.33%
+453 passed in 50.02s
+
+$ $BP -m ruff check .
+All checks passed!
+$ $BP -m ruff format --check .
+46 files already formatted
+```
+
+用例数 427 → 453（BUG-005 批 **+26**）：新增 `tests/test_gateway_errors.py` 9 例；`tests/test_gateway.py` 24 → 29（+5，两类 `NoneType` 文案 + 去前缀）；`tests/test_service.py` 17 → 25（+8，启动探活失败只试一次 / 三类归因 / 失败不启动网关）。`tests/` 仍**无 skip/xfail**；覆盖率维持 **99.33%**。
+
+> 合并注记：本节数字是**与模板批（§10）、BUG-004 批（§11）全部合并之后**在同一棵树上重跑的。
+> 本批单独在自身分支上跑是 `403 passed / 99.39% / 45 文件`（= 381 + 22），合并后 427 + 26 = **453**。
+
+逐模块覆盖率（`term-missing` 实测，2026-10-29，合并树）：
+
+| 模块 | 覆盖 | 模块 | 覆盖 |
+|---|---|---|---|
+| `binding` / `commands.*` / `config` / `mclog.*` / `models` / `rcon.fakes` / `rcon.pool` / `rcon.protocol` / `state` / `qq.fakes` / `qq.probe` / `__main__` | 100% | `bridge` | 99% |
+| `rcon.client` | 99% | `cli` | 99% |
+| `qq.gateway` | 98% | `service` | 99% |
+
+`qq.gateway` 未覆盖的 `43-44` 是「本机没装 `qq-botpy`」才走到的 import 兜底，其余（`99`、`166->exit`）是既有防御分支，与修复前同址；`service` 由 98% 升到 99%（新增探活分支被用例覆盖）。
+
+### 12.2 真机项：未执行
+
+| 场景 | 结论 |
+|---|---|
+| BUG-005 真机复现（平台把超时吞成 `None` 后抛 `'NoneType' …`） | **未执行**：平台超时是随机事件，无法主动触发（`BUGS.md`「未能复现 / 信息不足清单」第 4 条）。**本条不下真机结论**，`BUGS.md` 的 BUG-005 状态仍为「已修复（待真机回归）」 |
+| `run` 真登录（真 `app_secret`） | **未执行**：本机无可用真凭据。上游卡 `t_1600b504` 曾用**假凭据**真打平台得到 `code=10004 机器人不存在`（证明改后的 opener 能直连 `bots.qq.com`），那只能证明「网络路径通」，不构成本卡的真机通过证据 |
+| S5 真机 8 步（真 QQ 群 + 真 MC 服） | **未执行**：前置缺失（见 §6），期望值未改 |
+
+### 12.3 结论
+
+| 项 | 结论 |
+|---|---|
+| 全量测试 | **通过**：453 passed、覆盖率 99.33%（门槛 70%），无 skip/xfail |
+| 静态检查 | **通过**：`ruff check .` 全过，`ruff format --check .` 46 文件合规 |
+| 控制流 | **未加重试**：`Service._probe_before_gateway()` 只有一次 `await`，失败即 `shutdown()` + 返回 1；`src/` 无新增 `while` 重试或退避参数（既有的 `while True` 都是日志轮询 / 健康轮询 / 等停止信号 / RCON 读循环） |
+| 回归 | **无**：S1–S4/S6 的离线契约未改；正常退出仍是 `exit=0` 且无 `[错误]` |
+| 数字同步 | `README.md` §14、`docs/smoke.md` §7（粘贴块 + 覆盖度段）、本节与 §1/§3、`docs/progress.md` 「当前基线」表四处一致：**453 / 99.33% / 46 文件**（合并树口径） |
+| 未执行 | 上表三项真机场景 —— 原因见 §12.2，具备条件后按 `docs/smoke.md` 与 `PLAN.md` §5 回填 |

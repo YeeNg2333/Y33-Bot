@@ -775,6 +775,12 @@ def make_service(app: App, **kwargs) -> Service:
     return Service(app.config, env=app.env, config_path=app.config_path, **kwargs)
 
 
+async def _passing_probe(_app_id: str, _app_secret: str) -> int:
+    """离线探活替身：`run` 启动前会真取一次 access_token，测试一律替换掉（CI 不联网）。"""
+
+    return 7200
+
+
 async def test_service_shutdown_tolerates_close_failures(app: App, caplog: pytest.LogCaptureFixture) -> None:
     service = make_service(app, gateway=BrokenClose(), pool=BrokenClose())
     service._state = RecordingState(app.config.state_path)
@@ -970,7 +976,13 @@ async def test_service_run_builds_gateway_from_credentials(app: App, monkeypatch
             self._closed.set()
 
     monkeypatch.setattr(service_module, "BotpyGateway", StubBotpy)
-    service = Service(app.config, env=app.env, config_path=app.config_path, pool=app.make_pool())
+    service = Service(
+        app.config,
+        env=app.env,
+        config_path=app.config_path,
+        pool=app.make_pool(),
+        qq_probe=_passing_probe,  # 启动前探活用替身：真探活会发 HTTPS
+    )
 
     task = asyncio.create_task(service.run())
     await asyncio.sleep(0.1)  # 等网关/监听起好
