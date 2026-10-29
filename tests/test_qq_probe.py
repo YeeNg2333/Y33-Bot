@@ -38,6 +38,29 @@ def test_parse_token_rejects_bad_payload(payload: object) -> None:
 
 
 # ------------------------------------------------------------------ 真探活（网络出口被替换）
+class StubOpener:
+    """`probe._OPENER` 的替身：返回预设响应或抛预设异常，**不发任何真实请求**。
+
+    `_post_token()` 的请求发出者从 `urllib.request.urlopen()` 换成了
+    `build_opener(ProxyHandler({})).open()`（不吃系统代理，见 `probe.py`），
+    所以这里替换模块级 `_OPENER`，而不是 `urlopen`。
+    """
+
+    def __init__(self, response=None, *, error: BaseException | None = None, on_open=None) -> None:
+        self.response = response
+        self.error = error
+        self.on_open = on_open
+        self.calls: list[tuple[object, float | None]] = []
+
+    def open(self, request, timeout=None):  # noqa: ANN001 - 与 urllib 同签名
+        self.calls.append((request, timeout))
+        if self.on_open is not None:
+            self.on_open(request, timeout)
+        if self.error is not None:
+            raise self.error
+        return self.response
+
+
 async def test_probe_access_token_posts_credentials_and_returns_expiry(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -78,14 +101,13 @@ async def test_probe_access_token_uses_http_post_to_token_url(monkeypatch: pytes
         def read(self) -> bytes:
             return b'{"access_token": "tok", "expires_in": "7200"}'
 
-    def fake_urlopen(request, timeout=None):  # noqa: ANN001 - 与 urllib 同签名
+    def capture(request, timeout=None):  # noqa: ANN001 - 与 urllib 同签名
         captured["url"] = request.full_url
         captured["method"] = request.get_method()
         captured["body"] = request.data
         captured["timeout"] = timeout
-        return StubResponse()
 
-    monkeypatch.setattr(probe_module.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(probe_module, "_OPENER", StubOpener(StubResponse(), on_open=capture))
     payload = probe_module._post_token("app-id", "secret", 2.0)
 
     assert captured["url"] == TOKEN_URL
@@ -98,12 +120,11 @@ async def test_probe_access_token_uses_http_post_to_token_url(monkeypatch: pytes
 async def test_post_token_wraps_network_errors(monkeypatch: pytest.MonkeyPatch) -> None:
     import urllib.error
 
-    def fake_urlopen(request, timeout=None):  # noqa: ANN001 - 与 urllib 同签名
-        raise urllib.error.URLError("getaddrinfo failed")
-
-    monkeypatch.setattr(probe_module.urllib.request, "urlopen", fake_urlopen)
+    opener = StubOpener(error=urllib.error.URLError("getaddrinfo failed"))
+    monkeypatch.setattr(probe_module, "_OPENER", opener)
     with pytest.raises(QQProbeError, match="无法连接"):
         await asyncio.to_thread(probe_module._post_token, "app-id", "secret", 1.0)
+    assert len(opener.calls) == 1  # 一次失败就报错，没有第二次尝试
 
 
 async def test_post_token_wraps_http_error_body(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -116,10 +137,7 @@ async def test_post_token_wraps_http_error_body(monkeypatch: pytest.MonkeyPatch)
         def read(self) -> bytes:  # type: ignore[override]
             return b'{"code": 100007, "message": "appid or secret is invalid"}'
 
-    def fake_urlopen(request, timeout=None):  # noqa: ANN001 - 与 urllib 同签名
-        raise StubHTTPError()
-
-    monkeypatch.setattr(probe_module.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(probe_module, "_OPENER", StubOpener(error=StubHTTPError()))
     with pytest.raises(QQProbeError) as excinfo:
         await asyncio.to_thread(probe_module._post_token, "app-id", "secret", 1.0)
     assert "HTTP 403" in str(excinfo.value)
@@ -137,6 +155,6 @@ async def test_post_token_wraps_invalid_json(monkeypatch: pytest.MonkeyPatch) ->
         def read(self) -> bytes:
             return b"<html>502 Bad Gateway</html>"
 
-    monkeypatch.setattr(probe_module.urllib.request, "urlopen", lambda *_a, **_k: StubResponse())
+    monkeypatch.setattr(probe_module, "_OPENER", StubOpener(StubResponse()))
     with pytest.raises(QQProbeError, match="不是合法 JSON"):
         await asyncio.to_thread(probe_module._post_token, "app-id", "secret", 1.0)

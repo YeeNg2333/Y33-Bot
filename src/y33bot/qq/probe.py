@@ -26,6 +26,16 @@ TOKEN_URL = "https://bots.qq.com/app/getAppAccessToken"
 
 DEFAULT_TIMEOUT = 5.0
 
+#: 唯一的请求发出者：**显式不带代理**。
+#:
+#: 不用 `urllib.request.urlopen()` 的默认 opener，是因为它会继承系统代理（Windows 上还会读注册表）：
+#: 本机实测系统代理 `127.0.0.1:7897` 不运行时，经它取 token 会 `SSL: UNEXPECTED_EOF_WHILE_READING`，
+#: 而 `bots.qq.com` 直连可用 —— 那样会把「本机代理没开」误报成「凭据不可用」，
+#: 恰好破坏探活存在的意义（区分凭据/配置问题与平台抖动）。
+#: 因此这里固定不带代理，让探活结果只反映「凭据 + 平台」本身。
+#: 单测一律替换这个对象（见 `tests/test_qq_probe.py`），CI 保持完全离线。
+_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
 
 class QQProbeError(RuntimeError):
     """探活失败：凭据无效、平台报错、网络不可达、响应不是预期 JSON……"""
@@ -61,7 +71,7 @@ def _post_token(app_id: str, app_secret: str, timeout: float) -> object:
         method="POST",
     )
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        with _OPENER.open(request, timeout=timeout) as response:
             raw = response.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as exc:  # 平台用 HTTP 状态码表达错误时会走这里
         detail = exc.read().decode("utf-8", "replace")
