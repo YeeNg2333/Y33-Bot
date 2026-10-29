@@ -114,9 +114,9 @@ connect_timeout = 5.0
 command_timeout = 5.0
 
 [log_patterns]
-join = '\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) joined the game'
-quit = '\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) left the game'
-chat = '\[\d{2}:\d{2}:\d{2}\] \[Async Chat Thread - #\d+/INFO\]: <(?P<player>\w+)> (?P<message>.+)'
+join = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?P<player>\w+) joined the game'
+quit = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?P<player>\w+) left the game'
+chat = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)'
 encoding = "utf-8"
 ```
 
@@ -124,7 +124,7 @@ encoding = "utf-8"
 
 - **`paths.*` 与 `mc_servers[].log_path` 的相对路径按 `config.toml` 所在目录解析**，不是按当前工作目录（实测：从父目录用 `--config repo/config.toml` 运行，日志路径仍是 `repo/logs/latest.log`）。绝对路径原样使用。
 - 多台 MC 服就多写一个 `[[mc_servers]]`：QQ→MC 的消息会**广播到所有服**；MC→QQ 的事件都发到同一个群，但文案带来源服名（`Steve@main: 你好`），一眼能看出是哪个服。
-- `[log_patterns]` 是为了兼容 MC 版本差异：日志格式变了只改这里，不用改代码（`join`/`quit` 必须有 `player` 命名组，`chat` 必须有 `player` 与 `message`）。
+- `[log_patterns]` 是为了兼容 MC 版本差异：日志格式变了只改这里，不用改代码（`join`/`quit` 必须有 `player` 命名组，`chat` 必须有 `player` 与 `message`）。**出厂默认的三条模板是「一条吃四族」的形态**（原版 ≥1.21.2 / Fabric / Forge / NeoForge）：时间戳不再限定 `HH:MM:SS`（Forge 是 `[1810月2026 15:35:33.486]`）、logger 段在 `Server thread` 与旧版 `Async Chat Thread - #N` 之间二选一、可选一段模组加载器 `[…]`、聊天行可选 `[Not Secure] ` 前缀；四族真日志实测 **361/361 命中**（明细见 `docs/acceptance.md` §10）。`encoding` 是读日志文件用的编码（加载时会校验，未知名直接 `[配置] FAIL`），默认 `utf-8`。改完要**重启 y33bot**（无热重载）；配错模板不用等真事件暴露 —— `check` 的 `[日志模板 <name>]` 项会拿 `latest.log` 末尾的候选行先试匹配一遍（见 §13 第 16 条），运行期还有一次性的 `[警告] 疑似事件行连续 3 条未匹配 …` 看门狗（见 §13 第 4 条）。该形态偏离 `IDEA.md:170` 冻结的单形态模板，偏离已登记在 `PLAN.md` §7.3。
 - `log_poll_interval` 决定事件延迟（默认 0.5 秒）；`health_poll_interval` 决定离线/上线提示的及时性（默认 30 秒）。
 - **没有热重载**：改完配置要重启进程。
 
@@ -244,12 +244,16 @@ python -m y33bot run   --config config.toml             # 常驻：QQ 网关 + �
 [QQ] OK access_token 获取成功（有效期 7200s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
 [RCON main] OK /list -> There are 0 of a max of 20 players online:
 [日志 main] OK .../logs/latest.log 可读，偏移 0 字节
+[日志模板 main] OK 未找到可判定的样例行，跳过
 [绑定] OK 1 条
 OK
 ```
 
 > `[QQ] OK` 那一行是本节唯一**不是**逐字实测粘贴的输出 —— 它要求真实有效的机器人凭据（本机没有）。
 > 其余行都是本机实跑粘贴；探活失败那一行见下面「凭据无效」的实测输出。
+> `[日志模板 main]` 那行取自 2026-10-29 本机实跑（空日志 + `--no-probe` + 内存假 RCON，逐字输出见
+> [`docs/acceptance.md`](docs/acceptance.md) §10）；它**逐服紧跟**在 `[日志 <name>]` 之后，多服就多行。
+
 
 `check` 的 QQ 项会**真的**去平台取一次 `access_token`（不再只是看看环境变量填没填）。拿「格式像真的、但从未签发」的假凭据实测（2026-10-15 03:08 +0800）：
 
@@ -259,6 +263,7 @@ $ python -m y33bot check --config config.toml
 [QQ] FAIL access_token 获取失败: 平台返回错误: code=10004 message=机器人不存在
 [RCON main] FAIL 无法连接 127.0.0.1:34567: 连接 127.0.0.1:34567 失败: [WinError 1225] 远程计算机拒绝网络连接。
 [日志 main] OK .../logs/latest.log 可读，偏移 0 字节
+[日志模板 main] OK 未找到可判定的样例行，跳过
 [绑定] OK 0 条
 FAIL
 ```
@@ -334,7 +339,7 @@ $ python -m y33bot run --config config.toml
 | 命令 | 作用 |
 |---|---|
 | `python -m y33bot --version` | 打印 `y33bot 0.1.0` |
-| `python -m y33bot check --config config.toml` | 启动自检：配置 / QQ 凭据 / 每服 RCON / 每服日志 / 绑定表，退出码 0 通过、1 失败 |
+| `python -m y33bot check --config config.toml` | 启动自检：配置 / QQ 凭据 / 每服 RCON / 每服日志 / 每服日志模板 / 绑定表，退出码 0 通过、1 失败 |
 | `python -m y33bot check --config config.toml --no-probe` | 同上，但跳过 QQ 探活（`[QQ] OK` 只代表变量填了）；离线环境 / CI 用 |
 | `python -m y33bot run --config config.toml` | 常驻运行；`--verbose` 输出 DEBUG 日志（默认 INFO，走 stderr） |
 | `python -m y33bot bind list --config config.toml` | 列出绑定 |
@@ -549,8 +554,22 @@ MC 没开 RCON、端口不对或被防火墙挡了。确认 `server.properties` 
 - 消息里只有图片/表情等 `<...>` 标记 → 剔除后为空，整条丢弃（这是规格要求的「只提取文字」）；
 - 消息第一行才是被转发的内容（换行处截断）。
 
-**4）游戏里说话群里没反应**
-按顺序排查：① `[qq] group_openid` 是否填了 —— 留空时 MC→QQ 方向被禁用，启动时会打印一次 `[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用`；② 聊天是不是以 `#` 开头（不是的话设计上就不转发）；③ 日志行是否匹配 `[log_patterns]` —— MC 版本不同日志前缀会变，改模板不用改代码；④ 是不是命中回环防护前缀（默认忽略以 `[QQ]` 开头的聊天）；⑤ 群里那条是不是带了服名（`Steve@main: 你好`）—— 带服名说明转发是成功的，只是你在游戏里找不到 `[→QQ]` 回显，那是 v0.2 故意去掉的。
+**4）游戏里说话 / 玩家进出服，群里没反应（MC→QQ 方向）**
+按下面的顺序排查，**先确认「哪一类行被丢」，再动模板**（顺序反了就是在瞎改正则）：
+
+1. **方向有没有被关掉**：`[qq] group_openid` 留空时 MC→QQ 方向被禁用，启动会打印一次 `[警告] [qq] group_openid 未配置，MC→QQ 方向已禁用`。
+2. **看门狗有没有报警**：运行中若**候选行**（含 `joined the game` / `left the game` / `<玩家> ` 形状的行）连续 **3** 条都没被任何模板命中，会打印**一次**
+   `[警告] 疑似事件行连续 3 条未匹配 [log_patterns]（main）：MC→QQ 方向可能失效，请按 README §13 调整模板`。
+   触发条件与边界：① **只对候选行计数** —— 服务端启动 INFO、mod 列表、RCON 线程行这些噪声不算，所以「真·安静的服」和「正常启动的服」都不会误报；
+   ② **只打一次**（不刷屏），任一事件重新命中后**重新武装**，所以「恢复后又全哑」会再报一次；③ 默认日志级别（INFO）就能看到，不用 `--verbose`。
+3. **用 `run --verbose` 看被丢的是哪一类行**：默认级别下逐行细节看不到，`--verbose` 会把每条未命中打成
+   `[忽略] 日志行未匹配任何模板: <原行>`。按原行判断它属于进服 / 退服 / 聊天 / 纯噪声，**只调对应那一条模板**。
+4. **再改 `[log_patterns]`**：`join`/`quit` 必须保留 `(?P<player>…)`，`chat` 必须保留 `(?P<player>…)` 与 `(?P<message>…)`；
+   改模板不用改代码，但要**重启 y33bot**（无热重载）。四族布局（vanilla / Fabric / Forge / NeoForge）实测可用的模板、
+   以及「可选段前面的空格必须放进可选组内」这类陷阱，见 `BUGS.md` 的 BUG-002 / BUG-003。
+5. **用 `check` 离线自检一遍**：`[日志模板 main]` 会拿 `latest.log` 末尾的候选行试匹配三个模板（见下面第 16 条），不用等真事件发生。
+6. **其他可能**：聊天不是以 `#` 开头（设计上不转发）；命中回环防护前缀（默认忽略以 `[QQ]` 开头的聊天）；
+   群里那条带了服名（`Steve@main: 你好`）—— 带服名说明转发其实是成功的，只是你在游戏里找不到 `[→QQ]` 回显，那是 v0.2 故意去掉的。
 
 **5）为什么重新启动后历史消息又被推了一遍**
 `data/state.json` 丢了或被重置（偏移归 0）。按 §12 的顺序处理：先清空/轮转 `latest.log` 再删 `state.json`。
@@ -616,9 +635,44 @@ QQ 官方约束：被动回复只在收到事件后的短窗口内有效（本�
 想进一步定位「为什么断」：`run --verbose` 看 `[botpy]` 行（`ws关闭，停止接收消息!`、`鉴权失败，重置token...`、`获取token失败…`），
 排查顺序与离线取证结论都写在 `BUGS.md` 的 BUG-001 里；重启不会重推历史消息（`data/state.json` 的日志偏移续读）。
 
-**15）`run` 一启动就 `exit=1`，日志里是 `'NoneType' …`（`QQ 平台接口无响应（SDK 把超时吞成 None …）`）**
+**15）群里收不到游戏内的 `#` 聊天，但进服 / 退服通知是正常的**
 
-**不是配置写错**，是 QQ 平台接口/网络的瞬时超时（`BUGS.md` 的 BUG-005、`PLAN.md` §7.3）：SDK 把 HTTP 超时
+典型症状是「一半对、一半不对」：进出通知走 `join`/`quit` 两条模板，`#` 聊天走的是**另一条** `chat` 模板，
+所以通知正常不能推出聊天也正常 —— 先单独验 `[log_patterns].chat`。拿 `latest.log` 里那条聊天原文做一次 dry-run：
+
+```bash
+$ python -m y33bot simulate log-event --server main \
+    --line '[15:18:30] [Server thread/INFO]: [Not Secure] <Steve> #大家好' --dry-run --config config.toml
+[群消息] Steve@main: 大家好
+```
+
+| dry-run 输出 | 含义 | 怎么办 |
+|---|---|---|
+| `[警告] 日志行未匹配任何模板`（退出码 1） | `chat` 模板认不出这一行 | 你这份 `config.toml` 大概还是**旧模板**：MC 1.21.2 起聊天回到主线程并带 `[Not Secure] ` 前缀（`[Server thread/INFO]: [Not Secure] <player> msg`），Forge 还会在 logger 后多一段 `[net.minecraft.server.MinecraftServer/]`。把 §5.1 的 `[log_patterns]` 三条整段换成**出厂默认**（一条吃四族，见 `PLAN.md` §7.3），改完重启进程（没有热重载） |
+| `[忽略] 聊天非 # 开头，不转发` | 模板没问题 | 这条聊天本身不以 `#` 开头，设计上不转发（要转发就在游戏里加 `#`） |
+| `[群消息] Steve@main: …` | 模板没问题 | 问题在 QQ 侧：`[qq] group_openid` 为空（MC→QQ 方向禁用，见第 4 条）、主动消息频控或网关断开（见第 9、14 条） |
+
+> 顺带一句：`simulate log-event` 与 `run` 用的是同一个 `parse_line`，所以这里的判定就是线上判定。
+> 四条模板（`join`/`quit`/`chat` + 可选 `encoding`）改任一条都只影响它自己，不会连带其它两条。
+
+**16）`check` 里 `[日志模板 main]` 这一行是什么 / `FAIL` 了怎么办**
+
+它紧跟在 `[日志 <name>]` 之后，是「**模板 × 本服真实日志**」的自检：读 `latest.log` 末尾 200 行，挑出候选行（含 `joined the game` / `left the game` / `<玩家> `），逐条喂给 `join` / `quit` / `chat` 三个模板。四种结果：
+
+| 输出 | 含义 | 对退出码的影响 |
+|---|---|---|
+| `[日志模板 main] OK 样例行 N 条全部命中（join a / quit b / chat c）` | 候选行**全部**命中 —— 模板与本服日志布局一致（括号里是按类别分组的命中条数） | 不影响，仍为 0 |
+| `[日志模板 main] FAIL N 条样例行全部未命中：请按 README §13 调整 [log_patterns]` | 候选行**一条都没命中** —— 正是 BUG-002 / BUG-003 那种「MC→QQ 全哑」的前兆；`check` 末行是 `FAIL`、**退出码 1** | 1 |
+| `[日志模板 main] FAIL N 条样例行中 M 条命中、K 条未命中：请按 README §13 调整 [log_patterns]` | **部分命中**：比如 `join`/`quit` 对了、`chat` 那条布局没覆盖 —— 同样说明有一类事件正在被丢，不能只看「有几条命中了」就放过 | 1 |
+| `[日志模板 main] OK 未找到可判定的样例行，跳过` | 日志里没有候选行（刚轮转 / 清空，或这段时间确实没有进出服与聊天），**跳过、不 FAIL** | 不影响，仍为 0 |
+
+看到 `FAIL` 就按上面第 4 条的排查顺序处理：先 `run --verbose` 看 `[忽略]` 行属于哪一类，再只改对应的那条模板，最后重跑 `check`。
+
+**刻意不做的事**：不会因为「日志里一条事件都没有」就判 `FAIL` 或非 0 退出。真·安静的服务器（没人上下线、没人说话）本来就可能长时间零事件，按「零事件」判失败**必然误报**；所以 `check` 只在「**有**候选行、且有候选行没被任何模板命中」时才判 `FAIL`（**全部未命中**与**部分命中**都算）。这是用户已拍板的口径。
+
+**17）`run` 一启动就 `exit=1`，日志里是 `'NoneType' …`（`QQ 平台接口无响应（SDK 把超时吞成 None …）`）**
+
+**不是配置写错**，是 QQ 平台接口/网络的瞬时超时（`BUGS.md` 的 BUG-005、`PLAN.md` §7.4）：SDK 把 HTTP 超时
 吞成 `None` 后抛 `'NoneType' object is not subscriptable` / `… has no attribute 'get'`。本项目只把文案翻成可读原因，
 **行为不变**：一次失败就打 `[错误]` 并以退出码 1 结束，**不重试、不退避**。**直接重跑即可**（实测同版本复跑就恢复正常）。
 
@@ -656,7 +710,25 @@ python -m pytest -q --cov=y33bot --cov-report=term-missing # 带覆盖率
 python -m ruff check . && python -m ruff format --check .  # 静态检查与格式
 ```
 
-在 BUG-005 修复落地后（2026-10-29）实测：`403 passed`、覆盖率 `TOTAL 99%`（`--cov-fail-under=70` 门槛通过，实测 `99.39%`）、`ruff check .` 与 `ruff format --check .` 全过（45 文件）。作为对照：BUG-001 修复后（2026-10-15）是 `381 passed` / `99.33%`、BUG-001 取证用例合入后是 `357 passed` / `99.30%`、v0.2 变更（真机反馈三项）后是 `352 passed`、v0.1.0 时是 `214 passed` / `TOTAL 90%`——数字随后续新增测试变大。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件，`check` 的真探活也在单测里被替身替换（真机/CI 用 `--no-probe` 保离线）。
+最近一次实测（2026-10-29，三批同日落地：日志模板改为「四族通吃」出厂默认 + 三方相等回归锁、BUG-004 的零事件看门狗 + `check` 模板自检、BUG-005 的超时文案可读化 + `run` 启动前一次性探活）：**`453 passed`**、覆盖率 `TOTAL 99%`（`--cov-fail-under=70` 门槛通过，实测 **`99.33%`**）、`ruff check .` 与 `ruff format --check .` 全过（**46 文件**），`tests/` 无 `skip` / `xfail`；另做了一次真日志全量复扫：`test-notes/artifacts/` 下 vanilla / Fabric / Forge / NeoForge 四族共 **361/361** 条真行全部命中（改前同一批行是 101/361，逐族明细见 `docs/acceptance.md` §10）。
+
+历史对照（当时各自的实测值，保留原样）：BUG-001 修复落地后（2026-10-15）`381 passed` / `99.33%` / ruff 43 文件；BUG-001 取证用例合入后 `357 passed` / `99.30%`；v0.2 变更（真机反馈三项）后 `352 passed`；v0.1.0 时 `214 passed` / `TOTAL 90%`——数字随后续新增测试变大。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件，`check` 的真探活也在单测里被替身替换（真机/CI 用 `--no-probe` 保离线）。
+
+BUG-004 批（模板批 + 本批的合并树，2026-10-29）本机实跑：**`427 passed`**、覆盖率 **`99.36%`**、
+`ruff format --check .` 全过（**45 文件**），`tests/` 无 `skip` / `xfail`。
+用例数 409 → 427（BUG-004 批 **+18**）：`tests/test_mclog_patterns.py` +7（`looks_like_event` 参数化：join / quit / chat×2 / 噪声×2 / 空行）、
+`tests/test_mclog_watcher.py` +3（看门狗只报一次 / 启动噪声 100 行不报 / 命中后重新武装）、
+`tests/test_smoke.py` +6（`[日志模板]` 全命中、全未命中、部分命中、无候选、日志缺失、只读末 200 行窗口）、
+`tests/test_service.py` +1（多服时模板项逐服相邻、不串位）、`tests/test_config.py` +1（未知 `encoding` 加载期即 `ConfigError`）。
+命令与逐条真实输出见 [`docs/acceptance.md`](docs/acceptance.md) §11。
+
+BUG-005 批再合入后（三批全并，2026-10-29）本机实跑：**`453 passed`** / **`99.33%`** / `ruff format --check .` **46 文件**。
+用例数 427 → 453（BUG-005 批 **+26**）：新增 `tests/test_gateway_errors.py` 9 例（超时文案可读化、去 `start()` 双前缀、启动探活失败只试一次）、
+`tests/test_gateway.py` 24 → 29（+5，两类 `NoneType` 文案 + 去前缀）、`tests/test_service.py` 17 → 25（+8，启动探活失败只试一次 / 三类归因 / 失败不启动网关）。
+命令与逐条真实输出见 [`docs/acceptance.md`](docs/acceptance.md) §12。
+
+> 上面那段的 `381 passed` / `99.33%` / `43 文件` 是 BUG-001 那批的**历史值**，保留作对照，不是当前基线。
+> 当前基线以本段为准，四处同步点（本段、`docs/smoke.md` §7 两处、`docs/acceptance.md` §1+§3、`docs/progress.md` 基线表）已全部回填。
 
 - 逐条手工自测（S1–S4、S6 的真机输出）：[`docs/smoke.md`](docs/smoke.md)
 - 端到端验收记录（每条含命令 / 实际输出 / 结论）：`docs/acceptance.md`

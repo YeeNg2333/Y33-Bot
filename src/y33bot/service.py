@@ -22,6 +22,7 @@ from .bridge import Bridge
 from .commands.builtin import build_registry
 from .commands.registry import CommandRegistry
 from .config import AppConfig, ConfigError
+from .mclog.patterns import CompiledPatterns, compile_patterns, looks_like_event, parse_line
 from .mclog.watcher import LogWatcher
 from .models import MCGroupMessage
 from .qq.gateway import BotpyGateway, QQGateway, QQGatewayError
@@ -101,6 +102,13 @@ def _describe_probe_error(exc: BaseException) -> str:
     return f"{text}（{advice}）"
 
 
+#: `check` 的模板自检只看日志末尾这么多行：够覆盖一次上线/聊天，又不必读整份日志（BUG-004）
+TEMPLATE_SAMPLE_LINES = 200
+
+#: 计数输出的事件类型顺序（与 `looks_like_event()` 的取值一致）
+_EVENT_KIND_ORDER = ("join", "quit", "chat")
+
+
 @dataclass(frozen=True)
 class CheckResult:
     """`check` 子命令的一行结果（PLAN.md §3.4）。"""
@@ -108,6 +116,80 @@ class CheckResult:
     label: str
     ok: bool
     detail: str
+
+
+def _tail_lines(path: Path, *, limit: int, encoding: str) -> list[str]:
+    """读文件末尾最多 `limit` 个非空行（尾插顺序不变）。
+
+    从尾部按块回读，`latest.log` 再大也不会整份读进内存；文件不存在 / 打不开 / 读取
+    中途失败一律返回空列表，让调用方按「没有可判定的样例行」处理，绝不把 `check` 打成异常。
+    """
+
+    block = 8192
+    remaining = 0
+    data = b""
+    try:
+        with path.open("rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            remaining = handle.tell()
+            while remaining > 0 and data.count(b"\n") <= limit:
+                step = min(block, remaining)
+                remaining -= step
+                handle.seek(remaining)
+                data = handle.read(step) + data
+    except OSError:
+        return []
+
+    lines = data.split(b"\n")
+    if remaining > 0:  # 首段是从中间截断的半行，丢弃
+        lines = lines[1:]
+    texts = [line.decode(encoding, errors="replace").rstrip("\r") for line in lines]
+    return [text for text in texts if text.strip()][-limit:]
+
+
+def _format_counts(counts: dict[str, int]) -> str:
+    """把命中计数渲染成 `join a / quit b / chat c`（只列出现过的类型，顺序固定）。"""
+
+    return " / ".join(f"{kind} {counts[kind]}" for kind in _EVENT_KIND_ORDER if counts.get(kind))
+
+
+def _template_check(server_name: str, compiled: CompiledPatterns, log_path: Path) -> CheckResult:
+    """`[日志模板 <name>]`：拿 `latest.log` 末尾样例行反过来验证 `[log_patterns]` 是否还能用。
+
+    判别分两步，与日志布局无关（BUG-004：模板写错时没人发现）：
+    先用 `looks_like_event()` 按载荷特征挑出「本该是事件」的候选行，
+    再逐条 `parse_line()` 看现行模板是否真的命中。
+    - 有候选且全部命中 → OK；
+    - 有候选但 0 命中 / 部分命中 → FAIL（提示按 README §13 调模板）；
+    - 没有候选（含日志缺失、读不出来）→ OK 跳过，不算失败（安静服务端不能误报）。
+    """
+
+    label = f"日志模板 {server_name}"
+    lines = _tail_lines(log_path, limit=TEMPLATE_SAMPLE_LINES, encoding=compiled.encoding)
+    samples = [(line, looks_like_event(line)) for line in lines]
+    candidates = [(line, kind) for line, kind in samples if kind is not None]
+    total = len(candidates)
+    if total == 0:
+        return CheckResult(label, True, "未找到可判定的样例行，跳过")
+
+    counts: dict[str, int] = {}
+    matched = 0
+    for line, _kind in candidates:
+        event = parse_line(compiled, line)
+        if event is None:
+            continue
+        matched += 1
+        counts[event.kind] = counts.get(event.kind, 0) + 1
+
+    if matched == total:
+        return CheckResult(label, True, f"样例行 {total} 条全部命中（{_format_counts(counts)}）")
+    if matched == 0:
+        return CheckResult(label, False, f"{total} 条样例行全部未命中：请按 README §13 调整 [log_patterns]")
+    return CheckResult(
+        label,
+        False,
+        f"{total} 条样例行中 {matched} 条命中、{total - matched} 条未命中：请按 README §13 调整 [log_patterns]",
+    )
 
 
 class Service:
@@ -206,7 +288,8 @@ class Service:
             if created and pool is not None:
                 await pool.close()
 
-        # ---- 日志文件
+        # ---- 日志文件 + 日志模板自检（同一份 latest.log，模板项紧跟日志项之后）
+        compiled = compile_patterns(config.patterns)  # 配置加载阶段已校验过，这里不会失败
         state_store = StateStore.load(config.state_path)
         for server in config.servers:
             path = Path(server.log_path)
@@ -214,14 +297,16 @@ class Service:
             offset = int(saved.log_offset) if saved is not None else 0
             if not path.exists():
                 results.append(CheckResult(f"日志 {server.name}", False, f"{path} 不存在（启动后会持续重试）"))
-                continue
-            try:
-                with path.open("rb") as handle:
-                    handle.read(1)
-            except OSError as exc:
-                results.append(CheckResult(f"日志 {server.name}", False, f"{path} 不可读: {exc}"))
             else:
-                results.append(CheckResult(f"日志 {server.name}", True, f"{path} 可读，偏移 {offset} 字节"))
+                try:
+                    with path.open("rb") as handle:
+                        handle.read(1)
+                except OSError as exc:
+                    results.append(CheckResult(f"日志 {server.name}", False, f"{path} 不可读: {exc}"))
+                else:
+                    results.append(CheckResult(f"日志 {server.name}", True, f"{path} 可读，偏移 {offset} 字节"))
+            # 日志缺失 / 不可读也照样出一行 OK 跳过：模板自检只对「看得见的样例行」负责
+            results.append(_template_check(server.name, compiled, path))
 
         # ---- 绑定表
         try:

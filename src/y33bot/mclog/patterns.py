@@ -20,7 +20,14 @@ from ..models import LogEventKind, MCLogEvent
 if TYPE_CHECKING:  # 避免 config <-> mclog.patterns 的运行时循环导入
     from ..config import LogPatterns
 
-__all__ = ["PatternError", "CompiledPatterns", "REQUIRED_GROUPS", "compile_patterns", "parse_line"]
+__all__ = [
+    "PatternError",
+    "CompiledPatterns",
+    "REQUIRED_GROUPS",
+    "compile_patterns",
+    "parse_line",
+    "looks_like_event",
+]
 
 #: 各模板必须提供的命名组
 REQUIRED_GROUPS: dict[str, tuple[str, ...]] = {
@@ -30,6 +37,9 @@ REQUIRED_GROUPS: dict[str, tuple[str, ...]] = {
 }
 
 _KINDS: tuple[LogEventKind, ...] = ("join", "quit", "chat")
+
+#: 聊天行的载荷特征：`<玩家名> `（与时间戳 / 线程名 / logger 段的布局无关）
+_CHAT_SHAPE = re.compile(r"<\w+> ")
 
 
 class PatternError(ValueError):
@@ -107,4 +117,25 @@ def parse_line(compiled: CompiledPatterns, line: str) -> MCLogEvent | None:
             raw=text,
             occurred_at=time.time(),
         )
+    return None
+
+
+def looks_like_event(text: str) -> str | None:
+    """按**载荷特征**猜这一行可能是哪类事件，返回 `"join"` / `"quit"` / `"chat"` / `None`。
+
+    与具体日志布局无关：只看业务载荷（`joined the game`、`left the game`、`<玩家名> `），
+    不看时间戳格式、线程名（`Server thread` / `Async Chat Thread - #N`）或 log4j2 的 logger 段，
+    因此模板写错（或 MC 版本/加载器换了布局）时依然认得出「这行本该是个事件」。
+
+    用途：`LogWatcher` 的零事件看门狗（BUG-004）——只对候选行统计未命中，
+    避免把服务端启动 INFO、mod 列表这类正常未匹配行算成故障；`check` 的模板自检也复用它。
+    注意它**不解析事件内容**，命中事件请用 `parse_line()`。
+    """
+
+    if "joined the game" in text:
+        return "join"
+    if "left the game" in text:
+        return "quit"
+    if _CHAT_SHAPE.search(text):
+        return "chat"
     return None

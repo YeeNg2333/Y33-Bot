@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import DEFAULT_ENV, App
+from conftest import DEFAULT_ENV, App, check_item, check_items
 from y33bot import __version__
 from y33bot.cli import main
 
@@ -68,12 +68,15 @@ def test_check_reports_failure_for_unreachable_rcon(workdir: App, capsys) -> Non
     code, lines, _err = run(["check", "--config", CONFIG, "--no-probe"], capsys)
 
     assert code == 1
-    assert lines[0] == "[配置] OK config.toml 解析成功，1 个 MC 服"
-    assert lines[1] == "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置"
-    assert lines[2].startswith("[RCON main] FAIL 无法连接 127.0.0.1:34567:")
-    assert lines[3] == f"[日志 main] OK {workdir.log_path} 可读，偏移 0 字节"
-    assert lines[4] == "[绑定] OK 0 条"
-    assert lines[5] == "FAIL"
+    out = check_items(lines, ["配置", "QQ", "RCON main", "日志 main", "日志模板 main", "绑定"])
+    assert out["配置"] == "[配置] OK config.toml 解析成功，1 个 MC 服"
+    assert out["QQ"] == "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置"
+    assert out["RCON main"].startswith("[RCON main] FAIL 无法连接 127.0.0.1:34567:")
+    assert out["日志 main"] == f"[日志 main] OK {workdir.log_path} 可读，偏移 0 字节"
+    assert out["日志模板 main"] == "[日志模板 main] OK 未找到可判定的样例行，跳过"
+    assert out["绑定"] == "[绑定] OK 0 条"
+    assert len(lines) == 7  # 6 个自检项（逐服「日志 + 日志模板」相邻）+ 末行
+    assert lines[-1] == "FAIL"
 
 
 def test_check_probes_credentials_by_default(workdir: App, capsys, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -91,7 +94,7 @@ def test_check_probes_credentials_by_default(workdir: App, capsys, monkeypatch: 
     code, lines, _err = run(["check", "--config", CONFIG], capsys)
 
     assert seen == [(DEFAULT_ENV["QQ_BOT_APP_ID"], DEFAULT_ENV["QQ_BOT_APP_SECRET"])]
-    assert lines[1] == (
+    assert check_item(lines, "QQ") == (
         "[QQ] OK access_token 获取成功（有效期 7200s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置"
     )
     assert code == 1  # RCON 项仍然失败（本用例只关心 QQ 项的语义）
@@ -110,30 +113,36 @@ def test_check_reports_unusable_credentials(workdir: App, capsys, monkeypatch: p
     code, lines, _err = run(["check", "--config", CONFIG], capsys)
 
     assert code == 1
-    assert lines[1] == "[QQ] FAIL access_token 获取失败: 平台返回错误: code=100007 message=appid or secret invalid"
+    assert check_item(lines, "QQ") == (
+        "[QQ] FAIL access_token 获取失败: 平台返回错误: code=100007 message=appid or secret invalid"
+    )
 
 
 def test_check_reports_missing_secret(workdir: App, capsys, monkeypatch) -> None:
     monkeypatch.delenv("QQ_BOT_APP_SECRET")
     code, lines, _err = run(["check", "--config", CONFIG, "--no-probe"], capsys)
     assert code == 1
-    assert lines[1] == "[QQ] FAIL 环境变量 QQ_BOT_APP_SECRET 未设置"
+    assert check_item(lines, "QQ") == "[QQ] FAIL 环境变量 QQ_BOT_APP_SECRET 未设置"
 
 
 def test_check_reports_missing_rcon_password(workdir: App, capsys, monkeypatch) -> None:
     monkeypatch.delenv("MC_RCON_PASSWORD_MAIN")
     code, lines, _err = run(["check", "--config", CONFIG, "--no-probe"], capsys)
     assert code == 1
-    assert lines[2].startswith("[RCON main] FAIL 无法连接 127.0.0.1:25575:")
-    assert "MC_RCON_PASSWORD_MAIN" in lines[2]
+    rcon = check_item(lines, "RCON main")
+    assert rcon.startswith("[RCON main] FAIL 无法连接 127.0.0.1:25575:")
+    assert "MC_RCON_PASSWORD_MAIN" in rcon
 
 
 def test_check_missing_log_file(workdir: App, capsys) -> None:
     workdir.log_path.unlink()
     code, lines, _err = run(["check", "--config", CONFIG, "--no-probe"], capsys)
     assert code == 1
-    assert lines[3].startswith("[日志 main] FAIL")
-    assert "不存在" in lines[3]
+    log = check_item(lines, "日志 main")
+    assert log.startswith("[日志 main] FAIL")
+    assert "不存在" in log
+    # 日志项 FAIL 不影响模板项：没有可判定的样例行就跳过（不算失败）
+    assert check_item(lines, "日志模板 main") == "[日志模板 main] OK 未找到可判定的样例行，跳过"
 
 
 # ------------------------------------------------------------------ bind（S2/S5-5）

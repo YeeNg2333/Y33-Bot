@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import codecs
 import re
 import tomllib
 from collections.abc import Mapping
@@ -302,6 +303,15 @@ def load_config(path: str | Path, env: Mapping[str, str] | None = None) -> AppCo
         chat=_req_str(patterns_table, "chat", "log_patterns.chat"),
         encoding=_opt_str(patterns_table, "encoding", "log_patterns.encoding", "utf-8") or "utf-8",
     )
+    # 编码名必须在加载期校验：未知编码会让 `bytes.decode()` 抛 LookupError，
+    # 而 `check` 的模板自检与日志轮询都假设 `startup_checks()` 不抛异常 —— 放行到这里
+    # 就等于让 `check` 直接崩栈（review r4408688937）。
+    try:
+        codecs.lookup(patterns.encoding)
+    except (LookupError, TypeError) as exc:
+        raise ConfigError(
+            f"log_patterns.encoding 不是已知编码: {patterns.encoding!r}（示例: utf-8 / utf-8-sig / gbk）"
+        ) from exc
     try:
         compile_patterns(patterns)
     except PatternError as exc:

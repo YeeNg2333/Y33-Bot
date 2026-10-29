@@ -83,6 +83,9 @@ def _base_text(tmp_path: Path) -> str:
         ("health_poll_interval = 5.0", "health_poll_interval = -1", "health_poll_interval 必须 > 0"),
         ('chat_prefix = "#"', 'chat_prefix = "##"', "必须是单字符"),
         ('encoding = "utf-8"', "encoding = 5", "必须是字符串"),
+        # 未知编码名必须在加载期被拒：`check` 的模板自检要 decode 日志尾部样例行，
+        # LookupError 会穿透 startup_checks() 让 check 崩栈而不是打印 FAIL（review r4408688937）
+        ('encoding = "utf-8"', 'encoding = "utf-88"', "不是已知编码"),
         ('ignored_chat_prefixes = ["[QQ]"]', "ignored_chat_prefixes = 5", "字符串数组"),
     ],
 )
