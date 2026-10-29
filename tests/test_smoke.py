@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 
 import y33bot
+from conftest import check_item, check_items
 from y33bot import cli
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -216,11 +217,14 @@ async def test_check_passes_with_reachable_rcon(
 
     lines = capsys.readouterr().out.splitlines()
     assert exit_code == 0
-    assert lines[0] == "[配置] OK config.toml 解析成功，1 个 MC 服"
-    assert "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置" in lines
-    assert f"[RCON main] OK /list -> {LIST_RESPONSE}" in lines
-    assert any(line.startswith("[日志 main] OK") and line.endswith("偏移 0 字节") for line in lines)
-    assert "[绑定] OK 0 条" in lines
+    items = check_items(lines, ["配置", "QQ", "RCON main", "日志 main", "日志模板 main", "绑定"])
+    assert items["配置"] == "[配置] OK config.toml 解析成功，1 个 MC 服"
+    assert items["QQ"] == "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置"
+    assert items["RCON main"] == f"[RCON main] OK /list -> {LIST_RESPONSE}"
+    assert items["日志 main"].startswith("[日志 main] OK") and items["日志 main"].endswith("偏移 0 字节")
+    # 日志里的 joined 那行能被现行模板解析 → 模板项按事件类型计数
+    assert items["日志模板 main"] == "[日志模板 main] OK 样例行 1 条全部命中（join 1）"
+    assert items["绑定"] == "[绑定] OK 0 条"
     assert lines[-1] == "OK"
 
 
@@ -251,8 +255,9 @@ def test_check_reports_unreachable_rcon(tmp_path: Path, capsys: pytest.CaptureFi
 
     assert cli.main(["check", "--config", str(config_path), "--no-probe"]) == 1
     lines = capsys.readouterr().out.splitlines()
-    assert any(line.startswith(f"[RCON main] FAIL 无法连接 127.0.0.1:{port}") for line in lines)
-    assert any(line.startswith("[日志 main] OK") for line in lines)
+    assert check_item(lines, "RCON main").startswith(f"[RCON main] FAIL 无法连接 127.0.0.1:{port}")
+    assert check_item(lines, "日志 main").startswith("[日志 main] OK")
+    assert check_item(lines, "日志模板 main") == "[日志模板 main] OK 未找到可判定的样例行，跳过"
 
 
 def test_check_reports_missing_config(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
