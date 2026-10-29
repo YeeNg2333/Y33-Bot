@@ -301,7 +301,7 @@ $ python -m y33bot run --config config.toml
 [botpy] 登录机器人账号中...
 [botpy] 获取token失败，请检查appid和secret填写是否正确！
 [错误] QQ 网关异常退出: {'code': 10004, 'message': '机器人不存在'}
-[错误] QQ 网关启动失败: QQ 网关启动失败: {'code': 10004, 'message': '机器人不存在'}
+[错误] QQ 网关启动失败: {'code': 10004, 'message': '机器人不存在'}
 [停止] 正在关闭…
 [停止] 已退出
 ```
@@ -615,6 +615,38 @@ QQ 官方约束：被动回复只在收到事件后的短窗口内有效（本�
 
 想进一步定位「为什么断」：`run --verbose` 看 `[botpy]` 行（`ws关闭，停止接收消息!`、`鉴权失败，重置token...`、`获取token失败…`），
 排查顺序与离线取证结论都写在 `BUGS.md` 的 BUG-001 里；重启不会重推历史消息（`data/state.json` 的日志偏移续读）。
+
+**15）`run` 一启动就 `exit=1`，日志里是 `'NoneType' …`（`QQ 平台接口无响应（SDK 把超时吞成 None …）`）**
+
+**不是配置写错**，是 QQ 平台接口/网络的瞬时超时（`BUGS.md` 的 BUG-005、`PLAN.md` §7.3）：SDK 把 HTTP 超时
+吞成 `None` 后抛 `'NoneType' object is not subscriptable` / `… has no attribute 'get'`。本项目只把文案翻成可读原因，
+**行为不变**：一次失败就打 `[错误]` 并以退出码 1 结束，**不重试、不退避**。**直接重跑即可**（实测同版本复跑就恢复正常）。
+
+两种情况，按日志首行判断：
+
+- **启动探活阶段**（`run` 起来先取一次 `access_token`，网关还没构造）——括号里的归因直接告诉你该查什么：
+
+  ```text
+  [错误] QQ 凭据探活失败（启动前一次性检查，不重试，未启动网关）: 平台返回错误: code=10004 message=机器人不存在（凭据/配置问题：app_id 或 app_secret 无效，不是平台抖动）
+  ```
+
+  `凭据/配置问题` → 查 `QQ_BOT_APP_ID` / `QQ_BOT_APP_SECRET`（重点是**有没有注入到这个进程**，本项目不读 shell 的 `.env` 文件）；
+  `网络不可达（不是凭据错）` → 查 DNS / 代理 / 防火墙；`平台接口报错（接口抖动）` → 稍后重跑。
+
+- **网关启动阶段**（探活过了，但 `/users/@me` 或 `/gateway/bot` 又超时）：
+
+  ```text
+  [错误] QQ 网关异常退出: QQ 平台接口无响应（SDK 把超时吞成 None，多为 /users/@me 或 /gateway/bot 超时）：'NoneType' object is not subscriptable
+  [错误] QQ 网关启动失败: QQ 平台接口无响应（SDK 把超时吞成 None，多为 /users/@me 或 /gateway/bot 超时）：'NoneType' object is not subscriptable
+  ```
+
+  两行只差前缀（「异常退出」= 网关协程里抛的，「启动失败」= `start()` 抛出的），**原因只有一份**，
+  不再出现 `QQ 网关启动失败: QQ 网关启动失败:` 这种双前缀。
+
+非 `NoneType` 的异常（比如凭据错 `{'code': 10004, 'message': '机器人不存在'}`）仍**原样打印**，不会被套上「超时」帽子 —— 那才是配置问题，见上面第 9 条。
+
+想看原始堆栈：`run --verbose` 会多打一行 `[调试] QQ 网关异常原始堆栈:` + 完整 `Traceback`（默认 INFO 不打印）。
+平台短时抖动交给 `systemd`（`Restart=on-failure`）或 `nssm`/任务计划拉起即可，项目自己**不做退避重启**（见第 14 条）。
 
 ## 14. 测试、检查与验收记录
 
