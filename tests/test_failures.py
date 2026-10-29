@@ -800,6 +800,10 @@ async def test_service_startup_checks_unreadable_log(app: App) -> None:
     results = await service.startup_checks()
     log_result = next(item for item in results if item.label == "日志 main")
     assert log_result.ok is False and "不可读" in log_result.detail
+    # 同一份「读不出来的 latest.log」也让模板项走跳过分支：OK + 不影响退出码
+    template_result = next(item for item in results if item.label == "日志模板 main")
+    assert template_result.ok is True
+    assert template_result.detail == "未找到可判定的样例行，跳过"
 
 
 async def test_service_log_loop_survives_watcher_and_bridge_errors(app: App, caplog: pytest.LogCaptureFixture) -> None:

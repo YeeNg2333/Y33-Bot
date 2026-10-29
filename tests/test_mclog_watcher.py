@@ -13,6 +13,17 @@ QUIT_LINE = "[12:00:05] [Server thread/INFO]: Steve left the game\n"
 CHAT_LINE = "[12:00:01] [Async Chat Thread - #0/INFO]: <Steve> #大家好\n"
 NOISE_LINE = "[12:00:02] [Server thread/INFO]: Preparing spawn area: 12%\n"
 
+#: 真机形态（Forge / NeoForge 的 log4j2 布局）：夹具里的 vanilla 模板一行都打不中，但载荷特征还在
+FORGE_JOIN_LINE = (
+    "[1810月2026 15:35:33.486] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game\n"
+)
+FORGE_QUIT_LINE = (
+    "[1810月2026 15:36:01.002] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Alex left the game\n"
+)
+FORGE_CHAT_LINE = (
+    "[1810月2026 15:36:05.104] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: <Steve> #大家好\n"
+)
+
 
 def _watcher(app: App, store: StateStore | None = None, server: str = "main") -> tuple[LogWatcher, StateStore]:
     target = app.config.server(server)
@@ -164,3 +175,72 @@ def test_decode_error_replacement(app: App) -> None:
     watcher, _ = _watcher(app)
     events = watcher.poll_new_events()
     assert [event.kind for event in events] == ["chat", "join"]
+
+
+# ------------------------------------------------------- 零事件看门狗（BUG-004）
+def _watchdog_warnings(caplog: pytest.LogCaptureFixture) -> list[str]:
+    """到目前为止收集到的看门狗告警（按出现顺序）。"""
+
+    return [record.getMessage() for record in caplog.records if "疑似事件行连续" in record.getMessage()]
+
+
+def _startup_noise(count: int = 100) -> str:
+    """服务端启动阶段的 INFO 噪声：模板一条都不命中，但没有一条是候选事件行。"""
+
+    samples = [
+        "[12:00:00] [main/INFO]: Loading 45 mods:",
+        "[12:00:01] [Server thread/INFO]: Preparing spawn area: 12%",
+        "[12:00:02] [Server thread/INFO]: Time elapsed: 4523 ms",
+        "[12:00:03] [RCON Listener #1/INFO]: Thread RCON Client started",
+        "[12:00:04] [main/INFO]: Environment: authHost='https://authserver.mojang.com'",
+    ]
+    return "".join(f"{samples[index % len(samples)]}\n" for index in range(count))
+
+
+def test_watchdog_warns_once_when_event_lines_never_match(app: App, caplog: pytest.LogCaptureFixture) -> None:
+    """3 条真机形态事件行 + 打不中的模板 → 只告警一次；继续喂候选行不刷屏。"""
+
+    app.write_log(FORGE_JOIN_LINE + FORGE_QUIT_LINE + FORGE_CHAT_LINE)
+    watcher, _ = _watcher(app)  # 夹具模板是 vanilla 布局 + 旧聊天线程写法
+
+    with caplog.at_level("WARNING"):
+        assert watcher.poll_new_events() == []
+        assert _watchdog_warnings(caplog) == [
+            "[警告] 疑似事件行连续 3 条未匹配 [log_patterns]（main）：MC→QQ 方向可能失效，请按 README §13 调整模板"
+        ]
+
+        app.write_log(FORGE_JOIN_LINE * 3)  # 再喂 3 条候选：已经报过，不再刷屏
+        assert watcher.poll_new_events() == []
+
+    assert len(_watchdog_warnings(caplog)) == 1
+
+
+def test_watchdog_stays_silent_on_startup_noise(app: App, caplog: pytest.LogCaptureFixture) -> None:
+    """100 条服务端启动噪声 + 正确模板 → 0 告警（防误报的核心回归）。"""
+
+    app.write_log(_startup_noise(100))
+    watcher, _ = _watcher(app)
+
+    with caplog.at_level("WARNING"):
+        assert watcher.poll_new_events() == []
+
+    assert _watchdog_warnings(caplog) == []
+
+
+def test_watchdog_rearms_after_a_matched_event(app: App, caplog: pytest.LogCaptureFixture) -> None:
+    """命中事件后计数归零并重新武装：不刷屏，但下一轮同类故障还能再报一次。"""
+
+    app.write_log(FORGE_JOIN_LINE * 3)
+    watcher, _ = _watcher(app)
+
+    with caplog.at_level("WARNING"):
+        assert watcher.poll_new_events() == []
+        assert len(_watchdog_warnings(caplog)) == 1
+
+        app.write_log(CHAT_LINE)  # 命中 chat → 复位并重新武装
+        assert [event.kind for event in watcher.poll_new_events()] == ["chat"]
+
+        app.write_log(FORGE_JOIN_LINE * 3)  # 再来 3 条未命中候选 → 第二次告警
+        assert watcher.poll_new_events() == []
+
+    assert len(_watchdog_warnings(caplog)) == 2

@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import config_text
+from conftest import check_item, check_items, config_text
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_DIR = REPO_ROOT / "src"
@@ -119,13 +119,15 @@ def test_entrypoint_s1_check_reports_each_item(deploy_dir: Path) -> None:
     result = run_cli(deploy_dir, "check", "--config", CONFIG, "--no-probe")
     assert result.returncode == 1
     out = lines(result)
-    assert out[0] == "[配置] OK config.toml 解析成功，1 个 MC 服"
-    assert out[1] == "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置"
-    assert out[2].startswith(f"[RCON main] FAIL 无法连接 127.0.0.1:{UNREACHABLE_PORT}:")
-    assert out[3].endswith("可读，偏移 0 字节") and "[日志 main] OK" in out[3]
-    assert out[4] == "[绑定] OK 0 条"
-    assert out[5] == "FAIL"
-    assert len(out) == 6
+    items = check_items(out, ["配置", "QQ", "RCON main", "日志 main", "日志模板 main", "绑定"])
+    assert items["配置"] == "[配置] OK config.toml 解析成功，1 个 MC 服"
+    assert items["QQ"] == "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置"
+    assert items["RCON main"].startswith(f"[RCON main] FAIL 无法连接 127.0.0.1:{UNREACHABLE_PORT}:")
+    assert items["日志 main"].endswith("可读，偏移 0 字节") and "[日志 main] OK" in items["日志 main"]
+    assert items["日志模板 main"] == "[日志模板 main] OK 未找到可判定的样例行，跳过"
+    assert items["绑定"] == "[绑定] OK 0 条"
+    assert len(out) == 7  # 6 个自检项（逐服「日志 + 日志模板」相邻）+ 末行
+    assert out[-1] == "FAIL"
     # 明细日志走 stderr（§3.6），stdout 只有契约行
     assert "[警告] RCON main 命令失败" in result.stderr
 
@@ -135,7 +137,7 @@ def test_entrypoint_s1_check_missing_secret(deploy_dir: Path) -> None:
 
     result = run_cli(deploy_dir, "check", "--config", CONFIG, env_overrides={"QQ_BOT_APP_SECRET": ""})
     assert result.returncode == 1
-    assert lines(result)[1] == "[QQ] FAIL 环境变量 QQ_BOT_APP_SECRET 未设置"
+    assert check_item(lines(result), "QQ") == "[QQ] FAIL 环境变量 QQ_BOT_APP_SECRET 未设置"
     assert lines(result)[-1] == "FAIL"
 
 
