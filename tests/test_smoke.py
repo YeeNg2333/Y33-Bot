@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 
 import y33bot
+from conftest import CHAT_TEMPLATE, JOIN_TEMPLATE, QUIT_TEMPLATE
 from y33bot import cli
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -60,21 +61,14 @@ def _free_port() -> int:
         return int(probe.getsockname()[1])
 
 
-# 出厂默认的三条模板（与 config.example.toml / tests/conftest.py 逐字一致）。
-# 直接作为「已处理好转义的正则」插进下面的 f-string：TOML 单引号字面量原样保留反斜杠，
-# 所以这里用 raw 字符串写，落到 config.toml 里的就是与出厂默认相同的单反斜杠形态。
-_TOML_JOIN = (
-    r"\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\]"
-    r"(?: \[[^\]]+\])?: (?P<player>\w+) joined the game"
-)
-_TOML_QUIT = (
-    r"\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\]"
-    r"(?: \[[^\]]+\])?: (?P<player>\w+) left the game"
-)
-_TOML_CHAT = (
-    r"\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\]"
-    r"(?: \[[^\]]+\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)"
-)
+# 出厂默认的三条模板**不再在这里另存一份**：直接复用 `tests/conftest.py` 的常量，
+# 而 conftest 的常量由 `tests/test_log_patterns_real_lines.py` 的一致性锁钉死在
+# `config.example.toml` 与 `PLAN.md` §3.5 上。早先这里有一份独立副本，默认模板更新时
+# 它会静默过期、冒烟测试继续用旧布局（review r4408694215）。
+# TOML 单引号字面量原样保留反斜杠，所以 raw 字符串插进 f-string 即可。
+_TOML_JOIN = JOIN_TEMPLATE
+_TOML_QUIT = QUIT_TEMPLATE
+_TOML_CHAT = CHAT_TEMPLATE
 
 
 def _write_config(tmp_path: Path, *, port: int, log_path: Path) -> Path:
