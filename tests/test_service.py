@@ -323,3 +323,83 @@ async def test_run_returns_0_when_stopped_by_signal(app: App, caplog: pytest.Log
     assert code == 0
     assert [record.getMessage() for record in caplog.records if record.levelno >= logging.ERROR] == []
     assert gateway.started is False  # shutdown 关掉了网关
+
+
+# ------------------------------------------- 启动前探活（issue #3 / BUG-005 方向 3）
+async def test_run_probes_once_and_exits_nonzero_when_credentials_rejected(
+    app: App, caplog: pytest.LogCaptureFixture
+) -> None:
+    """探活失败 → 一次即退出（非 0），日志首行说清「凭据/配置问题」，且根本没起网关。
+
+    `gateway` 不注入 = 走真网关分支，探活就在它前面；探活是注入的替身（`failing_probe`），全程离线。
+    """
+
+    service = make_service(app, pool=app.make_pool(), probe=failing_probe)
+    with caplog.at_level(logging.DEBUG):
+        code = await asyncio.wait_for(service.run(), timeout=10)
+
+    assert code == 1
+    errors = [record.getMessage() for record in caplog.records if record.levelno >= logging.ERROR]
+    assert len(errors) == 1  # 只尝试一次：没有第二次探活、没有网关启动失败的第二条 [错误]
+    assert errors[0].startswith("[错误] QQ 凭据探活失败（启动前一次性检查，不重试，未启动网关）: ")
+    assert "code=100007" in errors[0] and "appid or secret invalid" in errors[0]  # 原文不吞
+    assert "凭据/配置问题" in errors[0]
+    assert service._gateway is None  # 探活失败就没构造真网关
+
+
+async def test_run_skips_startup_probe_when_gateway_is_injected(app: App) -> None:
+    """注入替身网关（单测/离线路径）时不触网：探活只服务于真实 SDK 登录。"""
+
+    called: list[tuple[str, str]] = []
+
+    async def probe(_app_id: str, _app_secret: str) -> int:
+        called.append((_app_id, _app_secret))
+        raise AssertionError("注入网关时不该走启动前探活")
+
+    gateway = app.make_gateway()
+    service = make_service(app, gateway=gateway, pool=app.make_pool(), probe=probe)
+    original = {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
+    try:
+        task = asyncio.create_task(service.run())
+        for _ in range(50):
+            if gateway.started:
+                break
+            await asyncio.sleep(0.02)
+        service._signal_flag.set()
+        assert await asyncio.wait_for(task, timeout=10) == 0
+    finally:
+        for sig, handler in original.items():
+            signal.signal(sig, handler)
+
+    assert called == []
+
+
+async def test_probe_before_gateway_reports_expiry_on_success(app: App, caplog: pytest.LogCaptureFixture) -> None:
+    """成功路径：拿到的有效期只进 DEBUG，不改变 `run` 的 INFO 级输出。"""
+
+    service = make_service(app, pool=app.make_pool())
+    with caplog.at_level(logging.DEBUG):
+        assert await service._probe_before_gateway(("app-id", "secret")) is True
+    messages = [record.getMessage() for record in caplog.records]
+    assert any("QQ 凭据探活通过（access_token 有效期 7200s）" in message for message in messages)
+    infos = [record.getMessage() for record in caplog.records if record.levelno >= logging.INFO]
+    assert [message for message in infos if "QQ 凭据探活" in message] == []  # INFO 级输出不变
+
+
+@pytest.mark.parametrize(
+    ("exc", "expected"),
+    [
+        (QQProbeError("平台返回错误: code=100007 message=appid or secret invalid"), "凭据/配置问题"),
+        (QQProbeError("平台返回错误: code=10004 message=机器人不存在"), "凭据/配置问题"),  # 本机实测原文
+        (QQProbeError("无法连接 https://bots.qq.com: <urlopen error [SSL: UNEXPECTED_EOF]>"), "网络不可达"),
+        (QQProbeError("HTTP 503 Service Unavailable: <html>502 Bad Gateway</html>"), "接口抖动"),
+    ],
+)
+def test_describe_probe_error_separates_causes(exc: BaseException, expected: str) -> None:
+    """归因文案要能把「凭据错 / 网络不通 / 平台抖动」分开，且保留原文。"""
+
+    from y33bot.service import _describe_probe_error
+
+    described = _describe_probe_error(exc)
+    assert described.startswith(str(exc))  # 原文不吞
+    assert expected in described

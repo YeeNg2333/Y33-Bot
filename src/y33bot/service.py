@@ -39,6 +39,52 @@ __all__ = ["CheckResult", "Service"]
 
 logger = logging.getLogger("y33bot.service")
 
+#: 探活失败归因用的关键字（BUG-005 修复方向 3）：命中前者 = 凭据/配置问题，命中后者 = 网络不可达。
+#: 目的是让启动失败的首行日志就能分清「我们配置错了」还是「平台/网络抖动」。
+#: 100007 = appid/secret 无效，10004 = 机器人不存在（本机实测平台原文），两者都是配置问题而非抖动。
+_CREDENTIAL_HINTS = (
+    "100007",
+    "10004",
+    "appid or secret",
+    "invalid",
+    "unauthorized",
+    "机器人不存在",
+    "secret invalid",
+)
+_NETWORK_HINTS = (
+    "ssl",
+    "eof",
+    "timed out",
+    "timeout",
+    "connection",
+    "urlopen",
+    "proxy",
+    "getaddrinfo",
+    "unreachable",
+    "network",
+)
+
+
+def _describe_probe_error(exc: BaseException) -> str:
+    """把探活异常翻成一句可读原因（风格对齐 `gateway._describe_gateway_error`：原文保留在冒号后）。
+
+    三类归因（顺序即优先级）：
+
+    - 平台明确说凭据/机器人不对（`code=100007`、`code=10004 机器人不存在`、HTTP 4xx）→ 凭据/配置问题；
+    - 连接层报错（SSL EOF / 超时 / DNS）→ 网络不可达，**不是**凭据错；
+    - 其余（HTTP 5xx、响应不是 JSON……）→ 平台侧抖动。
+    """
+
+    text = str(exc).strip() or exc.__class__.__name__
+    lowered = text.lower()
+    if any(hint in lowered for hint in _CREDENTIAL_HINTS) or "http 4" in lowered:
+        advice = "凭据/配置问题：app_id 或 app_secret 无效，不是平台抖动"
+    elif any(hint in lowered for hint in _NETWORK_HINTS):
+        advice = "网络不可达（不是凭据错）：检查本机网络/代理后重跑"
+    else:
+        advice = "平台接口报错（接口抖动）：稍后重跑即可，本进程不重试"
+    return f"{text}（{advice}）"
+
 
 @dataclass(frozen=True)
 class CheckResult:
@@ -172,6 +218,32 @@ class Service:
 
         return results
 
+    # ------------------------------------------------------------------ 启动探活
+    async def _probe_before_gateway(self, credentials: tuple[str, str]) -> bool:
+        """起 QQ 网关前探活一次：`True` = 凭据可用，可以继续原有启动流程。
+
+        BUG-005 修复方向 3 / issue #3：平台「凭据错」与「sgroup 接口抖动」原来的报错长得一样，
+        启动前先取一次 `access_token` 就能把两者分开（`[错误]` 首行直接写明归因）。
+
+        口径（PLAN.md §7，N7 / PLAN.md:498 不变）：**只试一次**——失败立刻返回 `False`，
+        由调用方打日志并以非 0 退出，交给 `systemd`/`nssm` 拉起；这里没有 `while` 重试、没有退避参数。
+
+        探活实现可注入（`qq_probe`，默认 `qq.probe.probe_access_token`），CI 与单测用替身，全程离线。
+        """
+
+        app_id, app_secret = credentials
+        self._logger.debug("[启动] QQ 凭据探活（一次，不重试）…")
+        try:
+            expires_in = await self._qq_probe(app_id, app_secret)
+        except Exception as exc:  # noqa: BLE001 - 探活失败要落成一行可读日志，不把栈甩给运维
+            self._logger.error(
+                "[错误] QQ 凭据探活失败（启动前一次性检查，不重试，未启动网关）: %s",
+                _describe_probe_error(exc),
+            )
+            return False
+        self._logger.debug("[启动] QQ 凭据探活通过（access_token 有效期 %ss）", expires_in)
+        return True
+
     # ------------------------------------------------------------------ 常驻
     async def run(self) -> int:
         """装配全部组件并常驻运行；返回进程退出码。"""
@@ -211,6 +283,11 @@ class Service:
             except ConfigError as exc:
                 self._logger.error("[错误] %s", exc)
                 await self._pool.close()
+                return 1
+            # BUG-005 修复方向 3：真登录前先探活一次，把「凭据/配置问题」与「sgroup 接口抖动」分开。
+            # 探活只跟真实 SDK 网关走；网关是注入的替身（单测/离线路径）时由调用方自己负责，不触网。
+            if not await self._probe_before_gateway(credentials):
+                await self.shutdown()
                 return 1
             self._gateway = BotpyGateway(config, credentials, self._state, handler=self._on_group_message)
 
