@@ -114,9 +114,9 @@ connect_timeout = 5.0
 command_timeout = 5.0
 
 [log_patterns]
-join = '\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) joined the game'
-quit = '\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) left the game'
-chat = '\[\d{2}:\d{2}:\d{2}\] \[Async Chat Thread - #\d+/INFO\]: <(?P<player>\w+)> (?P<message>.+)'
+join = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?P<player>\w+) joined the game'
+quit = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?P<player>\w+) left the game'
+chat = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)'
 encoding = "utf-8"
 ```
 
@@ -124,7 +124,7 @@ encoding = "utf-8"
 
 - **`paths.*` 与 `mc_servers[].log_path` 的相对路径按 `config.toml` 所在目录解析**，不是按当前工作目录（实测：从父目录用 `--config repo/config.toml` 运行，日志路径仍是 `repo/logs/latest.log`）。绝对路径原样使用。
 - 多台 MC 服就多写一个 `[[mc_servers]]`：QQ→MC 的消息会**广播到所有服**；MC→QQ 的事件都发到同一个群，但文案带来源服名（`Steve@main: 你好`），一眼能看出是哪个服。
-- `[log_patterns]` 是为了兼容 MC 版本差异：日志格式变了只改这里，不用改代码（`join`/`quit` 必须有 `player` 命名组，`chat` 必须有 `player` 与 `message`）。
+- `[log_patterns]` 是为了兼容 MC 版本差异：日志格式变了只改这里，不用改代码（`join`/`quit` 必须有 `player` 命名组，`chat` 必须有 `player` 与 `message`）。**出厂默认的三条模板是「一条吃四族」的形态**（原版 ≥1.21.2 / Fabric / Forge / NeoForge）：时间戳不再限定 `HH:MM:SS`（Forge 是 `[1810月2026 15:35:33.486]`）、logger 段在 `Server thread` 与旧版 `Async Chat Thread - #N` 之间二选一、可选一段模组加载器 `[…]`、聊天行可选 `[Not Secure] ` 前缀；四族真日志实测 **361/361 命中**（明细见 `docs/acceptance.md` §10）。`encoding` 是读日志文件用的编码，默认 `utf-8`。该形态偏离 `IDEA.md:170` 冻结的单形态模板，偏离已登记在 `PLAN.md` §7.3。
 - `log_poll_interval` 决定事件延迟（默认 0.5 秒）；`health_poll_interval` 决定离线/上线提示的及时性（默认 30 秒）。
 - **没有热重载**：改完配置要重启进程。
 
@@ -616,6 +616,26 @@ QQ 官方约束：被动回复只在收到事件后的短窗口内有效（本�
 想进一步定位「为什么断」：`run --verbose` 看 `[botpy]` 行（`ws关闭，停止接收消息!`、`鉴权失败，重置token...`、`获取token失败…`），
 排查顺序与离线取证结论都写在 `BUGS.md` 的 BUG-001 里；重启不会重推历史消息（`data/state.json` 的日志偏移续读）。
 
+**15）群里收不到游戏内的 `#` 聊天，但进服 / 退服通知是正常的**
+
+典型症状是「一半对、一半不对」：进出通知走 `join`/`quit` 两条模板，`#` 聊天走的是**另一条** `chat` 模板，
+所以通知正常不能推出聊天也正常 —— 先单独验 `[log_patterns].chat`。拿 `latest.log` 里那条聊天原文做一次 dry-run：
+
+```bash
+$ python -m y33bot simulate log-event --server main \
+    --line '[15:18:30] [Server thread/INFO]: [Not Secure] <Steve> #大家好' --dry-run --config config.toml
+[群消息] Steve@main: 大家好
+```
+
+| dry-run 输出 | 含义 | 怎么办 |
+|---|---|---|
+| `[警告] 日志行未匹配任何模板`（退出码 1） | `chat` 模板认不出这一行 | 你这份 `config.toml` 大概还是**旧模板**：MC 1.21.2 起聊天回到主线程并带 `[Not Secure] ` 前缀（`[Server thread/INFO]: [Not Secure] <player> msg`），Forge 还会在 logger 后多一段 `[net.minecraft.server.MinecraftServer/]`。把 §5.1 的 `[log_patterns]` 三条整段换成**出厂默认**（一条吃四族，见 `PLAN.md` §7.3），改完重启进程（没有热重载） |
+| `[忽略] 聊天非 # 开头，不转发` | 模板没问题 | 这条聊天本身不以 `#` 开头，设计上不转发（要转发就在游戏里加 `#`） |
+| `[群消息] Steve@main: …` | 模板没问题 | 问题在 QQ 侧：`[qq] group_openid` 为空（MC→QQ 方向禁用，见第 4 条）、主动消息频控或网关断开（见第 9、14 条） |
+
+> 顺带一句：`simulate log-event` 与 `run` 用的是同一个 `parse_line`，所以这里的判定就是线上判定。
+> 四条模板（`join`/`quit`/`chat` + 可选 `encoding`）改任一条都只影响它自己，不会连带其它两条。
+
 ## 14. 测试、检查与验收记录
 
 ```bash
@@ -624,7 +644,9 @@ python -m pytest -q --cov=y33bot --cov-report=term-missing # 带覆盖率
 python -m ruff check . && python -m ruff format --check .  # 静态检查与格式
 ```
 
-在 BUG-001 修复落地后（2026-10-15）实测：`381 passed`、覆盖率 `TOTAL 99%`（`--cov-fail-under=70` 门槛通过，实测 `99.33%`）、`ruff check .` 与 `ruff format --check .` 全过（43 文件）。作为对照：BUG-001 取证用例合入后是 `357 passed` / `99.30%`，v0.2 变更（真机反馈三项）后是 `352 passed`，v0.1.0 时是 `214 passed` / `TOTAL 90%`——数字随后续新增测试变大。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件，`check` 的真探活也在单测里被替身替换（真机/CI 用 `--no-probe` 保离线）。
+最近一次实测（2026-10-29，日志模板改为「四族通吃」出厂默认 + 三方相等回归锁落地后）：`409 passed`、覆盖率 `TOTAL 99%`（`--cov-fail-under=70` 门槛通过，实测 **`99.33%`**）、`ruff check .` 与 `ruff format --check .` 全过（**45 文件**）；另做了一次真日志全量复扫：`test-notes/artifacts/` 下 vanilla / Fabric / Forge / NeoForge 四族共 **361/361** 条真行全部命中（改前同一批行是 101/361，逐族明细见 `docs/acceptance.md` §10）。
+
+历史对照（当时各自的实测值，保留原样）：BUG-001 修复落地后（2026-10-15）`381 passed` / `99.33%` / ruff 43 文件；BUG-001 取证用例合入后 `357 passed` / `99.30%`；v0.2 变更（真机反馈三项）后 `352 passed`；v0.1.0 时 `214 passed` / `TOTAL 90%`——数字随后续新增测试变大。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件，`check` 的真探活也在单测里被替身替换（真机/CI 用 `--no-probe` 保离线）。
 
 - 逐条手工自测（S1–S4、S6 的真机输出）：[`docs/smoke.md`](docs/smoke.md)
 - 端到端验收记录（每条含命令 / 实际输出 / 结论）：`docs/acceptance.md`
