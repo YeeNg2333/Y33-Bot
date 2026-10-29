@@ -265,6 +265,107 @@ def test_check_reports_missing_config(tmp_path: Path, capsys: pytest.CaptureFixt
     assert lines[-1] == "FAIL"
 
 
+def _break_join_template(config_path: Path) -> None:
+    """把 join 模板改成「真机行打不中」的形态（模拟 BUG-004：布局换了、模板没跟）。"""
+
+    text = config_path.read_text(encoding="utf-8")
+    broken = text.replace("joined the game", "has joined the game")
+    assert broken != text, "假配置里没有可替换的 join 模板片段"
+    config_path.write_text(broken, encoding="utf-8")
+
+
+async def _check_output(config_path: Path, capsys: pytest.CaptureFixture[str]) -> tuple[int, list[str]]:
+    """真跑一次 `check`：`cli.main` 内部会 `asyncio.run()`，因此放到线程里跑。"""
+
+    exit_code = await asyncio.to_thread(cli.main, ["check", "--config", str(config_path), "--no-probe"])
+    return exit_code, capsys.readouterr().out.splitlines()
+
+
+async def test_check_template_item_all_hit(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], ready_env: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """末尾候选样例行全部命中：按事件类型计数、紧跟同台服的日志项、退出码 0（BUG-004）。"""
+
+    monkeypatch.chdir(tmp_path)
+    log_path = tmp_path / "latest.log"
+    log_path.write_text(
+        "[12:00:04] [Server thread/INFO]: Steve joined the game\n"
+        "[12:00:05] [Server thread/INFO]: Steve left the game\n"
+        "[12:00:01] [Async Chat Thread - #0/INFO]: <Steve> #hi\n",
+        encoding="utf-8",
+    )
+
+    async with MiniRconServer() as server:
+        config_path = _write_config(tmp_path, port=server.port, log_path=log_path)
+        exit_code, lines = await _check_output(config_path, capsys)
+
+    template_line = "[日志模板 main] OK 样例行 3 条全部命中（join 1 / quit 1 / chat 1）"
+    assert exit_code == 0
+    assert template_line in lines
+    # 逐服相邻：模板项紧跟在同台服的日志项之后
+    assert lines[lines.index(template_line) - 1].startswith("[日志 main] OK")
+    assert lines[-1] == "OK"
+
+
+async def test_check_template_item_all_miss_fails(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], ready_env: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """含候选但全部未命中（模板写错）→ FAIL + 指向 README §13，并参与退出码（1）。"""
+
+    monkeypatch.chdir(tmp_path)
+    log_path = tmp_path / "latest.log"
+    log_path.write_text("[12:00:04] [Server thread/INFO]: Steve joined the game\n" * 3, encoding="utf-8")
+
+    async with MiniRconServer() as server:
+        config_path = _write_config(tmp_path, port=server.port, log_path=log_path)
+        _break_join_template(config_path)
+        exit_code, lines = await _check_output(config_path, capsys)
+
+    assert exit_code == 1
+    assert "[日志模板 main] FAIL 3 条样例行全部未命中：请按 README §13 调整 [log_patterns]" in lines
+    assert lines[-1] == "FAIL"
+
+
+async def test_check_template_item_skips_without_candidates(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], ready_env: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """纯启动噪声（无候选行）→ OK 跳过，不算失败，退出码 0。"""
+
+    monkeypatch.chdir(tmp_path)
+    log_path = tmp_path / "latest.log"
+    noise = "".join(
+        f"[12:00:0{index % 10}] [Server thread/INFO]: Preparing spawn area: {index % 100}%\n" for index in range(100)
+    )
+    log_path.write_text(noise, encoding="utf-8")
+
+    async with MiniRconServer() as server:
+        config_path = _write_config(tmp_path, port=server.port, log_path=log_path)
+        exit_code, lines = await _check_output(config_path, capsys)
+
+    assert exit_code == 0
+    assert "[日志模板 main] OK 未找到可判定的样例行，跳过" in lines
+    assert lines[-1] == "OK"
+
+
+async def test_check_template_item_skips_when_log_missing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], ready_env: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`latest.log` 不存在：模板项照旧 OK 跳过（失败只由日志项记），check 不崩。"""
+
+    monkeypatch.chdir(tmp_path)
+    log_path = tmp_path / "latest.log"  # 故意不创建：check 应当照常逐项打印
+    assert not log_path.exists()
+
+    async with MiniRconServer() as server:
+        config_path = _write_config(tmp_path, port=server.port, log_path=log_path)
+        exit_code, lines = await _check_output(config_path, capsys)
+
+    assert exit_code == 1  # 由「日志 main」项导致，不是模板项
+    assert any(line.startswith("[日志 main] FAIL") for line in lines)
+    assert "[日志模板 main] OK 未找到可判定的样例行，跳过" in lines
+    assert not any(line.startswith("[日志模板 main] FAIL") for line in lines)
+
+
 # ------------------------------------------------------------------ run / 子命令
 def test_run_fails_fast_without_qq_credentials(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch

@@ -13,6 +13,7 @@ from y33bot.mclog.patterns import (
     CompiledPatterns,
     PatternError,
     compile_patterns,
+    looks_like_event,
     parse_line,
 )
 
@@ -124,3 +125,30 @@ def test_compiled_patterns_is_frozen() -> None:
 def test_pattern_accessor() -> None:
     compiled = compile_patterns(_patterns())
     assert compiled.pattern("chat") is compiled.chat
+
+
+# ------------------------------------------------- looks_like_event（BUG-004）
+@pytest.mark.parametrize(
+    ("line", "expected"),
+    [
+        # log4j2 布局（Forge / NeoForge）：线程名后还挂一段 logger
+        (
+            "[1810月2026 15:35:33.486] [Server thread/INFO] "
+            "[net.minecraft.server.MinecraftServer/]: Steve joined the game",
+            "join",
+        ),
+        # 同一套 log4j2 布局，logger 段不以 `/` 结尾的版本
+        ("[16:17:07] [Server thread/INFO] [minecraft/MinecraftServer]: Alex left the game", "quit"),
+        # 1.21.2+ 多一层 `[Not Secure] ` 前缀；以及 1.21.1 及更早的旧聊天线程布局
+        ("[14:30:09] [Server thread/INFO]: [Not Secure] <Steve> #大家好", "chat"),
+        ("[12:00:01] [Async Chat Thread - #0/INFO]: <Steve> #大家好", "chat"),
+        # 无关行：服务端启动噪声 / 空行都不是候选
+        ("[12:00:02] [Server thread/INFO]: Preparing spawn area: 12%", None),
+        ("[12:00:00] [main/INFO]: Loading 45 mods:", None),
+        ("", None),
+    ],
+)
+def test_looks_like_event_judges_by_payload_not_layout(line: str, expected: str | None) -> None:
+    """判别助手只看业务载荷：模板写错、加载器换布局时，这行仍要被认成「本该是个事件」。"""
+
+    assert looks_like_event(line) == expected
