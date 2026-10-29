@@ -656,7 +656,7 @@ python -m pytest -q --cov=y33bot --cov-report=term-missing # 带覆盖率
 python -m ruff check . && python -m ruff format --check .  # 静态检查与格式
 ```
 
-在 BUG-001 修复落地后（2026-10-15）实测：`381 passed`、覆盖率 `TOTAL 99%`（`--cov-fail-under=70` 门槛通过，实测 `99.33%`）、`ruff check .` 与 `ruff format --check .` 全过（43 文件）。作为对照：BUG-001 取证用例合入后是 `357 passed` / `99.30%`，v0.2 变更（真机反馈三项）后是 `352 passed`，v0.1.0 时是 `214 passed` / `TOTAL 90%`——数字随后续新增测试变大。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件，`check` 的真探活也在单测里被替身替换（真机/CI 用 `--no-probe` 保离线）。
+在 BUG-005 修复落地后（2026-10-29）实测：`403 passed`、覆盖率 `TOTAL 99%`（`--cov-fail-under=70` 门槛通过，实测 `99.39%`）、`ruff check .` 与 `ruff format --check .` 全过（45 文件）。作为对照：BUG-001 修复后（2026-10-15）是 `381 passed` / `99.33%`、BUG-001 取证用例合入后是 `357 passed` / `99.30%`、v0.2 变更（真机反馈三项）后是 `352 passed`、v0.1.0 时是 `214 passed` / `TOTAL 90%`——数字随后续新增测试变大。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件，`check` 的真探活也在单测里被替身替换（真机/CI 用 `--no-probe` 保离线）。
 
 - 逐条手工自测（S1–S4、S6 的真机输出）：[`docs/smoke.md`](docs/smoke.md)
 - 端到端验收记录（每条含命令 / 实际输出 / 结论）：`docs/acceptance.md`
