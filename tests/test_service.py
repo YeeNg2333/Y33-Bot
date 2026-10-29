@@ -9,7 +9,8 @@ import signal
 import pytest
 
 from conftest import App
-from y33bot.qq.gateway import QQGatewayError
+from y33bot.qq import gateway as gateway_module
+from y33bot.qq.gateway import BotpyGateway, QQGatewayError
 from y33bot.qq.probe import QQProbeError
 from y33bot.service import Service
 from y33bot.state import StateStore
@@ -180,6 +181,56 @@ async def test_run_returns_1_when_gateway_fails(app: App) -> None:
     service = make_service(app, gateway=broken, pool=app.make_pool())
     assert await asyncio.wait_for(service.run(), timeout=10) == 1
     assert broken.closed is True
+
+
+async def test_gateway_startup_failure_logs_single_readable_prefix(
+    app: App, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """BUG-005：启动期失败只留**一层**前缀，且原因是可读文案（真机曾是 `QQ 网关启动失败: QQ 网关启动失败: …`）。
+
+    整链用真 `BotpyGateway` + 假 `botpy.Client`（只把 SDK 那两条 `NoneType` 异常离线复刻出来），
+    不连 QQ；`Service.run()` 的最终输出就是运维真正看到的那两行。
+    """
+
+    class NoneTypeFailingClient:
+        """复刻 SDK 吞掉超时后返回 `None` 的那一步（`botpy/http.py:181-195` / `botpy/client.py:171`）。"""
+
+        def __init__(self, **_kwargs) -> None:
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_exc) -> None:
+            return None
+
+        async def start(self, *_args, **_kwargs):
+            raise TypeError("'NoneType' object is not subscriptable")
+
+    monkeypatch.setattr(
+        gateway_module,
+        "botpy",
+        type("B", (), {"Client": NoneTypeFailingClient, "Intents": lambda **kwargs: kwargs}),
+    )
+    gateway = BotpyGateway(
+        app.config,
+        ("app-id", "app-secret"),
+        StateStore.load(app.config.state_path),
+        handler=lambda message: None,  # type: ignore[arg-type,return-value]
+        startup_timeout=1.0,
+    )
+    service = make_service(app, gateway=gateway, pool=app.make_pool())
+
+    with caplog.at_level(logging.INFO):
+        assert await asyncio.wait_for(service.run(), timeout=10) == 1
+
+    reason = (
+        "QQ 平台接口无响应（SDK 把超时吞成 None，多为 /users/@me 或 /gateway/bot 超时）："
+        "'NoneType' object is not subscriptable"
+    )
+    startup_errors = [record.getMessage() for record in caplog.records if "QQ 网关启动失败" in record.getMessage()]
+    assert startup_errors == ["[错误] QQ 网关启动失败: " + reason]  # 一层前缀 + 可读原因
+    assert gateway._task is None  # shutdown() 真的关掉了网关
 
 
 async def test_run_returns_1_without_credentials(app: App) -> None:

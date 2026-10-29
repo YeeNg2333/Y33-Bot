@@ -223,8 +223,12 @@ async def test_start_fails_fast_when_gateway_never_comes_up(app: App, monkeypatc
         handler=lambda message: None,  # type: ignore[arg-type]
         startup_timeout=1.0,
     )
-    with pytest.raises(QQGatewayError, match="启动失败"):
+    with pytest.raises(QQGatewayError) as excinfo:
         await gateway.start()
+    # BUG-005：`start()` 不再自加「QQ 网关启动失败」前缀（唯一前缀在 service.py），
+    # 异常文案就是底层原因，且原始异常仍作为 cause 保留。
+    assert str(excinfo.value) == "凭据无效"
+    assert isinstance(excinfo.value.__cause__, RuntimeError)
     await gateway.close()
 
 
@@ -421,3 +425,88 @@ async def test_wait_closed_cancel_does_not_kill_gateway_task(app: App, monkeypat
     assert task is not None and task.done() is False  # 网关任务仍然在跑
     await gateway.close()
     assert task.cancelled() or task.done()
+
+
+# ------------------------------------------------------------------ BUG-005：错误文案可读化 + 去双前缀
+@pytest.mark.parametrize(
+    "text",
+    ["'NoneType' object is not subscriptable", "'NoneType' object has no attribute 'get'"],
+)
+def test_describe_gateway_error_explains_sdk_none_timeout(text: str) -> None:
+    """BUG-005：SDK 把超时吞成 None 后的两种内部异常都翻译成「平台接口无响应」，并保留原文。
+
+    两条文本来自真机日志（`BUGS.md` BUG-005「原始证据」）：`/gateway/bot` 超时抛
+    `not subscriptable`，`/users/@me` 超时抛 `has no attribute 'get'`。
+    """
+
+    message = gateway_module._describe_gateway_error(TypeError(text))
+    assert message.startswith("QQ 平台接口无响应（SDK 把超时吞成 None")
+    assert message.endswith("：" + text)
+
+
+@pytest.mark.parametrize("exc", [RuntimeError("凭据无效"), ValueError("{'code': 10004, 'message': '机器人不存在'}")])
+def test_describe_gateway_error_keeps_other_errors_verbatim(exc: Exception) -> None:
+    """非 NoneType 异常不套「超时」帽子：凭据错 / 网络错要能一眼区分（BUG-005 的核心诉求）。"""
+
+    assert gateway_module._describe_gateway_error(exc) == str(exc)
+
+
+async def test_run_client_logs_readable_message_and_keeps_traceback(
+    app: App, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """BUG-005：`_run_client` 的 `[错误]` 用可读文案，原始 traceback 只降到 DEBUG 保留。"""
+
+    class NoneTypeFailingClient:
+        def __init__(self, **_kwargs) -> None:
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_exc) -> None:
+            return None
+
+        async def start(self, *_args, **_kwargs):
+            # 复刻真机那一步：SDK 把超时吞成 None（botpy/http.py:181-195 隐式 return None）后，
+            # `botpy/client.py:171` 的 `_ws_ap["session_start_limit"]` 抛的就是这条文本。
+            raise TypeError("'NoneType' object is not subscriptable")
+
+        async def close(self) -> None:
+            return None
+
+    monkeypatch.setattr(
+        gateway_module,
+        "botpy",
+        type("B", (), {"Client": NoneTypeFailingClient, "Intents": lambda **kwargs: kwargs}),
+    )
+    gateway = BotpyGateway(
+        app.config,
+        ("app-id", "app-secret"),
+        StateStore.load(app.config.state_path),
+        handler=lambda message: None,  # type: ignore[arg-type,return-value]
+        startup_timeout=1.0,
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        with pytest.raises(QQGatewayError) as excinfo:
+            await gateway.start()
+        await asyncio.sleep(0.05)
+
+    expected = (
+        "QQ 平台接口无响应（SDK 把超时吞成 None，多为 /users/@me 或 /gateway/bot 超时）："
+        "'NoneType' object is not subscriptable"
+    )
+    assert [r.getMessage() for r in caplog.records if r.levelno == logging.ERROR] == [
+        "[错误] QQ 网关异常退出: " + expected
+    ]
+    stack = [r for r in caplog.records if r.getMessage().startswith("[调试] QQ 网关异常原始堆栈")]
+    assert len(stack) == 1 and stack[0].levelno == logging.DEBUG
+    # traceback 必须真的在消息里：`cli._PlainFormatter` 只输出 `record.getMessage()`。
+    traceback_text = stack[0].getMessage()
+    assert "Traceback (most recent call last)" in traceback_text
+    assert "TypeError: 'NoneType' object is not subscriptable" in traceback_text
+
+    # 双前缀没了：`start()` 的文案本身就是可读原因，前缀只在 service.py 加一层。
+    assert str(excinfo.value) == expected
+    assert not str(excinfo.value).startswith("QQ 网关启动失败")
+    await gateway.close()
