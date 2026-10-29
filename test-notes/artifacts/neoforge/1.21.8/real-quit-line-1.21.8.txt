@@ -1,0 +1,1 @@
+[1810月2026 16:01:10.525] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game

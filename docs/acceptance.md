@@ -4,6 +4,10 @@
 `PLAN.md` §5 的验收场景。下面每条都给出**命令 + 真实输出 + 结论**，输出是实际执行后粘贴的，
 不是手写预期值。手工自测手册（含每个模块的自测点）见 `docs/smoke.md`。
 
+> **「变更前记录」标注（2026-10-29 追加）**：本文件 **§0–§9 是日志模板变更之前**的记录
+> （出厂默认还是 vanilla 1.20.x 窄模板；当时例数 **381**、覆盖率 **99.33%**、ruff **43 文件**），
+> **原文一字未改**，仅在此加标注，避免与最新数字混淆。模板改成「四族通吃」之后的实测见 **§10**。
+
 ---
 
 ## 0. 执行环境与前置
@@ -35,8 +39,12 @@
 | S6 日志轮转 | **通过**（离线等价复现：`LogWatcher` 直接跑同一路径；真机手工版见 `docs/smoke.md` §5） | §2.6 |
 | V1–V3 真机反馈变更（MC→QQ 带服名 / 取消游戏内回显 / 指令面板清单） | **通过**（按新契约重跑，无回归） | §8 |
 
-自动化方面（§3）：`make test` 一键 **357 passed、总覆盖率 99.30%**（门槛 70%；v0.2 变更后 352、BUG-001 取证合入后 357，见 §8.6），`ruff check` +
+自动化方面（§3）：`make test` 一键 **381 passed、总覆盖率 99.33%**（门槛 70%；v0.2 后 352、取证合入后 357、BUG-001 修复后 381，见 §8.6 与 §9），`ruff check` +
 `ruff format --check` 全绿，全仓**无 skip/xfail**，CI 里跑的就是同一条 `make test`。
+
+> **变更后（2026-10-29）**：日志模板改「四族通吃」之后的最新实测是 **409 passed** / 总覆盖率 **99.33%**
+> （门槛 70%）/ `ruff check .` 全过 + `ruff format --check .` **45 文件**；真日志复扫 **361/361**。
+> 上段与 §3 的 381 / 348 是**变更前记录**（数字不改写），最新证据见 **§10.4**。
 
 ---
 
@@ -76,9 +84,14 @@ exit=1
 `Connection refused`；两者都落在 `[RCON main] FAIL 无法连接 <host>:<port>: …` 同一契约下。
 `check` 的明细日志走 stderr（§3.6），stdout 只有上面 6 行契约文本。
 
+> **注（2026-10-15，BUG-001 修复后）**：本节两份粘贴是**变更前**的原始记录，未改写。
+> 当时 `[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置` 只证明「环境变量非空」——
+> 凭据完全无效也照样 OK（`BUGS.md` 的 F4）。现在 QQ 项默认真探活、新增 `--no-probe`，
+> 本轮复验见 **§9.1**。
+
 自动化等价物：`tests/e2e/test_entrypoint.py::test_entrypoint_s1_check_reports_each_item`（真子进程）、
 `…::test_entrypoint_s1_check_missing_secret`、`…::test_entrypoint_check_missing_config`、
-`tests/test_cli.py::test_check_*`。
+`tests/test_cli.py::test_check_*`（含探活成功/失败两条）、`tests/test_qq_probe.py`。
 
 ### 2.2 S2 QQ→MC 绑定与转发
 
@@ -257,6 +270,10 @@ $ $BP -m pytest tests/test_mclog_watcher.py::test_rotation_resets_offset tests/e
 
 ## 3. 自动化测试、覆盖率与静态检查
 
+> **变更前记录**（2026-10-13 的实测，原文不改写）：本节命令输出里的 `348 passed` / `40 files` 是模板变更之前的数字。
+> 模板改「四族通吃」之后的最新一次实跑（2026-10-29）：**409 passed** / `Total coverage: 99.33%` /
+> `ruff check .` 全过 / `ruff format --check .` **45 files**，见 **§10.4**。
+
 一键入口（本地与 CI 同一条命令）：
 
 ```bash
@@ -295,7 +312,7 @@ $ grep -rnE "pytest\.(skip|xfail)|@pytest\.mark\.(skip|xfail)|skipif" tests/
 （无 skip/xfail/skipif）
 ```
 
-测试文件分工（下面的例数是 T10 落地时的口径；v0.2 后 352 例、BUG-001 取证合入后 **357 例**）：
+测试文件分工（下面的例数是 T10 落地时的口径；v0.2 后 352 例、BUG-001 取证合入后 **357 例**、BUG-001 修复后 **381 例**，见 §9）：
 
 | 文件 | 例数 | 说明 |
 |---|---|---|
@@ -803,3 +820,356 @@ All checks passed!
 - §8.4 粘贴的输出是 v0.2 那一轮（352 例）的**原始记录，未改写**；本节是本轮合入后的复验。
   少数「历史记录」按原样保留：§3 的逐文件例数（T10 口径）、§7.2 / §7.11（T12 复验，348 例）。
 - 缺陷结论、影响面与推荐修复方向见 `BUGS.md` 的 BUG-001「回复」（**真缺陷**；真机触发链路 Q1/Q3 **未执行**）。
+
+---
+
+## 9. BUG-001 修复落地后的复验（2026-10-15，看板卡 `t_80249809`）
+
+本卡按 `BUGS.md` 的推荐方向落地 **R2-lite**（运行期网关失效 → `[错误]` + 非 0 退出，不做退避重启）
+与 **R5**（`check` 的 QQ 项真探活），并同步 `PLAN.md` §3.2/§3.3/§3.4/§3.6/§5/§7.2 与 README、`docs/smoke.md`。
+**§7 / §8 的粘贴与 348/352/357 这些数字是历史记录，未改写**；本节是本轮复验。
+
+### 9.0 执行环境与前置
+
+| 项 | 值 |
+|---|---|
+| 日期 | 2026-10-15（03:05–03:09 +0800） |
+| 机器 | Y33NG-LAPTOP（Windows 11 + git-bash／MSYS），Python 3.12.10（仓库内 `.venv`） |
+| 代码版本 | 分支 `y33-bot/t_80249809-bug-001-0-r2-lite-check-qq-r5`；对照基线 = `757db31`（本卡起点，`git archive` 出 `src/`） |
+| 取证目录 | 仓库**之外**：`…/cache/scratch/bug001-fix`（`config.toml`（`port = 34567` 故意不可达、`group_openid = "GROUP-OPENID-1"`）+ `logs/latest.log` + 对照脚本 `verify_gateway_death.py`） |
+| 环境变量 | `QQ_BOT_APP_ID=102000000`、`QQ_BOT_APP_SECRET=this-secret-is-bogus-and-never-issued`（**从未签发的假值**）、`MC_RCON_PASSWORD_MAIN=bogus-rcon` |
+| 未执行 | **真机触发链路**（Q1 静默那一刻的日志尾部、Q3 QQ 侧关码）与 **S5 真机 8 步**：本机没有真实 QQ 机器人凭据、也没有 `enable-rcon=true` 的真 MC 服。本节所有证据都在**离线**（真网络只用到 §9.1 平台的 token 接口） |
+
+### 9.1 R5：`check` 的 QQ 项真探活（同一个假凭据，修复前 vs 修复后）
+
+修复前（`757db31` 的 `src`，`PYTHONPATH` 指过去）：
+
+```bash
+$ PYTHONPATH=<757db31>/src $BP -m y33bot check --config config.toml        # 2026-10-15 03:08:21 +0800
+[配置] OK config.toml 解析成功，1 个 MC 服
+[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置          ← 凭据是完全假的，也照样 OK
+[RCON main] FAIL 无法连接 127.0.0.1:34567: 连接 127.0.0.1:34567 失败: [WinError 1225] 远程计算机拒绝网络连接。
+[日志 main] OK …\bug001-fix\logs\latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+FAIL
+exit=1
+```
+
+修复后（本卡 `src`，默认真探活）：
+
+```bash
+$ PYTHONPATH=<本卡>/src $BP -m y33bot check --config config.toml           # 2026-10-15 03:08:04 +0800
+[警告] RCON main 命令失败: 连接 127.0.0.1:34567 失败: [WinError 1225] 远程计算机拒绝网络连接。
+[配置] OK config.toml 解析成功，1 个 MC 服
+[QQ] FAIL access_token 获取失败: 平台返回错误: code=10004 message=机器人不存在
+[RCON main] FAIL 无法连接 127.0.0.1:34567: 连接 127.0.0.1:34567 失败: [WinError 1225] 远程计算机拒绝网络连接。
+[日志 main] OK …\bug001-fix\logs\latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+FAIL
+exit=1
+```
+
+（`code=10004 message=机器人不存在` 是**平台真的回话**了 —— 探活确实发出了一次 HTTPS 请求，
+而不是本地提前失败。同一台机器上两次 `check` 耗时之差约 0.15s，即那次取 token 的往返。）
+
+修复后（`--no-probe`，离线环境/CI 用）：
+
+```bash
+$ PYTHONPATH=<本卡>/src $BP -m y33bot check --config config.toml --no-probe
+[配置] OK config.toml 解析成功，1 个 MC 服
+[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置
+[RCON main] FAIL 无法连接 127.0.0.1:34567: 连接 127.0.0.1:34567 失败: [WinError 1225] 远程计算机拒绝网络连接。
+[日志 main] OK …\bug001-fix\logs\latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+FAIL
+exit=1
+```
+
+| 分支 | 命令 | 结果 | 结论 |
+|---|---|---|---|
+| 凭据无效（假值） | `check`（默认探活） | `[QQ] FAIL access_token 获取失败: 平台返回错误: code=10004 message=机器人不存在` | **通过**（修复前是 `[QQ] OK`） |
+| 离线跳过 | `check --no-probe` | `[QQ] OK …未探活（--no-probe）…` | **通过**（文案自己说明「未探活」） |
+| 凭据缺失 | `env -u QQ_BOT_APP_SECRET check` | `[QQ] FAIL 环境变量 QQ_BOT_APP_SECRET 未设置` | **通过**（与旧行为一致，且不联网） |
+| 凭据有效 | —— | 预期 `[QQ] OK access_token 获取成功（有效期 <N>s），…` | **未执行**：本机没有真实凭据；单元测试用替身锁住该文案（`tests/test_cli.py::test_check_probes_credentials_by_default`） |
+
+自动化等价物：`tests/test_qq_probe.py`（解析/平台报错/HTTP 错误/非 JSON/网络不可达，全程离线）、
+`tests/test_cli.py::test_check_probes_credentials_by_default`、`…::test_check_reports_unusable_credentials`、
+`tests/test_service.py::test_startup_checks_reports_unusable_credentials`（探活失败 → `CheckResult(ok=False)`）、
+`…::test_startup_checks_without_probe_keeps_offline_path`、`…::test_service_default_probe_is_the_real_one`。
+
+### 9.2 R2-lite：运行期网关失效 → `[错误]` + 非 0 退出（同脚本前后对照）
+
+同一份脚本（`…/bug001-fix/verify_gateway_death.py`：桩网关 `start()` 成功、0.3s 后网关任务结束，
+用 `asyncio.wait_for` 做 3s 看门狗，超时判定为「没有退出」）、同一份 `config.toml`，只换 `PYTHONPATH`：
+
+```bash
+$ PYTHONPATH=<757db31>/src $BP verify_gateway_death.py config.toml 0.3 3      # 2026-10-15 03:07:47 +0800
+修复前 退出码(99=run() 在 3s 内没有返回)=99
+INFO [启动] y33bot 0.1.0（1 个 MC 服）
+INFO [启动] 日志监听已启动: main
+INFO [停止] 正在关闭…                                  ← 只有看门狗的取消才让它走关闭流程
+INFO [停止] 已退出
+run() 在 3s 内没有返回：网关 started=True，进程仍在常驻（静默）
+```
+
+```bash
+$ PYTHONPATH=<本卡>/src $BP verify_gateway_death.py config.toml 0.3 3
+修复后 退出码=1
+INFO [启动] y33bot 0.1.0（1 个 MC 服）
+INFO [启动] 日志监听已启动: main
+ERROR [错误] QQ 网关已断开（收不到群消息），进程退出等待重启
+INFO [停止] 正在关闭…
+INFO [停止] 已退出
+网关 started=True closed=True
+exit=1
+```
+
+（修复前那份日志里**一条 `[错误]` 都没有**，正是 BUG-001 描述的「进程常驻、日志干净」。）
+
+反向对照（不能把「我们自己主动关」也报成故障）：`tests/test_service.py::test_run_returns_0_when_stopped_by_signal`
+断言收到停止信号时退出码 0 且 `[错误]` 记录为空；端到端的整链回归（真 SDK 的 `multi_run()` + 真 `BotpyGateway`
++ 真 `Service.run()`）在 `tests/test_bug001_reconnect.py::test_service_reports_and_exits_when_sdk_gateway_coroutine_returns`。
+
+| 分支 | 结果 | 结论 |
+|---|---|---|
+| 启动后网关任务结束 | `[错误] QQ 网关已断开（收不到群消息），进程退出等待重启` + `exit=1` + 走完 `shutdown()` | **通过**（修复前：3s 看门狗判超时、无 `[错误]`） |
+| 收到停止信号（`Ctrl+C`/`SIGTERM`） | `exit=0`、无 `[错误]` | **通过** |
+| 启动期网关失败 | `[错误] QQ 网关启动失败: …` + `exit=1` | **通过**（原有行为未变） |
+| 真机断线（断网 / 重置 AppSecret / 等 token 过期） | —— | **未执行**（无真实凭据与真 MC 服）；`PLAN.md` §5 S5 已补上「新增观察点」与期望输出 |
+
+### 9.3 一键测试与静态检查
+
+```bash
+$ $BP -m pytest -q
+381 passed in 47.11s
+
+$ $BP -m pytest -q --cov=y33bot --cov-report=term-missing --cov-fail-under=70
+TOTAL                              1839      6    400      9    99%
+Required test coverage of 70% reached. Total coverage: 99.33%
+381 passed in 47.11s
+
+$ $BP -m ruff check . && $BP -m ruff format --check .
+All checks passed!
+43 files already formatted
+```
+
+用例数 357 → 381（+24）：新增 `tests/test_qq_probe.py`（10 例，探活解析与失败文案）、
+`tests/test_gateway.py` +3（`wait_closed` 的三个语义）、`tests/test_service.py` +5
+（探活失败/`--no-probe`/默认真探活/网关死亡退出 1/正常停止退出 0）、
+`tests/test_cli.py` +2（默认探活成功、探活失败）；另有 5 例按新契约**改写**（原本钉「静默失效」的取证用例）：
+`tests/test_service.py::test_run_ignores_gateway_task_ending` → `…::test_run_returns_1_when_gateway_dies_after_start`（同一场景，断言反过来了）、
+`tests/test_bug001_reconnect.py::test_service_stays_alive_when_sdk_gateway_coroutine_returns` → `…::test_service_reports_and_exits_when_sdk_gateway_coroutine_returns`，
+以及 `tests/test_cli.py` / `tests/e2e/*` / `tests/test_smoke.py` 里 `check` 的期望行（补 `--no-probe` 与新文案）。
+`tests/` 仍**无 skip/xfail**；覆盖率 99.30% → 99.33%（`qq.probe` 100%，其余模块覆盖度不变）。
+
+> 说明：上面那句「改写」是**契约变了才改**，不是把失败用例改绿 —— 旧用例钉的是「网关死了没人管」这个当时的事实，
+> 修复后它必须钉相反的行为；`BUGS.md` 的「回复」原文未改，其引用的旧用例名/行号只代表修复前状态，
+> 本轮「修复记录」小节已注明对应关系。
+
+### 9.4 结论
+
+| 项 | 结论 |
+|---|---|
+| R2-lite 运行期网关失效报警退出 | **通过**（离线前后对照 + 整链回归用例；真机触发链路未执行） |
+| R5 `check` 真探活 | **通过**（真网络实测：假凭据 → `[QQ] FAIL access_token 获取失败: 平台返回错误: code=10004`；离线路径 `--no-probe` 可用） |
+| 回归 | **无**：S1–S4/S6 的离线契约（`simulate`、bind、日志轮转）未改；正常退出仍是 `exit=0` 且无 `[错误]`；381 例全绿、覆盖率 99.33%、ruff 43 文件全绿 |
+| 未执行 | 真机断线三连与 Q1/Q3 取证、S5 真机 8 步 —— 原因见 §9.0；`PLAN.md` §5 已补期望输出，具备环境后按 `docs/smoke.md` 回填 |
+| 文档 | `PLAN.md` §7.2 变更登记 + §3.1/§3.2/§3.3/§3.4/§3.6/§5 同步；`README.md` §7/§8/§13/§14；`docs/smoke.md` §1/§6/§7；`BUGS.md` BUG-001 状态「已修复」+「修复记录」 |
+| AGENTS.md | **本次未写入**：「开发进度」那条要加的条目已写好，但运行环境把 `AGENTS.md` 当作**受保护的智能体指令文件**，写入需要交互批准，而本卡是无人值守运行（无用户在场可批准），故未落盘。待补内容（含文件清单、测试数字、真机是否执行、遗留项）原文见看板卡 `t_80249809` 的评论，人工或有批准能力的会话可直接粘贴 |
+
+---
+
+## 10. 日志模板「四族通吃」变更后复验（2026-10-29，看板卡 `t_33baa9bb`）
+
+> **本节是模板变更之后**的实测。§0–§9 保留模板变更**之前**的记录（当时 381 例 / 99.33% / ruff 43 文件、
+> 出厂默认是 vanilla 1.20.x 窄模板），按要求**只加「变更前记录」标注、不改写历史内容**。
+> 变更登记见 `PLAN.md` §7.3，缺陷侧见 `BUGS.md` BUG-002/003。
+
+### 10.0 执行环境与前置
+
+| 项 | 值 |
+|---|---|
+| 日期 | 2026-10-29 |
+| 机器 | Y33NG-LAPTOP（Windows 11 + git-bash／MSYS），Python 3.12.10（仓库内 `.venv`） |
+| 代码版本 | 分支 `wt/t_33baa9bb`（= main + `wt/t_2a31fd67` 的出厂模板与夹具 + `wt/t_739a0487` 的回归锁），**`src/` 零改动** |
+| 抽检对象 | `test-notes/artifacts/` 下 2026-10-18 实机测试矩阵的原始日志：`00-env`、`vanilla`、`fabric`、`forge`、`neoforge` |
+| 判定方式 | 用 `config.example.toml` **自身的** `[log_patterns]` 编译后逐行过 `parse_line`（不在脚本里硬编码模板），按族、按事件类型统计命中 |
+| 扫描脚本 | 临时脚本，**未入库**：`…/cache/scratch/factory_default_sweep.py`（改后）、`…/cache/scratch/y33_before_sweep_t33baa9bb.py`（改前，模板取自 `git show main:config.example.toml`） |
+| 真机回归 | **未执行**：本机没有可用的四族 MC 服。本轮做的是「真日志离线复扫 + 文档/出厂默认一致性 + 自动化回归」 |
+
+### 10.1 同一批真行：改前 vs 改后逐族命中
+
+「改前」= `main:config.example.toml` 的出厂默认（vanilla 1.20.x 窄形态）；「改后」= 本轮出厂默认（四族通吃）。
+
+| 族 | 改前 join | 改前 quit | 改前 chat | 改后 join | 改后 quit | 改后 chat |
+|---|---|---|---|---|---|---|
+| `00-env`（环境基座） | 1/1 | 1/1 | 0/2 | 1/1 | 1/1 | 2/2 |
+| `vanilla` | 27/27 | 26/26 | **0/52** | 27/27 | 26/26 | 52/52 |
+| `fabric` | 23/23 | 22/22 | **0/28** | 23/23 | 22/22 | 28/28 |
+| `forge` | **0/36** | **0/24** | **0/48** | 36/36 | 24/24 | 48/48 |
+| `neoforge` | **1/22** | **0/21** | **0/28** | 22/22 | 21/21 | 28/28 |
+| **合计** | — | — | — | **361/361（MISS 0）** | — | — |
+
+改前合计 **101/361**，改后 **361/361**。改前的漏判正好对上 `BUGS.md` 的两条缺陷：
+Forge 全族 0 命中（BUG-002：中文日期时间戳 + logger 后多一段 `[net.minecraft.server.MinecraftServer/]`）、
+≥1.21.2 起聊天 0 命中（BUG-003：聊天回到主线程且多 `[Not Secure] ` 前缀）。
+
+改后一遍的实际输出：
+
+```text
+== 出货默认 == sweep 脚本候选A ==
+  join: True
+  quit: True
+  chat: True
+
+== 出货默认（config.example.toml）逐族命中 ==
+  00-env     join=1/1  quit=1/1  chat=2/2
+  fabric     join=23/23  quit=22/22  chat=28/28
+  forge      join=36/36  quit=24/24  chat=48/48
+  neoforge   join=22/22  quit=21/21  chat=28/28
+  vanilla    join=27/27  quit=26/26  chat=52/52
+  合计 361/361
+  MISS 数: 0
+```
+
+改前一遍的实际输出（同一批行、旧模板）：
+
+```text
+== 改前模板（main:config.example.toml）逐族命中 ==
+  00-env     join=1/1  quit=1/1  chat=0/2
+  fabric     join=23/23  quit=22/22  chat=0/28
+  forge      join=0/36  quit=0/24  chat=0/48
+  neoforge   join=1/22  quit=0/21  chat=0/28
+  vanilla    join=27/27  quit=26/26  chat=0/52
+  合计 101/361
+```
+
+### 10.2 ≤ 1.21.1 旧形态仍然命中（回归不退）
+
+制品矩阵里没有 ≤1.21.1 的真行，用文档样例行（`Async Chat Thread - #0/#12`）单独验：
+
+```text
+== ≤1.21.1 旧形态（文档样例行）==
+  chat: True -> ('chat', 'Steve', '#大家好')
+  chat-12: True -> ('chat', 'Alex', '#hi 😀')
+  plain: True -> ('chat', 'Steve', '普通聊天')
+  旧形态全部命中: True
+```
+
+3/3 命中 —— 换成「四族通吃」形态没有丢掉旧版本。
+
+### 10.3 三方逐字相等回归锁与真行用例
+
+`tests/test_log_patterns_real_lines.py`（28 例）把三份「出厂默认」钉成**逐字相等**：
+`config.example.toml` ≡ `tests/conftest.py` 的三条夹具常量 ≡ `PLAN.md` §3.5 的样板代码块
+（§3.5 用 `tomllib` 解析，顺带验证样板是合法 TOML）。另有 16 条内联行
+（13 条真机真行：vanilla ≥1.21.2 / Fabric 26.1 / Forge 两种 logger 形态 / NeoForge 1.21.4；3 条 ≤1.21.1 旧形态文档样例行 ——
+制品矩阵里没有该形态的真行）逐条断言 `kind` / `player` / `message`，2 条非事件行断言**不**误判，2 条语义断言
+（非 `#` 聊天仍被 bridge 忽略、`#` 聊天仍转发 `Steve@main: …`）。
+
+```bash
+$ .venv/Scripts/python.exe -m pytest tests/test_log_patterns_real_lines.py -q
+............................                                             [100%]
+28 passed in 0.12s
+```
+
+红锁验证（本卡复核）：把 `PLAN.md` §3.5 的 `[log_patterns]` 回退成旧模板后重跑 ——
+
+```text
+$ .venv/Scripts/python.exe -m pytest tests/test_log_patterns_real_lines.py -q -k plan_section
+FAILED tests/test_log_patterns_real_lines.py::test_plan_section_equals_factory_defaults[join]
+FAILED tests/test_log_patterns_real_lines.py::test_plan_section_equals_factory_defaults[quit]
+FAILED tests/test_log_patterns_real_lines.py::test_plan_section_equals_factory_defaults[chat]
+3 failed, 25 deselected in 0.20s
+```
+
+恢复后 28 例全绿（`…… 28 passed in 0.47s`）。也就是说「文档里贴的样板」与「出厂默认」再也不会各自漂移：
+改任一处而不同步另外两处，这三条用例立红。
+
+### 10.4 一键测试与静态检查
+
+```bash
+$ .venv/Scripts/python.exe -m pytest -q --cov=y33bot --cov-report=term-missing --cov-fail-under=70
+TOTAL                              1839      6    400      9    99%
+Required test coverage of 70% reached. Total coverage: 99.33%
+409 passed in 48.43s
+
+$ .venv/Scripts/python.exe -m ruff check .
+All checks passed!
+$ .venv/Scripts/python.exe -m ruff format --check .
+45 files already formatted
+```
+
+用例数 **381 → 409**（+28，全部来自新增的 `tests/test_log_patterns_real_lines.py`），覆盖率 **99.33%**（不变），
+ruff 合规文件 **45**（2026-10-15 那轮记录的是 43，期间新增了测试文件；本卡**没有**新增 `.py`）。
+
+### 10.5 结论
+
+| 项 | 结论 |
+|---|---|
+| 模板改后四族真行 | **通过**：361/361 命中、MISS 0（改前同一批行 101/361） |
+| ≤1.21.1 旧形态回归 | **通过**：3/3 仍命中 |
+| 文档与出厂默认一致 | **通过**：三方逐字相等锁 6 条用例全绿，红锁验证有效（回退 §3.5 后 3 条立红） |
+| 自动化回归 | **通过**：409 passed、覆盖率 99.33%（门槛 70%）、ruff check/format 全绿（45 文件） |
+| 产品代码 | **零改动**：`git diff main..HEAD -- src/` 为空 |
+| 真机回归 | **未执行**：本机没有四族 MC 服；真行取自 `test-notes/artifacts/` 的矩阵制品，不是本轮新采的真机日志。恢复真机后按 `docs/smoke.md` §3 回填 |
+| 历史记录 | §0–§9 **原文未改**，仅加「变更前记录」标注；本轮数字全部落在 §10 |
+
+### 10.6 根卡终局复核（2026-10-29，看板卡 `t_13b9be2a`，PR #5）
+
+子卡把模板 / 夹具 / 回归锁 / 文档 / `BUGS.md` 分别落地后，根卡在自己的 worktree 上把
+`wt/t_e7da5bef`（PR #5 的 head `60db1aa`）合并进来做一次**独立复核**，不引用子卡结论，全部重跑：
+
+```bash
+$ git merge --no-ff 60db1aa        # 合并树：e6efc29
+ 11 files changed, 706 insertions(+), 36 deletions(-)
+
+$ git diff --stat 73400e0..HEAD -- src/          # 产品代码
+（空）
+$ git diff --stat 73400e0..HEAD -- IDEA.md 需求1.txt AGENTS.md
+（空）
+
+$ .venv/Scripts/python.exe -m pytest -q --cov=y33bot --cov-fail-under=70
+TOTAL                              1839      6    400      9    99%
+Required test coverage of 70% reached. Total coverage: 99.33%
+409 passed in 49.13s
+
+$ .venv/Scripts/python.exe -m ruff check .
+All checks passed!
+$ .venv/Scripts/python.exe -m ruff format --check .
+45 files already formatted
+```
+
+离线复扫（同一批 `test-notes/artifacts/**` 真行，脚本在仓库外，模板取自本 worktree 的 `config.example.toml`）：
+
+```text
+== 出货默认 == sweep 脚本候选A ==
+  join: True  quit: True  chat: True
+== 出货默认（config.example.toml）逐族命中 ==
+  00-env     join=1/1  quit=1/1  chat=2/2
+  fabric     join=23/23  quit=22/22  chat=28/28
+  forge      join=36/36  quit=24/24  chat=48/48
+  neoforge   join=22/22  quit=21/21  chat=28/28
+  vanilla    join=27/27  quit=26/26  chat=52/52
+  合计 361/361
+  MISS 数: 0
+== ≤1.21.1 旧形态（文档样例行）==
+  旧形态全部命中: True
+```
+
+改前同一批行的对照（模板取自 `git show main:config.example.toml`）：`合计 101/361`
+（forge join 0/36、quit 0/24、chat 0/48；neoforge join 1/22、quit 0/21、chat 0/28；
+vanilla / fabric chat 0/52、0/28）。
+
+GitHub 侧（`api.github.com`，2026-10-29）：
+
+| 项 | 实测 |
+|---|---|
+| PR | [#5](https://github.com/YeeNg2333/Y33-Bot/pull/5) `fix(log_patterns): 出厂默认模板兼容 1.21.2+ 与 Forge/NeoForge 布局`，正文首行 `Closes #1` |
+| PR 状态 | `state=open`、`merged=false`、`mergeable_state=clean`、`changed_files=797`（含 origin/main 落后的既有提交，见卡片遗留项） |
+| CI | head `60db1aa` 的 `test (3.12)` 两次运行均 `completed / success` |
+| issue #1 | `state=open`（合并 PR 后由 `Closes #1` 自动关闭，本轮未手动关闭） |
+
+结论：与 §10.1–§10.5 的子卡实录**逐项一致**（361/361、409 例、99.33%、45 文件、`src/` 零改动）。
+真机四族端到端回归**仍未执行**——本机没有 vanilla / Fabric / Forge / NeoForge 服与 QQ 凭据，
+替代证据是上面这份 361 条真机采集行的全量复扫 + 28 例回归锁；真机就绪后按 `docs/smoke.md` §3 回填。

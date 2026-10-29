@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 
 import y33bot
+from conftest import CHAT_TEMPLATE, JOIN_TEMPLATE, QUIT_TEMPLATE
 from y33bot import cli
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -60,6 +61,16 @@ def _free_port() -> int:
         return int(probe.getsockname()[1])
 
 
+# 出厂默认的三条模板**不再在这里另存一份**：直接复用 `tests/conftest.py` 的常量，
+# 而 conftest 的常量由 `tests/test_log_patterns_real_lines.py` 的一致性锁钉死在
+# `config.example.toml` 与 `PLAN.md` §3.5 上。早先这里有一份独立副本，默认模板更新时
+# 它会静默过期、冒烟测试继续用旧布局（review r4408694215）。
+# TOML 单引号字面量原样保留反斜杠，所以 raw 字符串插进 f-string 即可。
+_TOML_JOIN = JOIN_TEMPLATE
+_TOML_QUIT = QUIT_TEMPLATE
+_TOML_CHAT = CHAT_TEMPLATE
+
+
 def _write_config(tmp_path: Path, *, port: int, log_path: Path) -> Path:
     """按 PLAN.md §3.5 的结构生成一份临时 config.toml（模板带命名组，符合 §4.1）。"""
 
@@ -90,9 +101,9 @@ connect_timeout = 1.0
 command_timeout = 1.0
 
 [log_patterns]
-join = '\\[\\d{{2}}:\\d{{2}}:\\d{{2}}\\] \\[Server thread/INFO\\]: (?P<player>\\w+) joined the game'
-quit = '\\[\\d{{2}}:\\d{{2}}:\\d{{2}}\\] \\[Server thread/INFO\\]: (?P<player>\\w+) left the game'
-chat = '\\[\\d{{2}}:\\d{{2}}:\\d{{2}}\\] \\[Async Chat Thread - #\\d+/INFO\\]: <(?P<player>\\w+)> (?P<message>.+)'
+join = '{_TOML_JOIN}'
+quit = '{_TOML_QUIT}'
+chat = '{_TOML_CHAT}'
 encoding = "utf-8"
 """
     path = tmp_path / "config.toml"
@@ -210,13 +221,14 @@ async def test_check_passes_with_reachable_rcon(
     async with MiniRconServer() as server:
         config_path = _write_config(tmp_path, port=server.port, log_path=log_path)
         # cli.main 内部会 asyncio.run()，因此放到线程里跑，避免与测试自己的事件循环冲突
-        exit_code = await asyncio.to_thread(cli.main, ["check", "--config", str(config_path)])
+        # --no-probe：本用例测的是 RCON 真连；QQ 项的真探活（默认行为）在 test_cli.py 里用替身覆盖
+        exit_code = await asyncio.to_thread(cli.main, ["check", "--config", str(config_path), "--no-probe"])
         assert server.commands == ["/list"]
 
     lines = capsys.readouterr().out.splitlines()
     assert exit_code == 0
     assert lines[0] == "[配置] OK config.toml 解析成功，1 个 MC 服"
-    assert "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置" in lines
+    assert "[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置" in lines
     assert f"[RCON main] OK /list -> {LIST_RESPONSE}" in lines
     assert any(line.startswith("[日志 main] OK") and line.endswith("偏移 0 字节") for line in lines)
     assert "[绑定] OK 0 条" in lines
@@ -248,7 +260,7 @@ def test_check_reports_unreachable_rcon(tmp_path: Path, capsys: pytest.CaptureFi
     port = _free_port()
     config_path = _write_config(tmp_path, port=port, log_path=log_path)
 
-    assert cli.main(["check", "--config", str(config_path)]) == 1
+    assert cli.main(["check", "--config", str(config_path), "--no-probe"]) == 1
     lines = capsys.readouterr().out.splitlines()
     assert any(line.startswith(f"[RCON main] FAIL 无法连接 127.0.0.1:{port}") for line in lines)
     assert any(line.startswith("[日志 main] OK") for line in lines)

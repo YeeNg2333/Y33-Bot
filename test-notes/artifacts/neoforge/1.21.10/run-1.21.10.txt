@@ -1,0 +1,98 @@
+Using selector: EpollSelector
+[启动] y33bot 0.1.0（1 个 MC 服）
+[RCON 127.0.0.1:25733] 已连接
+[RCON nf12110] 已连接
+[启动] 日志监听已启动: nf12110
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 3750
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:47.960] [main/INFO] [net.neoforged.fml.startup.Entrypoint/]: JVM Uptime at startup: 71ms
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:47.969] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Starting FancyModLoader version 10.0.32 (DEDICATED_SERVER in PROD)
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:47.969] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Game directory: /home/hermes/mc-test/neoforge/1.21.10
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:48.031] [main/INFO] [net.neoforged.fml.loading.EarlyServiceDiscovery/]: Found 2 early service jars (out of 73) in 31ms
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:48.032] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Loading FML Early Services:
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:48.033] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - libraries/net/neoforged/fancymodloader/earlydisplay/10.0.32/earlydisplay-10.0.32.jar
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:48.034] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - libraries/net/neoforged/fancymodloader/loader/10.0.32/loader-10.0.32.jar
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:48.041] [main/INFO] [net.neoforged.fml.loading.ImmediateWindowHandler/]: Not loading early display in headless mode.
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:48.072] [main/INFO] [net.neoforged.fml.loading.moddiscovery.locators.GameLocator/]: Failed to find common Minecraft classes and resources on the classpath. Assuming we're launching production.
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:48.270] [main/INFO] [net.neoforged.fml.loading.moddiscovery.locators.JarInJarDependencyLocator/]: Found 2 dependencies adding them to mods collection
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:48.272] [main/INFO] [net.neoforged.fml.loading.moddiscovery.ModDiscoverer/]: 
+[忽略] 日志行未匹配任何模板:      Mod List:
+[忽略] 日志行未匹配任何模板: 		Name Version (Mod Id)
+[忽略] 日志行未匹配任何模板: 		Minecraft 1.21.10 (minecraft)
+[忽略] 日志行未匹配任何模板: 		NeoForge 21.10.64 (neoforge)
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:48.407] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/hermes/mc-test/neoforge/1.21.10/libraries/net/fabricmc/sponge-mixin/0.16.5+mixin.0.8.7/sponge-mixin-0.16.5+mixin.0.8.7.jar Service=FML Env=SERVER
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:48.438] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Loading FML Plugins:
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:48.440] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - ~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar > net.neoforged.neoforge-coremods-21.10.64.jar
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:48.600] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Building game content classloader:
+[忽略] 日志行未匹配任何模板:  - minecraft (jar(~libraries/net/neoforged/minecraft-server-patched/21.10.64/minecraft-server-patched-21.10.64.jar))
+[忽略] 日志行未匹配任何模板:  - mixinextras.neoforge (jar(~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar > mixinextras-neoforge-0.5.0.jar))
+[忽略] 日志行未匹配任何模板:  - neoforge (jar(~libraries/net/neoforged/neoforge/21.10.64/neoforge-21.10.64-universal.jar))
+[忽略] 日志行未匹配任何模板:  - net.neoforged.fml.generated (empty(VirtualJar/net.neoforged.fml.generated))
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:48.617] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Built game content classloader in 27ms
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:49.536] [main/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.0).
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:55.247] [modloading-worker-0/INFO] [net.neoforged.neoforge.common.NeoForgeMod/NEOFORGE-MOD]: NeoForge mod loading, version 21.10.64, for MC 1.21.10
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:55.729] [main/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:57.071] [main/INFO] [net.minecraft.server.Main/]: No existing world data, creating new world
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.243] [main/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 1461 recipes
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.254] [main/INFO] [net.minecraft.advancements.AdvancementTree/]: Loaded 1574 advancements
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.258] [main/INFO] [net.neoforged.neoforge.common.crafting.RecipePriorityManager/]: Loaded 0 recipe priority overrides
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.403] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting minecraft server version 1.21.10
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.404] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Loading properties
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.404] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Default game type: SURVIVAL
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.406] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.556] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting Minecraft server on *:25633
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.598] [Server thread/INFO] [net.minecraft.server.network.ServerConnectionListener/]: Using epoll channel type
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.639] [Server thread/WARN] [net.minecraft.server.dedicated.DedicatedServer/]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.639] [Server thread/WARN] [net.minecraft.server.dedicated.DedicatedServer/]: The server will make no attempt to authenticate usernames. Beware.
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.640] [Server thread/WARN] [net.minecraft.server.dedicated.DedicatedServer/]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.640] [Server thread/WARN] [net.minecraft.server.dedicated.DedicatedServer/]: To change this, set "online-mode" to "true" in the server.properties file.
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:58.698] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Preparing level "world"
+[忽略] 日志行未匹配任何模板: [1810月2026 16:18:59.028] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Selecting global world spawn...
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:07.073] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Loading 0 persistent chunks...
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:07.074] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Preparing spawn area: 100%
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:07.076] [Server thread/INFO] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]: Time elapsed: 8056 ms
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:07.076] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (8.423s)! For help, type "help"
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:07.076] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Starting remote control listener
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:07.079] [Server thread/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread RCON Listener started
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:07.079] [Server thread/INFO] [net.minecraft.server.rcon.thread.RconThread/]: RCON running on 0.0.0.0:25733
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:07.097] [Server thread/INFO] [net.neoforged.neoforge.server.permission.PermissionAPI/]: Successfully initialized permission handler neoforge:default_handler
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:08.992] [RCON Listener #1/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:09.204] [RCON Client /127.0.0.1 #2/INFO] [net.minecraft.server.rcon.thread.RconClient/]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:17.344] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Watcher[/127.0.0.1:56028] logged in with entity id 51 at (-0.5, 142.0, 2.5)
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:17.373] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Watcher joined the game
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:22.178] [RCON Listener #1/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:22.409] [RCON Client /127.0.0.1 #3/INFO] [net.minecraft.server.rcon.thread.RconClient/]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:25.994] [RCON Listener #1/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:26.197] [RCON Client /127.0.0.1 #4/INFO] [net.minecraft.server.rcon.thread.RconClient/]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:27.972] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Steve[/127.0.0.1:58874] logged in with entity id 199 at (-7.5, 139.0, -1.5)
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:27.976] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:29.871] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:31.062] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:32.606] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Steve lost connection: Disconnected
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:32.607] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:39.929] [RCON Listener #1/INFO] [net.minecraft.server.rcon.thread.GenericThread/]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:40.102] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Watcher lost connection: Disconnected
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:40.103] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Watcher left the game
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:55.012] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Steve2[/127.0.0.1:42046] logged in with entity id 323 at (4.5, 143.0, 10.5)
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:55.025] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve2 joined the game
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:56.844] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve2> 大家好，这是普通聊天（不该被转发）
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:58.008] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve2> #大家好，这是带井号的聊天（应被转发）
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:59.505] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Steve2 lost connection: Disconnected
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:59.506] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve2 left the game
+[RCON nf12110] /list
+[忽略] 状态未变化，不重复提示
+[警告] 日志文件缩小（size=0 < offset=10137），偏移重置为 0
+[忽略] 日志行未匹配任何模板: [1810月2026 16:19:27.976] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+[停止] 收到退出信号
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-neoforge-1.21.10.json
+[停止] 已退出

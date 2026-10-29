@@ -1,0 +1,397 @@
+2026-10-18T06:58:33.505981743Z main WARN Advanced terminal features are not available in this environment
+[14:58:33] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[14:58:33] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS
+[14:58:33] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: ModLauncher 10.2.6 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+[14:58:33] [main/WARN] [ne.mi.fm.lo.FMLConfig/CORE]: Configuration file /home/hermes/mc-test/forge/1.21.11/config/fml.toml is not correct. Correcting
+[14:58:33] [main/INFO] [ne.mi.fm.lo.FMLConfig/CORE]: Incorrect key [earlyWindowSkipGLVersions] was corrected from null to []
+[14:58:33] [main/INFO] [ne.mi.fm.lo.FMLConfig/CORE]: Incorrect key [earlyWindowLogHelpMessage] was corrected from null to true
+[14:58:33] [main/INFO] [ne.mi.fm.lo.FMLConfig/CORE]: Incorrect key [earlyWindowSquir] was corrected from null to false
+[14:58:33] [main/INFO] [ne.mi.fm.lo.FMLConfig/CORE]: Incorrect key [earlyWindowShowCPU] was corrected from null to false
+[14:58:33] [main/INFO] [ne.mi.fm.lo.ImmediateWindowHandler/]: ImmediateWindowProvider not loading because launch target is forge_server
+[14:58:33] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=jar:file:///home/hermes/mc-test/forge/1.21.11/libraries/org/spongepowered/mixin/0.8.7/mixin-0.8.7.jar!/ Service=ModLauncher Env=SERVER
+[14:58:34] [main/INFO] [ne.mi.fm.lo.mo.JarInJarDependencyLocator/]: No dependencies to load found. Skipping!
+[14:58:34] [main/INFO] [cp.mo.mo.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forge_server' with arguments [nogui]
+[14:58:41] [modloading-worker-0/INFO] [ne.mi.co.ForgeMod/FORGEMOD]: Forge mod loading, version 61.2.0, for MC 1.21.11 with MCP 20251223.124241
+[14:58:41] [modloading-worker-0/INFO] [ne.mi.co.MinecraftForge/FORGE]: MinecraftForge v61.2.0 Initialized
+[14:58:41] [modloading-worker-0/INFO] [ne.mi.co.ForgeMod/FORGEMOD]: Opening jdk.naming.dns/com.sun.jndi.dns to java.naming
+[14:58:41] [main/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Configuration file /home/hermes/mc-test/forge/1.21.11/config/forge-common.toml is not correct. Correcting
+[14:58:41] [main/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key general was corrected from null to its default, SynchronizedConfig{DataHolder:{}}. 
+[14:58:41] [main/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key general.logLegacyTagWarnings was corrected from null to its default, OFF. 
+[14:58:42] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
+[14:58:43] [main/INFO] [mojang/YggdrasilAuthenticationService]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[14:58:43] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [forge] Found status: UP_TO_DATE Current: 61.2.0 Target: null
+[14:58:44] [main/INFO] [minecraft/Main]: No existing world data, creating new world
+[14:58:45] [main/INFO] [minecraft/RecipeManager]: Loaded 1470 recipes
+[14:58:45] [main/INFO] [minecraft/AdvancementTree]: Loaded 1584 advancements
+[14:58:45] [Server thread/INFO] [minecraft/DedicatedServer]: Starting minecraft server version 1.21.11
+[14:58:45] [Server thread/INFO] [minecraft/DedicatedServer]: Loading properties
+[14:58:45] [Server thread/INFO] [minecraft/DedicatedServer]: Default game type: SURVIVAL
+[14:58:45] [Server thread/INFO] [minecraft/MinecraftServer]: Generating keypair
+[14:58:45] [Server thread/INFO] [minecraft/DedicatedServer]: Starting Minecraft server on *:25628
+2026-10-18T06:58:45.289508758Z Server thread ERROR An exception occurred processing Appender DebugFile
+org.apache.logging.log4j.core.appender.AppenderLoggingException: java.lang.NoClassDefFoundError: Could not initialize class io.netty.channel.kqueue.Native
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.tryCallAppender(AppenderControl.java:164)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.callAppender0(AppenderControl.java:133)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.callAppenderPreventRecursion(AppenderControl.java:124)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.callAppender(AppenderControl.java:88)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.LoggerConfig.callAppenders(LoggerConfig.java:711)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.LoggerConfig.processLogEvent(LoggerConfig.java:669)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.LoggerConfig.log(LoggerConfig.java:645)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.LoggerConfig.log(LoggerConfig.java:554)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AwaitCompletionReliabilityStrategy.log(AwaitCompletionReliabilityStrategy.java:67)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.Logger.logMessage(Logger.java:173)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.slf4j2.impl@2.25.2/org.apache.logging.slf4j.Log4jLogger.log(Log4jLogger.java:374)
+	at SECURE-BOOTSTRAP/io.netty.common@4.2.7.Final/io.netty.util.internal.logging.LocationAwareSlf4JLogger.log(LocationAwareSlf4JLogger.java:46)
+	at SECURE-BOOTSTRAP/io.netty.common@4.2.7.Final/io.netty.util.internal.logging.LocationAwareSlf4JLogger.debug(LocationAwareSlf4JLogger.java:129)
+	at SECURE-BOOTSTRAP/io.netty.transport.classes.kqueue@4.2.7.Final/io.netty.channel.kqueue.KQueue.<clinit>(KQueue.java:54)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.network.EventLoopGroupHolder.remote(EventLoopGroupHolder.java:59)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.network.ServerConnectionListener.startTcpServerListener(ServerConnectionListener.java:56)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.dedicated.DedicatedServer.initServer(DedicatedServer.java:239)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:726)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:287)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.lang.NoClassDefFoundError: Could not initialize class io.netty.channel.kqueue.Native
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:536)
+	at java.base/java.lang.Class.forName(Class.java:515)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j@2.25.2/org.apache.logging.log4j.util.LoaderUtil.loadClass(LoaderUtil.java:212)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer.lambda$static$1(ThrowableExtendedStackTraceRenderer.java:196)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer$ExtendedContext.loadClass(ThrowableExtendedStackTraceRenderer.java:180)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer$ExtendedContext.createClassResourceInfoByName(ThrowableExtendedStackTraceRenderer.java:166)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer$ExtendedContext.ofThrowable(ThrowableExtendedStackTraceRenderer.java:96)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer$ExtendedContext.access$000(ThrowableExtendedStackTraceRenderer.java:81)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer.createContext(ThrowableExtendedStackTraceRenderer.java:43)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer.createContext(ThrowableExtendedStackTraceRenderer.java:34)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableStackTraceRenderer.renderThrowable(ThrowableStackTraceRenderer.java:55)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowablePatternConverter.format(ThrowablePatternConverter.java:130)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.layout.PatternLayout$NoFormatPatternSerializer.toSerializable(PatternLayout.java:354)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.layout.PatternLayout.toText(PatternLayout.java:251)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.layout.PatternLayout.encode(PatternLayout.java:237)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.layout.PatternLayout.encode(PatternLayout.java:57)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender.directEncodeEvent(AbstractOutputStreamAppender.java:227)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender.tryAppend(AbstractOutputStreamAppender.java:220)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender.append(AbstractOutputStreamAppender.java:211)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.appender.RollingRandomAccessFileAppender.append(RollingRandomAccessFileAppender.java:275)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.tryCallAppender(AppenderControl.java:160)
+	... 19 more
+Caused by: java.lang.ExceptionInInitializerError: Exception java.lang.IllegalStateException: Only supported on OSX/BSD [in thread "Server thread"]
+	at SECURE-BOOTSTRAP/io.netty.transport.classes.kqueue@4.2.7.Final/io.netty.channel.kqueue.Native.loadNativeLibrary(Native.java:159)
+	at SECURE-BOOTSTRAP/io.netty.transport.classes.kqueue@4.2.7.Final/io.netty.channel.kqueue.Native.<clinit>(Native.java:76)
+	at SECURE-BOOTSTRAP/io.netty.transport.classes.kqueue@4.2.7.Final/io.netty.channel.kqueue.KQueue.<clinit>(KQueue.java:38)
+	... 6 more
+
+[14:58:45] [Server thread/WARN] [minecraft/DedicatedServer]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[14:58:45] [Server thread/WARN] [minecraft/DedicatedServer]: The server will make no attempt to authenticate usernames. Beware.
+[14:58:45] [Server thread/WARN] [minecraft/DedicatedServer]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[14:58:45] [Server thread/WARN] [minecraft/DedicatedServer]: To change this, set "online-mode" to "true" in the server.properties file.
+[14:58:45] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Configuration file ./world/serverconfig/forge-server.toml is not correct. Correcting
+[14:58:45] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server was corrected from null to its default, SynchronizedConfig{DataHolder:{}}. 
+[14:58:45] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.removeErroringBlockEntities was corrected from null to its default, false. 
+[14:58:45] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.removeErroringEntities was corrected from null to its default, false. 
+[14:58:45] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.fullBoundingBoxLadders was corrected from null to its default, false. 
+[14:58:45] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.permissionHandler was corrected from null to its default, forge:default_handler. 
+[14:58:45] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.advertiseDedicatedServerToLan was corrected from null to its default, true. 
+[14:58:45] [Server thread/INFO] [minecraft/DedicatedServer]: Preparing level "world"
+[14:58:45] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Selecting global world spawn...
+[14:58:56] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Loading 0 persistent chunks...
+[14:58:56] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Preparing spawn area: 100%
+[14:58:56] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Time elapsed: 10417 ms
+[14:58:56] [Server thread/INFO] [minecraft/DedicatedServer]: Done (10.816s)! For help, type "help"
+[14:58:56] [Server thread/INFO] [minecraft/DedicatedServer]: Starting remote control listener
+[14:58:56] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener started
+[14:58:56] [Server thread/INFO] [minecraft/RconThread]: RCON running on 0.0.0.0:25728
+[14:58:56] [Server thread/INFO] [ne.mi.se.pe.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
+[14:58:59] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[14:58:59] [RCON Client /127.0.0.1 #2/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[14:58:59] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[14:59:00] [RCON Client /127.0.0.1 #3/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[14:59:00] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[14:59:00] [RCON Client /127.0.0.1 #4/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[14:59:11] [Server thread/INFO] [minecraft/PlayerList]: Steve[/127.0.0.1:47476] logged in with entity id 17 at (-3.5, 64.0, 8.5)
+[14:59:11] [Server thread/INFO] [minecraft/MinecraftServer]: Steve joined the game
+[14:59:13] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[14:59:14] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[14:59:16] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Steve lost connection: Disconnected
+[14:59:16] [Server thread/INFO] [minecraft/MinecraftServer]: Steve left the game
+[14:59:19] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[14:59:33] [RCON Client /127.0.0.1 #5/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[14:59:42] [Server thread/INFO] [minecraft/PlayerList]: Steve[/127.0.0.1:42708] logged in with entity id 181 at (-3.5, 64.0, 8.5)
+[14:59:42] [Server thread/INFO] [minecraft/MinecraftServer]: Steve joined the game
+[14:59:44] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[14:59:45] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[14:59:47] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Steve lost connection: Disconnected
+[14:59:47] [Server thread/INFO] [minecraft/MinecraftServer]: Steve left the game
+[15:00:07] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping the server
+[15:00:07] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping server
+[15:00:07] [Server thread/INFO] [minecraft/MinecraftServer]: Saving players
+[15:00:07] [Server thread/INFO] [minecraft/MinecraftServer]: Saving worlds
+[15:00:07] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[15:00:07] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[15:00:07] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[15:00:07] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[15:00:07] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[15:00:07] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[15:00:07] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage: All dimensions are saved
+[15:00:07] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener stopped
+2026-10-18T07:06:25.354060652Z main WARN Advanced terminal features are not available in this environment
+[15:06:25] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[15:06:25] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS
+[15:06:25] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: ModLauncher 10.2.6 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+[15:06:25] [main/INFO] [ne.mi.fm.lo.ImmediateWindowHandler/]: ImmediateWindowProvider not loading because launch target is forge_server
+[15:06:25] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=jar:file:///home/hermes/mc-test/forge/1.21.11/libraries/org/spongepowered/mixin/0.8.7/mixin-0.8.7.jar!/ Service=ModLauncher Env=SERVER
+[15:06:26] [main/INFO] [ne.mi.fm.lo.mo.JarInJarDependencyLocator/]: No dependencies to load found. Skipping!
+[15:06:26] [main/INFO] [cp.mo.mo.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forge_server' with arguments [nogui]
+[15:06:32] [modloading-worker-0/INFO] [ne.mi.co.ForgeMod/FORGEMOD]: Forge mod loading, version 61.2.0, for MC 1.21.11 with MCP 20251223.124241
+[15:06:32] [modloading-worker-0/INFO] [ne.mi.co.MinecraftForge/FORGE]: MinecraftForge v61.2.0 Initialized
+[15:06:32] [modloading-worker-0/INFO] [ne.mi.co.ForgeMod/FORGEMOD]: Opening jdk.naming.dns/com.sun.jndi.dns to java.naming
+[15:06:33] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
+[15:06:34] [main/INFO] [mojang/YggdrasilAuthenticationService]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[15:06:34] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [forge] Found status: UP_TO_DATE Current: 61.2.0 Target: null
+[15:06:35] [main/INFO] [minecraft/Main]: No existing world data, creating new world
+[15:06:36] [main/INFO] [minecraft/RecipeManager]: Loaded 1470 recipes
+[15:06:36] [main/INFO] [minecraft/AdvancementTree]: Loaded 1584 advancements
+[15:06:36] [Server thread/INFO] [minecraft/DedicatedServer]: Starting minecraft server version 1.21.11
+[15:06:36] [Server thread/INFO] [minecraft/DedicatedServer]: Loading properties
+[15:06:36] [Server thread/INFO] [minecraft/DedicatedServer]: Default game type: SURVIVAL
+[15:06:36] [Server thread/INFO] [minecraft/MinecraftServer]: Generating keypair
+[15:06:36] [Server thread/INFO] [minecraft/DedicatedServer]: Starting Minecraft server on *:25628
+2026-10-18T07:06:36.590424548Z Server thread ERROR An exception occurred processing Appender DebugFile
+org.apache.logging.log4j.core.appender.AppenderLoggingException: java.lang.NoClassDefFoundError: Could not initialize class io.netty.channel.kqueue.Native
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.tryCallAppender(AppenderControl.java:164)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.callAppender0(AppenderControl.java:133)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.callAppenderPreventRecursion(AppenderControl.java:124)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.callAppender(AppenderControl.java:88)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.LoggerConfig.callAppenders(LoggerConfig.java:711)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.LoggerConfig.processLogEvent(LoggerConfig.java:669)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.LoggerConfig.log(LoggerConfig.java:645)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.LoggerConfig.log(LoggerConfig.java:554)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AwaitCompletionReliabilityStrategy.log(AwaitCompletionReliabilityStrategy.java:67)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.Logger.logMessage(Logger.java:173)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.slf4j2.impl@2.25.2/org.apache.logging.slf4j.Log4jLogger.log(Log4jLogger.java:374)
+	at SECURE-BOOTSTRAP/io.netty.common@4.2.7.Final/io.netty.util.internal.logging.LocationAwareSlf4JLogger.log(LocationAwareSlf4JLogger.java:46)
+	at SECURE-BOOTSTRAP/io.netty.common@4.2.7.Final/io.netty.util.internal.logging.LocationAwareSlf4JLogger.debug(LocationAwareSlf4JLogger.java:129)
+	at SECURE-BOOTSTRAP/io.netty.transport.classes.kqueue@4.2.7.Final/io.netty.channel.kqueue.KQueue.<clinit>(KQueue.java:54)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.network.EventLoopGroupHolder.remote(EventLoopGroupHolder.java:59)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.network.ServerConnectionListener.startTcpServerListener(ServerConnectionListener.java:56)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.dedicated.DedicatedServer.initServer(DedicatedServer.java:239)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:726)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:287)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.lang.NoClassDefFoundError: Could not initialize class io.netty.channel.kqueue.Native
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:536)
+	at java.base/java.lang.Class.forName(Class.java:515)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j@2.25.2/org.apache.logging.log4j.util.LoaderUtil.loadClass(LoaderUtil.java:212)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer.lambda$static$1(ThrowableExtendedStackTraceRenderer.java:196)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer$ExtendedContext.loadClass(ThrowableExtendedStackTraceRenderer.java:180)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer$ExtendedContext.createClassResourceInfoByName(ThrowableExtendedStackTraceRenderer.java:166)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer$ExtendedContext.ofThrowable(ThrowableExtendedStackTraceRenderer.java:96)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer$ExtendedContext.access$000(ThrowableExtendedStackTraceRenderer.java:81)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer.createContext(ThrowableExtendedStackTraceRenderer.java:43)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer.createContext(ThrowableExtendedStackTraceRenderer.java:34)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableStackTraceRenderer.renderThrowable(ThrowableStackTraceRenderer.java:55)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowablePatternConverter.format(ThrowablePatternConverter.java:130)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.layout.PatternLayout$NoFormatPatternSerializer.toSerializable(PatternLayout.java:354)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.layout.PatternLayout.toText(PatternLayout.java:251)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.layout.PatternLayout.encode(PatternLayout.java:237)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.layout.PatternLayout.encode(PatternLayout.java:57)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender.directEncodeEvent(AbstractOutputStreamAppender.java:227)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender.tryAppend(AbstractOutputStreamAppender.java:220)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender.append(AbstractOutputStreamAppender.java:211)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.appender.RollingRandomAccessFileAppender.append(RollingRandomAccessFileAppender.java:275)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.tryCallAppender(AppenderControl.java:160)
+	... 19 more
+Caused by: java.lang.ExceptionInInitializerError: Exception java.lang.IllegalStateException: Only supported on OSX/BSD [in thread "Server thread"]
+	at SECURE-BOOTSTRAP/io.netty.transport.classes.kqueue@4.2.7.Final/io.netty.channel.kqueue.Native.loadNativeLibrary(Native.java:159)
+	at SECURE-BOOTSTRAP/io.netty.transport.classes.kqueue@4.2.7.Final/io.netty.channel.kqueue.Native.<clinit>(Native.java:76)
+	at SECURE-BOOTSTRAP/io.netty.transport.classes.kqueue@4.2.7.Final/io.netty.channel.kqueue.KQueue.<clinit>(KQueue.java:38)
+	... 6 more
+
+[15:06:36] [Server thread/WARN] [minecraft/DedicatedServer]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[15:06:36] [Server thread/WARN] [minecraft/DedicatedServer]: The server will make no attempt to authenticate usernames. Beware.
+[15:06:36] [Server thread/WARN] [minecraft/DedicatedServer]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[15:06:36] [Server thread/WARN] [minecraft/DedicatedServer]: To change this, set "online-mode" to "true" in the server.properties file.
+[15:06:36] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Configuration file ./world/serverconfig/forge-server.toml is not correct. Correcting
+[15:06:36] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server was corrected from null to its default, SynchronizedConfig{DataHolder:{}}. 
+[15:06:36] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.removeErroringBlockEntities was corrected from null to its default, false. 
+[15:06:36] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.removeErroringEntities was corrected from null to its default, false. 
+[15:06:36] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.fullBoundingBoxLadders was corrected from null to its default, false. 
+[15:06:36] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.permissionHandler was corrected from null to its default, forge:default_handler. 
+[15:06:36] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.advertiseDedicatedServerToLan was corrected from null to its default, true. 
+[15:06:36] [Server thread/INFO] [minecraft/DedicatedServer]: Preparing level "world"
+[15:06:37] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Selecting global world spawn...
+[15:06:44] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Loading 0 persistent chunks...
+[15:06:44] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Preparing spawn area: 100%
+[15:06:44] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Time elapsed: 7269 ms
+[15:06:44] [Server thread/INFO] [minecraft/DedicatedServer]: Done (7.794s)! For help, type "help"
+[15:06:44] [Server thread/INFO] [minecraft/DedicatedServer]: Starting remote control listener
+[15:06:44] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener started
+[15:06:44] [Server thread/INFO] [minecraft/RconThread]: RCON running on 0.0.0.0:25728
+[15:06:44] [Server thread/INFO] [ne.mi.se.pe.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
+[15:06:46] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[15:06:46] [RCON Client /127.0.0.1 #2/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[15:06:46] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[15:06:47] [RCON Client /127.0.0.1 #3/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[15:06:47] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[15:06:47] [RCON Client /127.0.0.1 #4/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[15:06:53] [Server thread/INFO] [minecraft/PlayerList]: Steve[/127.0.0.1:54888] logged in with entity id 15 at (7.5, 70.0, 15.5)
+[15:06:53] [Server thread/INFO] [minecraft/MinecraftServer]: Steve joined the game
+[15:06:55] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[15:06:56] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[15:06:58] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Steve lost connection: Disconnected
+[15:06:58] [Server thread/INFO] [minecraft/MinecraftServer]: Steve left the game
+[15:07:03] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[15:07:17] [RCON Client /127.0.0.1 #5/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[15:07:17] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[15:07:26] [Server thread/INFO] [minecraft/PlayerList]: Steve[/127.0.0.1:48088] logged in with entity id 303 at (7.5, 70.0, 15.5)
+[15:07:26] [Server thread/INFO] [minecraft/MinecraftServer]: Steve joined the game
+[15:07:28] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[15:07:29] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[15:07:30] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Steve lost connection: Disconnected
+[15:07:30] [Server thread/INFO] [minecraft/MinecraftServer]: Steve left the game
+[15:07:37] [RCON Client /127.0.0.1 #6/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[15:07:37] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[15:07:51] [RCON Client /127.0.0.1 #7/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[15:07:51] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping the server
+[15:07:51] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping server
+[15:07:51] [Server thread/INFO] [minecraft/MinecraftServer]: Saving players
+[15:07:51] [Server thread/INFO] [minecraft/MinecraftServer]: Saving worlds
+[15:07:51] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[15:07:51] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[15:07:51] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[15:07:51] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[15:07:51] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[15:07:51] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[15:07:51] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage: All dimensions are saved
+[15:07:51] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener stopped
+2026-10-18T07:35:02.825516472Z main WARN Advanced terminal features are not available in this environment
+[15:35:02] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forge_server, nogui]
+[15:35:02] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: JVM identified as Eclipse Adoptium OpenJDK 64-Bit Server VM 21.0.12.1+1-LTS
+[15:35:02] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: ModLauncher 10.2.6 starting: java version 21.0.12.1 by Eclipse Adoptium; OS Linux arch amd64 version 5.14.0-611.36.1.el9_7.x86_64
+[15:35:03] [main/INFO] [ne.mi.fm.lo.ImmediateWindowHandler/]: ImmediateWindowProvider not loading because launch target is forge_server
+[15:35:03] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=jar:file:///home/hermes/mc-test/forge/1.21.11/libraries/org/spongepowered/mixin/0.8.7/mixin-0.8.7.jar!/ Service=ModLauncher Env=SERVER
+[15:35:03] [main/INFO] [ne.mi.fm.lo.mo.JarInJarDependencyLocator/]: No dependencies to load found. Skipping!
+[15:35:03] [main/INFO] [cp.mo.mo.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forge_server' with arguments [nogui]
+[15:35:09] [modloading-worker-0/INFO] [ne.mi.co.ForgeMod/FORGEMOD]: Forge mod loading, version 61.2.0, for MC 1.21.11 with MCP 20251223.124241
+[15:35:09] [modloading-worker-0/INFO] [ne.mi.co.MinecraftForge/FORGE]: MinecraftForge v61.2.0 Initialized
+[15:35:09] [modloading-worker-0/INFO] [ne.mi.co.ForgeMod/FORGEMOD]: Opening jdk.naming.dns/com.sun.jndi.dns to java.naming
+[15:35:10] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
+[15:35:11] [main/INFO] [mojang/YggdrasilAuthenticationService]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[15:35:11] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [forge] Found status: UP_TO_DATE Current: 61.2.0 Target: null
+[15:35:12] [main/INFO] [minecraft/Main]: No existing world data, creating new world
+[15:35:13] [main/INFO] [minecraft/RecipeManager]: Loaded 1470 recipes
+[15:35:13] [main/INFO] [minecraft/AdvancementTree]: Loaded 1584 advancements
+[15:35:13] [Server thread/INFO] [minecraft/DedicatedServer]: Starting minecraft server version 1.21.11
+[15:35:13] [Server thread/INFO] [minecraft/DedicatedServer]: Loading properties
+[15:35:13] [Server thread/INFO] [minecraft/DedicatedServer]: Default game type: SURVIVAL
+[15:35:13] [Server thread/INFO] [minecraft/MinecraftServer]: Generating keypair
+[15:35:13] [Server thread/INFO] [minecraft/DedicatedServer]: Starting Minecraft server on *:25628
+2026-10-18T07:35:13.660832862Z Server thread ERROR An exception occurred processing Appender DebugFile
+org.apache.logging.log4j.core.appender.AppenderLoggingException: java.lang.NoClassDefFoundError: Could not initialize class io.netty.channel.kqueue.Native
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.tryCallAppender(AppenderControl.java:164)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.callAppender0(AppenderControl.java:133)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.callAppenderPreventRecursion(AppenderControl.java:124)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.callAppender(AppenderControl.java:88)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.LoggerConfig.callAppenders(LoggerConfig.java:711)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.LoggerConfig.processLogEvent(LoggerConfig.java:669)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.LoggerConfig.log(LoggerConfig.java:645)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.LoggerConfig.log(LoggerConfig.java:554)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AwaitCompletionReliabilityStrategy.log(AwaitCompletionReliabilityStrategy.java:67)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.Logger.logMessage(Logger.java:173)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.slf4j2.impl@2.25.2/org.apache.logging.slf4j.Log4jLogger.log(Log4jLogger.java:374)
+	at SECURE-BOOTSTRAP/io.netty.common@4.2.7.Final/io.netty.util.internal.logging.LocationAwareSlf4JLogger.log(LocationAwareSlf4JLogger.java:46)
+	at SECURE-BOOTSTRAP/io.netty.common@4.2.7.Final/io.netty.util.internal.logging.LocationAwareSlf4JLogger.debug(LocationAwareSlf4JLogger.java:129)
+	at SECURE-BOOTSTRAP/io.netty.transport.classes.kqueue@4.2.7.Final/io.netty.channel.kqueue.KQueue.<clinit>(KQueue.java:54)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.network.EventLoopGroupHolder.remote(EventLoopGroupHolder.java:59)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.network.ServerConnectionListener.startTcpServerListener(ServerConnectionListener.java:56)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.dedicated.DedicatedServer.initServer(DedicatedServer.java:239)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:726)
+	at TRANSFORMER/minecraft@1.21.11/net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:287)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.lang.NoClassDefFoundError: Could not initialize class io.netty.channel.kqueue.Native
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:536)
+	at java.base/java.lang.Class.forName(Class.java:515)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j@2.25.2/org.apache.logging.log4j.util.LoaderUtil.loadClass(LoaderUtil.java:212)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer.lambda$static$1(ThrowableExtendedStackTraceRenderer.java:196)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer$ExtendedContext.loadClass(ThrowableExtendedStackTraceRenderer.java:180)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer$ExtendedContext.createClassResourceInfoByName(ThrowableExtendedStackTraceRenderer.java:166)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer$ExtendedContext.ofThrowable(ThrowableExtendedStackTraceRenderer.java:96)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer$ExtendedContext.access$000(ThrowableExtendedStackTraceRenderer.java:81)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer.createContext(ThrowableExtendedStackTraceRenderer.java:43)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableExtendedStackTraceRenderer.createContext(ThrowableExtendedStackTraceRenderer.java:34)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowableStackTraceRenderer.renderThrowable(ThrowableStackTraceRenderer.java:55)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.pattern.ThrowablePatternConverter.format(ThrowablePatternConverter.java:130)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.layout.PatternLayout$NoFormatPatternSerializer.toSerializable(PatternLayout.java:354)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.layout.PatternLayout.toText(PatternLayout.java:251)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.layout.PatternLayout.encode(PatternLayout.java:237)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.layout.PatternLayout.encode(PatternLayout.java:57)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender.directEncodeEvent(AbstractOutputStreamAppender.java:227)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender.tryAppend(AbstractOutputStreamAppender.java:220)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.appender.AbstractOutputStreamAppender.append(AbstractOutputStreamAppender.java:211)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.appender.RollingRandomAccessFileAppender.append(RollingRandomAccessFileAppender.java:275)
+	at SECURE-BOOTSTRAP/org.apache.logging.log4j.core@2.25.2/org.apache.logging.log4j.core.config.AppenderControl.tryCallAppender(AppenderControl.java:160)
+	... 19 more
+Caused by: java.lang.ExceptionInInitializerError: Exception java.lang.IllegalStateException: Only supported on OSX/BSD [in thread "Server thread"]
+	at SECURE-BOOTSTRAP/io.netty.transport.classes.kqueue@4.2.7.Final/io.netty.channel.kqueue.Native.loadNativeLibrary(Native.java:159)
+	at SECURE-BOOTSTRAP/io.netty.transport.classes.kqueue@4.2.7.Final/io.netty.channel.kqueue.Native.<clinit>(Native.java:76)
+	at SECURE-BOOTSTRAP/io.netty.transport.classes.kqueue@4.2.7.Final/io.netty.channel.kqueue.KQueue.<clinit>(KQueue.java:38)
+	... 6 more
+
+[15:35:13] [Server thread/WARN] [minecraft/DedicatedServer]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[15:35:13] [Server thread/WARN] [minecraft/DedicatedServer]: The server will make no attempt to authenticate usernames. Beware.
+[15:35:13] [Server thread/WARN] [minecraft/DedicatedServer]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[15:35:13] [Server thread/WARN] [minecraft/DedicatedServer]: To change this, set "online-mode" to "true" in the server.properties file.
+[15:35:13] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Configuration file ./world/serverconfig/forge-server.toml is not correct. Correcting
+[15:35:13] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server was corrected from null to its default, SynchronizedConfig{DataHolder:{}}. 
+[15:35:13] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.removeErroringBlockEntities was corrected from null to its default, false. 
+[15:35:13] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.removeErroringEntities was corrected from null to its default, false. 
+[15:35:13] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.fullBoundingBoxLadders was corrected from null to its default, false. 
+[15:35:13] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.permissionHandler was corrected from null to its default, forge:default_handler. 
+[15:35:13] [Server thread/WARN] [ne.mi.co.ForgeConfigSpec/CORE]: Incorrect key server.advertiseDedicatedServerToLan was corrected from null to its default, true. 
+[15:35:13] [Server thread/INFO] [minecraft/DedicatedServer]: Preparing level "world"
+[15:35:14] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Selecting global world spawn...
+[15:35:21] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Loading 0 persistent chunks...
+[15:35:21] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Preparing spawn area: 100%
+[15:35:21] [Server thread/INFO] [minecraft/LoggingLevelLoadListener]: Time elapsed: 7718 ms
+[15:35:21] [Server thread/INFO] [minecraft/DedicatedServer]: Done (8.208s)! For help, type "help"
+[15:35:21] [Server thread/INFO] [minecraft/DedicatedServer]: Starting remote control listener
+[15:35:21] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener started
+[15:35:21] [Server thread/INFO] [minecraft/RconThread]: RCON running on 0.0.0.0:25728
+[15:35:22] [Server thread/INFO] [ne.mi.se.pe.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
+[15:35:25] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[15:35:25] [RCON Client /127.0.0.1 #2/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[15:35:25] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[15:35:26] [RCON Client /127.0.0.1 #3/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[15:35:26] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[15:35:26] [RCON Client /127.0.0.1 #4/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[15:35:33] [Server thread/INFO] [minecraft/PlayerList]: Steve[/127.0.0.1:46390] logged in with entity id 16 at (-16.5, 75.0, 23.5)
+[15:35:33] [Server thread/INFO] [minecraft/MinecraftServer]: Steve joined the game
+[15:35:35] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[15:35:36] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[15:35:37] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Steve lost connection: Disconnected
+[15:35:37] [Server thread/INFO] [minecraft/MinecraftServer]: Steve left the game
+[15:35:43] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[15:35:56] [RCON Client /127.0.0.1 #5/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[15:35:57] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[15:36:06] [Server thread/INFO] [minecraft/PlayerList]: Steve[/127.0.0.1:39224] logged in with entity id 55 at (-16.5, 75.0, 23.5)
+[15:36:06] [Server thread/INFO] [minecraft/MinecraftServer]: Steve joined the game
+[15:36:07] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[15:36:08] [Server thread/INFO] [minecraft/MinecraftServer]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[15:36:10] [Server thread/INFO] [minecraft/ServerGamePacketListenerImpl]: Steve lost connection: Disconnected
+[15:36:10] [Server thread/INFO] [minecraft/MinecraftServer]: Steve left the game
+[15:36:17] [RCON Client /127.0.0.1 #6/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[15:36:17] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[15:36:31] [RCON Client /127.0.0.1 #7/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[15:36:31] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping the server
+[15:36:31] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping server
+[15:36:31] [Server thread/INFO] [minecraft/MinecraftServer]: Saving players
+[15:36:31] [Server thread/INFO] [minecraft/MinecraftServer]: Saving worlds
+[15:36:31] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[15:36:31] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[15:36:31] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[15:36:31] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[15:36:31] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[15:36:31] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[15:36:31] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage: All dimensions are saved
+[15:36:31] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener stopped

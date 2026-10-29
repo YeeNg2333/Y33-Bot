@@ -1,0 +1,25 @@
+  net/minecraft/world/ticks/TickAccess.class
+  net/minecraft/world/ticks/TickContainerAccess.class
+  net/minecraft/world/ticks/TickPriority.class
+  net/minecraft/world/ticks/WorldGenTickAccess.class
+  net/minecraft/world/ticks/package-info.class
+===============================================================================
+Processor: net.neoforged.installertools:binarypatcher
+  MainClass: net.neoforged.binarypatcher.ConsoleTool
+  Classpath:
+    /home/hermes/mc-test/neoforge/1.21.4/./libraries/net/neoforged/installertools/binarypatcher/2.1.2/binarypatcher-2.1.2-fatjar.jar
+    /home/hermes/mc-test/neoforge/1.21.4/./libraries/net/neoforged/installertools/binarypatcher/2.1.2/binarypatcher-2.1.2-fatjar.jar
+  Args: --clean, /home/hermes/mc-test/neoforge/1.21.4/./libraries/net/minecraft/server/1.21.4-20241203.161809/server-1.21.4-20241203.161809-srg.jar, --output, /home/hermes/mc-test/neoforge/1.21.4/./libraries/net/neoforged/neoforge/21.4.161/neoforge-21.4.161-server.jar, --apply, /tmp/neoforge_installer3709761349033977700/data/server.lzma
+Applying: 
+  Clean:     /home/hermes/mc-test/neoforge/1.21.4/./libraries/net/minecraft/server/1.21.4-20241203.161809/server-1.21.4-20241203.161809-srg.jar
+  Output:    /home/hermes/mc-test/neoforge/1.21.4/./libraries/net/neoforged/neoforge/21.4.161/neoforge-21.4.161-server.jar
+  KeepData:  false
+  Unpatched: false
+  Pack200:   false
+  Legacy:    false
+Loading patches file: /tmp/neoforge_installer3709761349033977700/data/server.lzma
+Processor: net.neoforged.installertools:binarypatcher: Loading patch files
+Processor: net.neoforged.installertools:binarypatcher: Patching input
+Processor: net.neoforged.installertools:binarypatcher: Adding new files
+The server installed successfully
+You can delete this installer file now if you wish

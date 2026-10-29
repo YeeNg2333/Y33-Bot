@@ -1,0 +1,78 @@
+Using selector: EpollSelector
+[启动] y33bot 0.1.0（1 个 MC 服）
+[RCON 127.0.0.1:25706] 已连接
+[RCON v1_21_9] 已连接
+[启动] 日志监听已启动: v1_21_9
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 333
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[警告] 日志文件缩小（size=2506 < offset=3483），偏移重置为 0
+[忽略] 日志行未匹配任何模板: [15:16:21] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[忽略] 日志行未匹配任何模板: [15:16:22] [ServerMain/INFO]: No existing world data, creating new world
+[忽略] 日志行未匹配任何模板: [15:16:23] [ServerMain/INFO]: Loaded 1461 recipes
+[忽略] 日志行未匹配任何模板: [15:16:23] [ServerMain/INFO]: Loaded 1574 advancements
+[忽略] 日志行未匹配任何模板: [15:16:23] [Server thread/INFO]: Starting minecraft server version 1.21.9
+[忽略] 日志行未匹配任何模板: [15:16:23] [Server thread/INFO]: Loading properties
+[忽略] 日志行未匹配任何模板: [15:16:23] [Server thread/INFO]: Default game type: SURVIVAL
+[忽略] 日志行未匹配任何模板: [15:16:23] [Server thread/INFO]: Generating keypair
+[忽略] 日志行未匹配任何模板: [15:16:23] [Server thread/INFO]: Starting Minecraft server on *:25606
+[忽略] 日志行未匹配任何模板: [15:16:23] [Server thread/INFO]: Using epoll channel type
+[忽略] 日志行未匹配任何模板: [15:16:23] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[忽略] 日志行未匹配任何模板: [15:16:23] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
+[忽略] 日志行未匹配任何模板: [15:16:23] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[忽略] 日志行未匹配任何模板: [15:16:23] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[忽略] 日志行未匹配任何模板: [15:16:23] [Server thread/INFO]: Preparing level "world"
+[忽略] 日志行未匹配任何模板: [15:16:23] [Server thread/INFO]: Selecting global world spawn...
+[忽略] 日志行未匹配任何模板: [15:16:34] [Server thread/INFO]: Loading 0 persistent chunks...
+[忽略] 日志行未匹配任何模板: [15:16:34] [Server thread/INFO]: Preparing spawn area: 100%
+[忽略] 日志行未匹配任何模板: [15:16:34] [Server thread/INFO]: Time elapsed: 10298 ms
+[忽略] 日志行未匹配任何模板: [15:16:34] [Server thread/INFO]: Done (10.602s)! For help, type "help"
+[忽略] 日志行未匹配任何模板: [15:16:34] [Server thread/INFO]: Starting remote control listener
+[忽略] 日志行未匹配任何模板: [15:16:34] [Server thread/INFO]: Thread RCON Listener started
+[忽略] 日志行未匹配任何模板: [15:16:34] [Server thread/INFO]: RCON running on 0.0.0.0:25706
+[忽略] 日志行未匹配任何模板: [15:16:37] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:16:37] [RCON Client /127.0.0.1 #2/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:16:38] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:16:38] [RCON Client /127.0.0.1 #3/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:16:38] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:16:39] [RCON Client /127.0.0.1 #4/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:16:40] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:16:40] [RCON Client /127.0.0.1 #5/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [15:16:42] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [15:17:01] [Server thread/INFO]: Steve[/127.0.0.1:40388] logged in with entity id 45 at (0.5, 141.0, 5.5)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.9.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '56ed1688e196de7e568359b4b01e1924'}, trace_id:56ed1688e196de7e568359b4b01e1924
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.9.json
+[忽略] 日志行未匹配任何模板: [15:17:02] [Server thread/INFO]: [Not Secure] <Steve> 矩阵测试：普通聊天（不该被转发）
+[忽略] 日志行未匹配任何模板: [15:17:03] [Server thread/INFO]: [Not Secure] <Steve> #矩阵测试：带井号聊天（应被转发）
+[忽略] 日志行未匹配任何模板: [15:17:05] [Server thread/INFO]: Steve lost connection: Disconnected
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.9.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '8301af469da5ab76e2bb336eea7738d7'}, trace_id:8301af469da5ab76e2bb336eea7738d7
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.9.json
+[警告] 日志文件缩小（size=0 < offset=2996），偏移重置为 0
+[忽略] 日志行未匹配任何模板: [15:17:15] [Server thread/INFO]: Alex[/127.0.0.1:45948] logged in with entity id 231 at (-9.5, 145.0, 3.5)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.9.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '5dda2913d9f4144b2164c165d86c2975'}, trace_id:5dda2913d9f4144b2164c165d86c2975
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.9.json
+[忽略] 日志行未匹配任何模板: [15:17:16] [Server thread/INFO]: [Not Secure] <Alex> 矩阵测试：普通聊天（不该被转发）
+[忽略] 日志行未匹配任何模板: [15:17:18] [Server thread/INFO]: [Not Secure] <Alex> #矩阵测试：带井号聊天（应被转发）
+[忽略] 日志行未匹配任何模板: [15:17:19] [Server thread/INFO]: Alex lost connection: Disconnected
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.9.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '5969c7d6781feb57f851b09567ffef9c'}, trace_id:5969c7d6781feb57f851b09567ffef9c
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.9.json
+[停止] 收到退出信号
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.9.json
+[停止] 已退出

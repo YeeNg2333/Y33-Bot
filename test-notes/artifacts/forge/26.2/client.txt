@@ -1,0 +1,1 @@
+mineflayer（minecraft-data）不支持 26.2，本版本跳过真实客户端

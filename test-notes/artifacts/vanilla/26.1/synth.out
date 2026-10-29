@@ -1,0 +1,65 @@
+===== 合成日志行补充用例：26.1 开始 2026-10-18 16:02:38 CST =====
+  [下载] 26.1 server.jar <- https://piston-data.mojang.com/v1/objects/3872a7f07a1a595e651aef8b058dfc2bb3772f46/server.jar
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                   Dload  Upload   Total   Spent    Left  Speed
+    0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0 57.6M    0  341k    0     0   322k      0  0:03:02  0:00:01  0:03:01  322k  2 57.6M    2 1193k    0     0   586k      0  0:01:40  0:00:02  0:01:38  586k  4 57.6M    4 2897k    0     0   917k      0  0:01:04  0:00:03  0:01:01  917k  7 57.6M    7 4293k    0     0  1051k      0  0:00:56  0:00:04  0:00:52 1051k 11 57.6M   11 6753k    0     0  1336k      0  0:00:44  0:00:05  0:00:39 1346k 17 57.6M   17  9.8M    0     0  1652k      0  0:00:35  0:00:06  0:00:29 1931k 24 57.6M   24 14.0M    0     0  2038k      0  0:00:28  0:00:07  0:00:21 2625k 33 57.6M   33 19.5M    0     0  2478k      0  0:00:23  0:00:08  0:00:15 3476k 46 57.6M   46 26.7M    0     0  3032k      0  0:00:19  0:00:09  0:00:10 4662k 60 57.6M   60 34.5M    0     0  3521k      0  0:00:16  0:00:10  0:00:06 5726k 71 57.6M   71 41.4M    0     0  3843k      0  0:00:15  0:00:11  0:00:04 6534k 79 57.6M   79 45.8M    0     0  3894k      0  0:00:15  0:00:12  0:00:03 6517k 87 57.6M   87 50.4M    0     0  3955k      0  0:00:14  0:00:13  0:00:01 6360k 97 57.6M   97 56.1M    0     0  4087k      0  0:00:14  0:00:14 --:--:-- 5983k100 57.6M  100 57.6M    0     0  4140k      0  0:00:14  0:00:14 --:--:-- 5627k
+  server.jar: 成功
+  [实例] 版本        = 26.1（Java 25）
+  [实例] 目录        = /home/hermes/mc-test/vanilla/26.1
+  [实例] 游戏端口    = 25607     RCON 端口 = 25707
+  [实例] online-mode = false
+  [实例] 日志        = /home/hermes/mc-test/vanilla/26.1/logs/latest.log
+  [实例] 元数据      = . /home/hermes/mc-test/vanilla/26.1/instance.env
+  [启动] tmux new -d -s mc-vanilla-26_1 "cd /home/hermes/mc-test/vanilla/26.1 && ./start.sh 2>&1 | tee -a console.out.log"
+  [停止] tmux send-keys -t mc-vanilla-26_1 'stop' Enter
+服务端就绪：[16:03:17] [Server thread/INFO]: RCON running on 0.0.0.0:25707
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: v26_1
+[启动] QQ 网关已连接
+[启动] QQ 网关就绪
+--- 追加：普通聊天 / # 聊天 / 退服 / 再进服 ---
+--- 轮转（S6）：清空 latest.log 后再追加一行进服 ---
+bot exit=0
+--- run-synth.out 全量 ---
+Using selector: EpollSelector
+[启动] y33bot 0.1.0（1 个 MC 服）
+[RCON 127.0.0.1:25707] 已连接
+[RCON v26_1] 已连接
+[启动] 日志监听已启动: v26_1
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 4732
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[警告] 日志文件缩小（size=2441 < offset=4073），偏移重置为 0
+[忽略] 日志行未匹配任何模板: [16:00:01] [Server thread/INFO]: Steve[/127.0.0.1:50001] logged in with entity id 10 at (0.5, 64.0, 0.5)
+[忽略] 日志行未匹配任何模板: [16:03:18] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '794e206e95f32b6b522d483ab88daf26'}, trace_id:794e206e95f32b6b522d483ab88daf26
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[忽略] 日志行未匹配任何模板: [16:00:05] [Server thread/INFO]: [Not Secure] <Steve> 合成行：普通聊天（不该被转发）
+[忽略] 日志行未匹配任何模板: [16:00:06] [Server thread/INFO]: [Not Secure] <Steve> #合成行：带井号聊天（应被转发）
+[忽略] 日志行未匹配任何模板: [16:00:08] [Server thread/INFO]: Steve lost connection: Disconnected
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'e3fc54cafc211bf95d21e2ca415b3df4'}, trace_id:e3fc54cafc211bf95d21e2ca415b3df4
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[警告] 日志文件缩小（size=54 < offset=2764），偏移重置为 0
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'e01a992cb1c6a55c2782e1c9b8526473'}, trace_id:e01a992cb1c6a55c2782e1c9b8526473
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[停止] 收到退出信号
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-26.1.json
+[停止] 已退出
+--- 收尾 ---
+/dev/mapper/rlm-root   17G   16G  1.1G   94% /
+===== 合成日志行补充用例：26.1 结束 2026-10-18 16:03:47 CST =====

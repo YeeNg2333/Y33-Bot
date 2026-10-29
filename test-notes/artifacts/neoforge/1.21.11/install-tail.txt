@@ -1,0 +1,25 @@
+===============================================================================
+Processor: net.neoforged.installertools:installertools -> PROCESS_MINECRAFT_JAR
+  MainClass: net.neoforged.installertools.ConsoleTool
+  Classpath:
+    /home/hermes/mc-test/neoforge/1.21.11/./libraries/net/neoforged/installertools/installertools/4.0.6/installertools-4.0.6-fatjar.jar
+    /home/hermes/mc-test/neoforge/1.21.11/./libraries/net/neoforged/installertools/installertools/4.0.6/installertools-4.0.6-fatjar.jar
+  Args: --task, PROCESS_MINECRAFT_JAR, --input, /home/hermes/mc-test/neoforge/1.21.11/./libraries/net/minecraft/server/1.21.11/server-1.21.11.jar, --input-mappings, /home/hermes/mc-test/neoforge/1.21.11/./libraries/net/minecraft/server/1.21.11/server-1.21.11-mappings.txt, --output, /home/hermes/mc-test/neoforge/1.21.11/./libraries/net/neoforged/minecraft-server-patched/21.11.48/minecraft-server-patched-21.11.48.jar, --extract-libraries-to, /home/hermes/mc-test/neoforge/1.21.11/./libraries/, --neoform-data, /home/hermes/mc-test/neoforge/1.21.11/./libraries/net/neoforged/neoform/1.21.11-20251209.172050/neoform-1.21.11-20251209.172050-mappings.tsrg.lzma, --apply-patches, /tmp/neoforge_installer10617572974766460718/data/client.lzma
+Task: PROCESS_MINECRAFT_JAR
+load parameter mappings [1656ms]
+load patch bundle [2188ms]
+load mappings [2485ms]
+load input zip [2615ms]
+merge mappings [348ms]
+Adding Libraries to Inheritance
+Processor: net.neoforged.installertools:installertools -> PROCESS_MINECRAFT_JAR: Processing entries
+Adding input to inheritance map
+Processing 14729 entries
+Adding extras
+Sorting
+deobfuscate jar [44496ms]
+applying patches [2009ms]
+write output file [2732ms]
+overall work [52142ms]
+The server installed successfully
+You can delete this installer file now if you wish

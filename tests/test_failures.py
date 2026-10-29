@@ -947,6 +947,7 @@ async def test_service_run_builds_gateway_from_credentials(app: App, monkeypatch
             created["config_is_same"] = config is app.config
             created["handler"] = handler
             self.closed = False
+            self._closed: asyncio.Event | None = asyncio.Event()
 
         async def start(self) -> None:
             created["started"] = True
@@ -954,8 +955,15 @@ async def test_service_run_builds_gateway_from_credentials(app: App, monkeypatch
         async def send_group_message(self, _message) -> None:  # pragma: no cover - run 里不会调用
             return None
 
+        async def wait_closed(self) -> None:
+            # 真网关会等 SDK 协程结束；这个桩一直等到 close()（= 优雅退出），不误报「网关断开」
+            assert self._closed is not None
+            await self._closed.wait()
+
         async def close(self) -> None:
             self.closed = True
+            assert self._closed is not None
+            self._closed.set()
 
     monkeypatch.setattr(service_module, "BotpyGateway", StubBotpy)
     service = Service(app.config, env=app.env, config_path=app.config_path, pool=app.make_pool())

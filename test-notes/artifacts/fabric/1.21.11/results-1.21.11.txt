@@ -1,0 +1,14 @@
+start_ok=1
+check_exit=0
+tellraw_exit=0
+client_saw_tellraw=no
+status_exit=0
+join_template_match=yes
+quit_template_match=yes
+chat_template_match=no
+chatplain_template_match=no
+loop_guard_tested=yes
+health_flip_tested=yes
+rotation_tested=yes
+run_exit=0
+conclusion_1.21.11=已跑完（见 /home/hermes/mc-test/fabric/1.21.11/artifacts/results-1.21.11.txt 上方各标记与 artifacts 原始制品）

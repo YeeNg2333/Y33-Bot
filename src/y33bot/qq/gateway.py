@@ -66,6 +66,15 @@ class QQGateway(Protocol):
         """关闭网关（幂等）。"""
         ...
 
+    async def wait_closed(self) -> None:
+        """等待网关**自己**结束（正常返回或抛异常都算）。
+
+        BUG-001：`Service.run()` 用它把「启动后网关任务结束」当成故障（`[错误]` + 非 0 退出），
+        而不是默默常驻。实现必须可取消（优雅退出时会 cancel 这个等待），
+        且**不能**在 `start()` 之前就返回。
+        """
+        ...
+
 
 class BotpyGateway:
     """基于腾讯官方 SDK `qq-botpy` 的网关实现。"""
@@ -156,6 +165,20 @@ class BotpyGateway:
                 await client.close()
             except Exception as exc:  # noqa: BLE001 - 关闭失败只记日志
                 self._logger.warning("[警告] 关闭 QQ 网关失败: %s", exc)
+
+    async def wait_closed(self) -> None:
+        """等待网关任务**自己**结束（BUG-001：`Service.run()` 用它检测「启动后网关失效」）。
+
+        实现用 done-callback + `Event` 而不是直接 `await self._task`：等待方被取消（优雅退出）
+        时不会把取消传导给网关任务本身；任务无论正常返回、抛异常还是被取消，都会唤醒等待方。
+        """
+
+        task = self._task
+        if task is None:  # pragma: no cover - start() 成功之后才会有任务
+            return
+        ended = asyncio.Event()
+        task.add_done_callback(lambda _task: ended.set())
+        await ended.wait()
 
     # ------------------------------------------------------------------ 收
     async def _on_group_at_message_create(self, message) -> None:  # noqa: ANN001 - SDK 回调签名

@@ -114,9 +114,9 @@ connect_timeout = 5.0
 command_timeout = 5.0
 
 [log_patterns]
-join = '\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) joined the game'
-quit = '\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) left the game'
-chat = '\[\d{2}:\d{2}:\d{2}\] \[Async Chat Thread - #\d+/INFO\]: <(?P<player>\w+)> (?P<message>.+)'
+join = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?P<player>\w+) joined the game'
+quit = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?P<player>\w+) left the game'
+chat = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)'
 encoding = "utf-8"
 ```
 
@@ -124,7 +124,7 @@ encoding = "utf-8"
 
 - **`paths.*` 与 `mc_servers[].log_path` 的相对路径按 `config.toml` 所在目录解析**，不是按当前工作目录（实测：从父目录用 `--config repo/config.toml` 运行，日志路径仍是 `repo/logs/latest.log`）。绝对路径原样使用。
 - 多台 MC 服就多写一个 `[[mc_servers]]`：QQ→MC 的消息会**广播到所有服**；MC→QQ 的事件都发到同一个群，但文案带来源服名（`Steve@main: 你好`），一眼能看出是哪个服。
-- `[log_patterns]` 是为了兼容 MC 版本差异：日志格式变了只改这里，不用改代码（`join`/`quit` 必须有 `player` 命名组，`chat` 必须有 `player` 与 `message`）。
+- `[log_patterns]` 是为了兼容 MC 版本差异：日志格式变了只改这里，不用改代码（`join`/`quit` 必须有 `player` 命名组，`chat` 必须有 `player` 与 `message`）。**出厂默认的三条模板是「一条吃四族」的形态**（原版 ≥1.21.2 / Fabric / Forge / NeoForge）：时间戳不再限定 `HH:MM:SS`（Forge 是 `[1810月2026 15:35:33.486]`）、logger 段在 `Server thread` 与旧版 `Async Chat Thread - #N` 之间二选一、可选一段模组加载器 `[…]`、聊天行可选 `[Not Secure] ` 前缀；四族真日志实测 **361/361 命中**（明细见 `docs/acceptance.md` §10）。`encoding` 是读日志文件用的编码，默认 `utf-8`。该形态偏离 `IDEA.md:170` 冻结的单形态模板，偏离已登记在 `PLAN.md` §7.3。
 - `log_poll_interval` 决定事件延迟（默认 0.5 秒）；`health_poll_interval` 决定离线/上线提示的及时性（默认 30 秒）。
 - **没有热重载**：改完配置要重启进程。
 
@@ -232,22 +232,44 @@ python -m y33bot simulate health --server main --offline --dry-run --config conf
 先自检，再常驻：
 
 ```bash
-python -m y33bot check --config config.toml     # 逐项 OK/FAIL，末行 OK/FAIL，退出码 0/1
-python -m y33bot run   --config config.toml     # 常驻：QQ 网关 + 日志轮询 + 健康轮询
+python -m y33bot check --config config.toml             # 逐项 OK/FAIL，末行 OK/FAIL，退出码 0/1
+python -m y33bot check --config config.toml --no-probe  # 同上，但跳过 QQ 探活（离线 / CI 用）
+python -m y33bot run   --config config.toml             # 常驻：QQ 网关 + 日志轮询 + 健康轮询
 ```
 
-自检通过（RCON 可达）时的实测输出：
+自检通过（RCON 可达、凭据有效）时的输出形态：
 
 ```text
 [配置] OK config.toml 解析成功，1 个 MC 服
-[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[QQ] OK access_token 获取成功（有效期 7200s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
 [RCON main] OK /list -> There are 0 of a max of 20 players online:
 [日志 main] OK .../logs/latest.log 可读，偏移 0 字节
 [绑定] OK 1 条
 OK
 ```
 
-MC 还没起（RCON 连不上）时，这一行变 FAIL、末行 FAIL、退出码 1，**这不是崩溃**，把 MC 起起来或把 `host`/`port` 指对再 check 即可：
+> `[QQ] OK` 那一行是本节唯一**不是**逐字实测粘贴的输出 —— 它要求真实有效的机器人凭据（本机没有）。
+> 其余行都是本机实跑粘贴；探活失败那一行见下面「凭据无效」的实测输出。
+
+`check` 的 QQ 项会**真的**去平台取一次 `access_token`（不再只是看看环境变量填没填）。拿「格式像真的、但从未签发」的假凭据实测（2026-10-15 03:08 +0800）：
+
+```text
+$ python -m y33bot check --config config.toml
+[配置] OK config.toml 解析成功，1 个 MC 服
+[QQ] FAIL access_token 获取失败: 平台返回错误: code=10004 message=机器人不存在
+[RCON main] FAIL 无法连接 127.0.0.1:34567: 连接 127.0.0.1:34567 失败: [WinError 1225] 远程计算机拒绝网络连接。
+[日志 main] OK .../logs/latest.log 可读，偏移 0 字节
+[绑定] OK 0 条
+FAIL
+```
+
+同一份配置在修复前打印的是 `[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置` —— 「变量填了」被当成了「凭据可用」。不想让 `check` 联网（离线机器、CI）就加 `--no-probe`，此时文案会自己说明这一点：
+
+```text
+[QQ] OK app_id 已设置 (env QQ_BOT_APP_ID)，未探活（--no-probe），group_openid 已配置
+```
+
+MC 还没起（RCON 连不上）时，RCON 那一行变 FAIL、末行 FAIL、退出码 1，**这不是崩溃**，把 MC 起起来或把 `host`/`port` 指对再 check 即可：
 
 ```text
 [RCON main] FAIL 无法连接 127.0.0.1:34567: 连接 127.0.0.1:34567 失败: [WinError 1225] 远程计算机拒绝网络连接。
@@ -292,12 +314,28 @@ $ python -m y33bot run --config config.toml
 [停止] 已退出
 ```
 
+**运行期网关失效不再静默**（BUG-001 修复）：长连接被平台关掉、网络瞬断、AppSecret 被重置后重连失败……
+只要网关任务结束，服务就打一条 `[错误]` 并**以退出码 1 结束**，交给 `systemd`/`nssm` 拉起
+（本机离线实测输出，见 `docs/acceptance.md` §9.2）：
+
+```text
+[启动] QQ 网关已连接
+[启动] 日志监听已启动: main
+[错误] QQ 网关已断开（收不到群消息），进程退出等待重启
+[停止] 正在关闭…
+[停止] 已退出
+```
+
+反过来说：`Ctrl+C`、`SIGTERM`、`systemctl stop` 这类**我们自己主动关**的场景不会打这行，退出码仍是 0。
+本节「凭据写错」那段（启动期失败）与这里的「运行期断开」是两个不同阶段，都用退出码 1 表达失败。
+
 ## 8. 命令速查
 
 | 命令 | 作用 |
 |---|---|
 | `python -m y33bot --version` | 打印 `y33bot 0.1.0` |
 | `python -m y33bot check --config config.toml` | 启动自检：配置 / QQ 凭据 / 每服 RCON / 每服日志 / 绑定表，退出码 0 通过、1 失败 |
+| `python -m y33bot check --config config.toml --no-probe` | 同上，但跳过 QQ 探活（`[QQ] OK` 只代表变量填了）；离线环境 / CI 用 |
 | `python -m y33bot run --config config.toml` | 常驻运行；`--verbose` 输出 DEBUG 日志（默认 INFO，走 stderr） |
 | `python -m y33bot bind list --config config.toml` | 列出绑定 |
 | `python -m y33bot bind set <openid> <游戏ID> --config config.toml` | 写绑定（同 openid 覆盖旧值）；游戏 ID 需匹配 `^[A-Za-z0-9_]{3,16}$` |
@@ -565,6 +603,39 @@ QQ 官方约束：被动回复只在收到事件后的短窗口内有效（本�
 
 那是 QQ 平台的功能，条目在**开发者管理端**手工配置（`发布设置 → 功能配置 → 指令配置`），本项目没有、也无法用代码注册。配置清单与字段限制见 **§5.3**，用 `python -m y33bot commands --config config.toml` 直接打印要填的两列。注意指令名要带 `/`（与 `config.toml` 的 `command_prefix` 一致），且本项目只收群 @消息 —— 面板消息不带 @ 时收不到。
 
+**14）机器人不回话 / 日志里出现 `[错误] QQ 网关已断开（收不到群消息），进程退出等待重启` / 进程自己退了**
+
+这是**修复后的刻意行为**（`BUGS.md` 的 BUG-001、`PLAN.md` §7.2）：收消息方向是一条 WebSocket 长连接，它一旦断掉（断网、平台踢下线、AppSecret 被重置、token 刷新持续失败……），SDK 并不会自己把它拉起来（本项目用 `ret_coro=True`，SDK 自带的重连驱动不执行）。所以服务**不再**装作没事：打一条 `[错误]`、走完正常关闭流程、以退出码 1 结束，把「重不重启」交给进程管理器。
+
+| 现象 | 含义 | 怎么办 |
+|---|---|---|
+| 日志有 `[错误] QQ 网关已断开…`，进程退出码 1 | 运行期网关任务结束（收方向永久失效） | 用 `systemd`（`Restart=on-failure`/`always`）或 `nssm`/任务计划拉起，见 §11；项目自己**不做退避重启** |
+| `run` 一起就 `[错误] QQ 网关启动失败: …` | 启动期失败（凭据错 / 出不了网） | 见上面第 9 条的两种错误 |
+| `check` 里 `[QQ] FAIL access_token 获取失败: …` | 真探活失败：凭据无效或网络不通 | 修凭据/网络；离线环境加 `--no-probe`（此时 `[QQ] OK` 只说明变量填了） |
+
+想进一步定位「为什么断」：`run --verbose` 看 `[botpy]` 行（`ws关闭，停止接收消息!`、`鉴权失败，重置token...`、`获取token失败…`），
+排查顺序与离线取证结论都写在 `BUGS.md` 的 BUG-001 里；重启不会重推历史消息（`data/state.json` 的日志偏移续读）。
+
+**15）群里收不到游戏内的 `#` 聊天，但进服 / 退服通知是正常的**
+
+典型症状是「一半对、一半不对」：进出通知走 `join`/`quit` 两条模板，`#` 聊天走的是**另一条** `chat` 模板，
+所以通知正常不能推出聊天也正常 —— 先单独验 `[log_patterns].chat`。拿 `latest.log` 里那条聊天原文做一次 dry-run：
+
+```bash
+$ python -m y33bot simulate log-event --server main \
+    --line '[15:18:30] [Server thread/INFO]: [Not Secure] <Steve> #大家好' --dry-run --config config.toml
+[群消息] Steve@main: 大家好
+```
+
+| dry-run 输出 | 含义 | 怎么办 |
+|---|---|---|
+| `[警告] 日志行未匹配任何模板`（退出码 1） | `chat` 模板认不出这一行 | 你这份 `config.toml` 大概还是**旧模板**：MC 1.21.2 起聊天回到主线程并带 `[Not Secure] ` 前缀（`[Server thread/INFO]: [Not Secure] <player> msg`），Forge 还会在 logger 后多一段 `[net.minecraft.server.MinecraftServer/]`。把 §5.1 的 `[log_patterns]` 三条整段换成**出厂默认**（一条吃四族，见 `PLAN.md` §7.3），改完重启进程（没有热重载） |
+| `[忽略] 聊天非 # 开头，不转发` | 模板没问题 | 这条聊天本身不以 `#` 开头，设计上不转发（要转发就在游戏里加 `#`） |
+| `[群消息] Steve@main: …` | 模板没问题 | 问题在 QQ 侧：`[qq] group_openid` 为空（MC→QQ 方向禁用，见第 4 条）、主动消息频控或网关断开（见第 9、14 条） |
+
+> 顺带一句：`simulate log-event` 与 `run` 用的是同一个 `parse_line`，所以这里的判定就是线上判定。
+> 四条模板（`join`/`quit`/`chat` + 可选 `encoding`）改任一条都只影响它自己，不会连带其它两条。
+
 ## 14. 测试、检查与验收记录
 
 ```bash
@@ -573,7 +644,9 @@ python -m pytest -q --cov=y33bot --cov-report=term-missing # 带覆盖率
 python -m ruff check . && python -m ruff format --check .  # 静态检查与格式
 ```
 
-在 BUG-001 取证用例合入后（2026-10-15）实测：`357 passed`、覆盖率 `TOTAL 99%`（`--cov-fail-under=70` 门槛通过，实测 `99.30%`）、`ruff check .` 与 `ruff format --check .` 全过（41 文件）。作为对照：v0.2 变更（真机反馈三项）后是 `352 passed`，v0.1.0 时是 `214 passed` / `TOTAL 90%`——数字随后续新增测试变大。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件。
+最近一次实测（2026-10-29，日志模板改为「四族通吃」出厂默认 + 三方相等回归锁落地后）：`409 passed`、覆盖率 `TOTAL 99%`（`--cov-fail-under=70` 门槛通过，实测 **`99.33%`**）、`ruff check .` 与 `ruff format --check .` 全过（**45 文件**）；另做了一次真日志全量复扫：`test-notes/artifacts/` 下 vanilla / Fabric / Forge / NeoForge 四族共 **361/361** 条真行全部命中（改前同一批行是 101/361，逐族明细见 `docs/acceptance.md` §10）。
+
+历史对照（当时各自的实测值，保留原样）：BUG-001 修复落地后（2026-10-15）`381 passed` / `99.33%` / ruff 43 文件；BUG-001 取证用例合入后 `357 passed` / `99.30%`；v0.2 变更（真机反馈三项）后 `352 passed`；v0.1.0 时 `214 passed` / `TOTAL 90%`——数字随后续新增测试变大。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件，`check` 的真探活也在单测里被替身替换（真机/CI 用 `--no-probe` 保离线）。
 
 - 逐条手工自测（S1–S4、S6 的真机输出）：[`docs/smoke.md`](docs/smoke.md)
 - 端到端验收记录（每条含命令 / 实际输出 / 结论）：`docs/acceptance.md`

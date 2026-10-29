@@ -1,0 +1,25 @@
+Processing 6728 entries
+Adding extras
+Sorting
+Processor: net.neoforged:AutoRenamingTool: Writing output
+Writing 6729 to output /home/hermes/mc-test/neoforge/1.21.8/./libraries/net/minecraft/server/1.21.8-20250717.133445/server-1.21.8-20250717.133445-srg.jar
+===============================================================================
+Processor: net.neoforged.installertools:binarypatcher
+  MainClass: net.neoforged.binarypatcher.ConsoleTool
+  Classpath:
+    /home/hermes/mc-test/neoforge/1.21.8/./libraries/net/neoforged/installertools/binarypatcher/3.0.13/binarypatcher-3.0.13-fatjar.jar
+    /home/hermes/mc-test/neoforge/1.21.8/./libraries/net/neoforged/installertools/binarypatcher/3.0.13/binarypatcher-3.0.13-fatjar.jar
+  Args: --clean, /home/hermes/mc-test/neoforge/1.21.8/./libraries/net/minecraft/server/1.21.8-20250717.133445/server-1.21.8-20250717.133445-srg.jar, --output, /home/hermes/mc-test/neoforge/1.21.8/./libraries/net/neoforged/neoforge/21.8.57/neoforge-21.8.57-server.jar, --apply, /tmp/neoforge_installer8115864460688124462/data/server.lzma
+Applying: 
+  Clean:     /home/hermes/mc-test/neoforge/1.21.8/./libraries/net/minecraft/server/1.21.8-20250717.133445/server-1.21.8-20250717.133445-srg.jar
+  Output:    /home/hermes/mc-test/neoforge/1.21.8/./libraries/net/neoforged/neoforge/21.8.57/neoforge-21.8.57-server.jar
+  KeepData:  false
+  Unpatched: false
+  Pack200:   false
+  Legacy:    false
+Loading patches file: /tmp/neoforge_installer8115864460688124462/data/server.lzma
+Processor: net.neoforged.installertools:binarypatcher: Loading patch files
+Processor: net.neoforged.installertools:binarypatcher: Patching input
+Processor: net.neoforged.installertools:binarypatcher: Adding new files
+The server installed successfully
+You can delete this installer file now if you wish

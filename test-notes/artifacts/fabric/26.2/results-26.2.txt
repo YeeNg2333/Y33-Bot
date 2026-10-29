@@ -1,0 +1,12 @@
+start_ok=1
+check_exit=0
+tellraw_exit=0
+status_exit=0
+real_client=unsupported_version
+chat_template_match=unverified(no_real_line)
+join_template_match=unverified(no_real_line)
+quit_template_match=unverified(no_real_line)
+health_flip_tested=yes
+rotation_tested=yes
+run_exit=0
+conclusion_26.2=已跑完（见 /home/hermes/mc-test/fabric/26.2/artifacts/results-26.2.txt 上方各标记与 artifacts 原始制品）

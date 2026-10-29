@@ -1,0 +1,87 @@
+Using selector: EpollSelector
+[启动] y33bot 0.1.0（1 个 MC 服）
+[RCON 127.0.0.1:25703] 已连接
+[RCON v1_21_4] 已连接
+[启动] 日志监听已启动: v1_21_4
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 1419
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[忽略] 日志行未匹配任何模板: [14:58:11] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[忽略] 日志行未匹配任何模板: [14:58:12] [ServerMain/INFO]: No existing world data, creating new world
+[忽略] 日志行未匹配任何模板: [14:58:13] [ServerMain/INFO]: Loaded 1370 recipes
+[忽略] 日志行未匹配任何模板: [14:58:13] [ServerMain/INFO]: Loaded 1481 advancements
+[忽略] 日志行未匹配任何模板: [14:58:13] [Server thread/INFO]: Starting minecraft server version 1.21.4
+[忽略] 日志行未匹配任何模板: [14:58:13] [Server thread/INFO]: Loading properties
+[忽略] 日志行未匹配任何模板: [14:58:13] [Server thread/INFO]: Default game type: SURVIVAL
+[忽略] 日志行未匹配任何模板: [14:58:13] [Server thread/INFO]: Generating keypair
+[忽略] 日志行未匹配任何模板: [14:58:13] [Server thread/INFO]: Starting Minecraft server on *:25603
+[忽略] 日志行未匹配任何模板: [14:58:13] [Server thread/INFO]: Using epoll channel type
+[忽略] 日志行未匹配任何模板: [14:58:13] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[忽略] 日志行未匹配任何模板: [14:58:13] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
+[忽略] 日志行未匹配任何模板: [14:58:13] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[忽略] 日志行未匹配任何模板: [14:58:13] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[忽略] 日志行未匹配任何模板: [14:58:13] [Server thread/INFO]: Preparing level "world"
+[忽略] 日志行未匹配任何模板: [14:58:21] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
+[忽略] 日志行未匹配任何模板: [14:58:21] [Worker-Main-1/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [14:58:21] [Worker-Main-1/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [14:58:22] [Worker-Main-1/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [14:58:23] [Worker-Main-1/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [14:58:23] [Worker-Main-1/INFO]: Preparing spawn area: 2%
+[忽略] 日志行未匹配任何模板: [14:58:23] [Worker-Main-1/INFO]: Preparing spawn area: 22%
+[忽略] 日志行未匹配任何模板: [14:58:24] [Worker-Main-1/INFO]: Preparing spawn area: 22%
+[忽略] 日志行未匹配任何模板: [14:58:24] [Worker-Main-1/INFO]: Preparing spawn area: 22%
+[忽略] 日志行未匹配任何模板: [14:58:26] [Worker-Main-1/INFO]: Preparing spawn area: 22%
+[忽略] 日志行未匹配任何模板: [14:58:26] [Worker-Main-1/INFO]: Preparing spawn area: 22%
+[忽略] 日志行未匹配任何模板: [14:58:26] [Worker-Main-1/INFO]: Preparing spawn area: 22%
+[忽略] 日志行未匹配任何模板: [14:58:26] [Worker-Main-1/INFO]: Preparing spawn area: 40%
+[忽略] 日志行未匹配任何模板: [14:58:27] [Server thread/INFO]: Time elapsed: 5871 ms
+[忽略] 日志行未匹配任何模板: [14:58:27] [Server thread/INFO]: Done (13.655s)! For help, type "help"
+[忽略] 日志行未匹配任何模板: [14:58:27] [Server thread/INFO]: Starting remote control listener
+[忽略] 日志行未匹配任何模板: [14:58:27] [Server thread/INFO]: Thread RCON Listener started
+[忽略] 日志行未匹配任何模板: [14:58:27] [Server thread/INFO]: RCON running on 0.0.0.0:25703
+[忽略] 日志行未匹配任何模板: [14:58:29] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [14:58:30] [RCON Client /127.0.0.1 #2/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [14:58:31] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [14:58:31] [RCON Client /127.0.0.1 #3/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [14:58:31] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [14:58:31] [RCON Client /127.0.0.1 #4/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [14:58:34] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [14:58:34] [RCON Client /127.0.0.1 #5/INFO]: Thread RCON Client /127.0.0.1 shutting down
+[忽略] 日志行未匹配任何模板: [14:58:37] [RCON Listener #1/INFO]: Thread RCON Client /127.0.0.1 started
+[忽略] 日志行未匹配任何模板: [14:58:51] [Server thread/INFO]: Steve[/127.0.0.1:33274] logged in with entity id 1 at (1.5, 110.0, 3.5)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.4.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '6517a68908b863e29e6e99ac7453364b'}, trace_id:6517a68908b863e29e6e99ac7453364b
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.4.json
+[忽略] 日志行未匹配任何模板: [14:58:53] [Server thread/INFO]: [Not Secure] <Steve> 矩阵测试：普通聊天（不该被转发）
+[忽略] 日志行未匹配任何模板: [14:58:54] [Server thread/INFO]: [Not Secure] <Steve> #矩阵测试：带井号聊天（应被转发）
+[忽略] 日志行未匹配任何模板: [14:58:55] [Server thread/INFO]: Steve lost connection: Disconnected
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.4.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '118f5673545733383561e8ed228dd89b'}, trace_id:118f5673545733383561e8ed228dd89b
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.4.json
+[警告] 日志文件缩小（size=0 < offset=3561），偏移重置为 0
+[忽略] 日志行未匹配任何模板: [14:59:05] [Server thread/INFO]: Alex[/127.0.0.1:58224] logged in with entity id 45 at (7.5, 112.0, -1.5)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.4.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': '9fc08397733b2d00f333a20d1f3c8517'}, trace_id:9fc08397733b2d00f333a20d1f3c8517
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.4.json
+[忽略] 日志行未匹配任何模板: [14:59:07] [Server thread/INFO]: [Not Secure] <Alex> 矩阵测试：普通聊天（不该被转发）
+[忽略] 日志行未匹配任何模板: [14:59:08] [Server thread/INFO]: [Not Secure] <Alex> #矩阵测试：带井号聊天（应被转发）
+[忽略] 日志行未匹配任何模板: [14:59:10] [Server thread/INFO]: Alex lost connection: Disconnected
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.4.json
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 400, 返回内容: {'message': '请求的资源不存在(用户/群已注销)', 'code': 11255, 'err_code': 40011028, 'trace_id': 'd3b4f214d65eca2271a8a6f8729354b8'}, trace_id:d3b4f214d65eca2271a8a6f8729354b8
+[错误] QQ 发送失败（不重试）: 请求的资源不存在(用户/群已注销)
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.4.json
+[停止] 收到退出信号
+[停止] 正在关闭…
+[状态] 已落盘 /home/hermes/Y33-Bot/data/state-vanilla-1.21.4.json
+[停止] 已退出
