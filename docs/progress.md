@@ -41,8 +41,9 @@
   `docs/acceptance.md` §1 总表与 §3 逐文件表（新增 `tests/test_gateway_errors.py` 一行、bucket `237 → 250`），
   并在 acceptance 新开 **§10** 记本轮复验（含逐模块覆盖率与「真机未执行」三项）；本文件「当前基线」表同步。
   四处统一为 **403 / 99.39% / 45 文件**，增量出处写明（`test_gateway.py` 24 → 29、`test_service.py` 17 → 25）。
-- 已完成：PR 已创建（正文首行 `Closes #3`，标题 `fix(qq): 网关超时错误可读化 + 启动前探活（不做重试）`）；
-  卡分支 `wt/t_1372eacc` 已 push，未改动 main。
+- 已完成：PR **#4** 已创建（https://github.com/YeeNg2333/Y33-Bot/pull/4，正文首行 `Closes #3`，
+  标题 `fix(qq): 网关超时错误可读化 + 启动前探活（不做重试）`）；卡分支 `wt/t_1372eacc` 已 push
+  （`d306591`），未改动 main。CI `test (3.12)` 在 `push` 与 `pull_request` 两个事件上均 success。
 - 未执行（照实记）：**真机回归**——BUG-005 的平台超时随机、无法主动触发；本机无真 `app_secret` 跑 `run`；
   S5 真机 8 步前置缺失。详见 `docs/acceptance.md` §10.2，`BUGS.md` 的 BUG-005 仍是「已修复（待真机回归）」。
 - 阻塞 / 待办：BUG-005 的「待真机回归」仍挂着；`t_739a0487` / `t_500f7787`（日志模板族，BUG-004）
