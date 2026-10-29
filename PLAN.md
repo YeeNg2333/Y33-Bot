@@ -748,3 +748,33 @@ B1 也**没有**新增重试（明确不重启）。`IDEA.md`、`需求1.txt` �
 `[错误] QQ 网关已断开…` 并 `exit=1`；`check` 也在真网络下实测（假凭据 → `[QQ] FAIL access_token 获取失败: 平台返回错误: code=10004 message=机器人不存在`）。
 原始输出见 `docs/acceptance.md` §9。**真机触发链路（Q1 静默时的日志尾部 / Q3 QQ 侧关码）仍未验证** ——
 本机没有真实 QQ 凭据与真 MC 服，按仓库规则「未执行就如实写未执行」，不用推断代替证据。
+
+### 7.3 BUG-005 修复：错误文案可读化 + 去双前缀 + 启动前一次性探活（2026-10-29）
+
+来源：`BUGS.md` 的 **BUG-005**（2026-10-18 实机测试矩阵汇总卡 `t_1c0e88a4` 登记：Forge 12 版里 5 次、
+NeoForge 3 次、原版 1 次；平台接口超时被 SDK 吞成 `None` 后只剩 `'NoneType' …`）。本次采纳它的
+**修复方向 2（把 `None` 类错误翻译成可读原因）**与**方向 3（启动前先探活）**，
+**方向 1（启动期有限重试 + 退避）不采纳** —— 既有口径是「一次失败就退出，交给 `systemd`/`nssm` 拉起」
+（本文件 §7.2 用户 2026-10-15 拍板），见下面「口径不变」段。
+
+| # | 变更 | 原状 | 现行为 | 涉及文件 |
+|---|---|---|---|---|
+| X1 | `run` 启动期新增**一次**联网探活（复用 BUG-001 R5 的 `qq/probe.py`） | `Service.run()` 拿到凭据后直接构造真网关并 `await gateway.start()`：平台接口超时与「凭据错」在日志里长得一样（都只透传 SDK 内部异常），运维无法区分是该重跑还是该改配置；启动期失败后进程管理器会反复冷启动 | 在构造真网关**之前**先 `await _probe_before_gateway(credentials)`：用既有 `qq.probe.probe_access_token()` 取一次 `access_token`。成功 → 原流程一行 INFO 不变，只多一行 `[调试] QQ 凭据探活通过（access_token 有效期 <N>s）`；**失败一次即退出**：打一行 `[错误] QQ 凭据探活失败（启动前一次性检查，不重试，未启动网关）: <原文>（<归因>）`，走既有 `shutdown()` 并返回 **1**，网关不再启动。归因分三类（顺序即优先级，原文保留在括号前）：**凭据/配置问题**（`code=10004/100007`、`invalid`、`unauthorized`、`HTTP 4xx`）、**网络不可达（不是凭据错）**（`ssl`/`eof`/`timeout`/`connection`/`proxy`/DNS）、**平台接口报错（接口抖动）**（其余，如 `HTTP 5xx`）。探活可注入（`Service(qq_probe=...)`，默认真实现），注入替身网关时跳过，CI 与单测仍全程离线。连带：`qq.probe._post_token()` 的请求发出者改为 `build_opener(ProxyHandler({}))` 直连，避免本机死代理的 `SSL: UNEXPECTED_EOF_WHILE_READING` 被误判成凭据错 | `src/y33bot/service.py`（`_probe_before_gateway` / `_describe_probe_error`）、`src/y33bot/qq/probe.py`、`tests/test_service.py`、`tests/test_qq_probe.py`、`tests/test_failures.py` |
+| X2 | 网关错误文案可读化 + 去掉 `start()` 的双前缀 | 两条 `[错误]` 都是 SDK 内部异常原文（`'NoneType' object is not subscriptable` / `'NoneType' object has no attribute 'get'`），运维读不出原因；且 `BotpyGateway.start()` 自己加了一层「QQ 网关启动失败」，`service.py` 又加一层 ⇒ 日志出现 `QQ 网关启动失败: QQ 网关启动失败: …` | `gateway.py` 新增 `_TIMEOUT_HINTS` + `_describe_gateway_error()`：命中那两条 `NoneType` 内部异常 → 翻译成 `QQ 平台接口无响应（SDK 把超时吞成 None，多为 /users/@me 或 /gateway/bot 超时）：<原文>`；**其余异常原样透传**（凭据错 `{'code': 10004, …}` 不会被套上「超时」帽子）。`_run_client` 的 `[错误]` 改用可读文案，原始堆栈降到 **DEBUG**，且用 `traceback.format_exception()` **拼进消息**（`cli._PlainFormatter` 只输出 `record.getMessage()`，只挂 `record.exc_info` 打不出来 —— 离线实跑才发现）。`start()` 抛 `QQGatewayError(_describe_gateway_error(...)) from ...` 去掉前缀，`service.py` 成为唯一前缀（双前缀消除，`QQ 网关启动失败` 只出现一次）。**只改文案与日志级别，控制流零变化** | `src/y33bot/qq/gateway.py`（`_TIMEOUT_HINTS` / `_describe_gateway_error` / `_run_client` / `start()`）、`tests/test_gateway.py`、`tests/test_service.py` |
+
+**口径不变（重要）**：本次**不做启动期重试/退避** —— 探活与网关启动都是「失败一次即打 `[错误]` + 退出码 1」，
+没有 `while`、没有次数/间隔参数，重启交给 `systemd`/`nssm`。`PLAN.md:85`（N7「不重试」）与
+`PLAN.md:498`（§3.6 网关失败分层）**口径不变**，§5 S5 的期望值**不改**（S5-1 仍是「日志出现
+`[启动] QQ 网关已连接` 与 `[启动] 日志监听已启动: main`」；探活只多一行 DEBUG，成功路径的 INFO 输出一条没变，
+`[错误] QQ 网关启动失败: <原因>` 这一行格式也仍是 §3.6 写的那条）。
+
+**对 IDEA 的偏离**：无。`IDEA.md` §4 的「不重试」只约束单条消息，本次也没有新增任何重试。
+**签名冻结条款核对**：`PLAN.md` §3.3 既有签名一行未改 —— 探活复用 `qq.probe` 的既有函数与 `Service` 既有的
+可选注入参数 `qq_probe`，`QQGatewayError` 的语义（启动期不可用）不变。
+
+**验证与边界**：离线全量用例在 BUG-005 三卡合并树（`wt/t_f43e4dc9` @ `6c2da59` = 两张修复卡 + 测试卡）
+实跑 **403 passed / 覆盖率 99.39% / ruff 干净（45 files）**；整批改动（含日志模板等其他卡）的最终例数以
+收口卡在合并树上重跑为准。文案用本仓自己的日志脚手架（`cli._setup_logging`，与 `run --verbose` 同款）离线探针逐行核对，
+`[错误] QQ 网关异常退出: / QQ 网关启动失败: / QQ 凭据探活失败（…）` 三行的实际输出见
+`BUGS.md` BUG-005「修复记录」。**真机回归未执行**：平台超时是随机事件、无法主动触发
+（`BUGS.md`「未能复现 / 信息不足清单」第 4 条），因此 `BUGS.md` BUG-005 的状态写「已修复（待真机回归）」，不写通过。
