@@ -1,0 +1,7 @@
+[配置] OK config-regress-vanilla-1_21_11-old.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功（有效期 6781s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON vanilla] OK /list -> There are 0 of a max of 20 players online:
+[日志 vanilla] OK /home/hermes/mc-test/vanilla/1.21.11/logs/latest.log 可读，偏移 0 字节
+[日志模板 vanilla] FAIL 4 条样例行中 2 条命中、2 条未命中：请按 README §13 调整 [log_patterns]
+[绑定] OK 0 条
+FAIL

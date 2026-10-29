@@ -1,0 +1,35 @@
+=== latest.log 总行数 ===
+106 /home/hermes/mc-test/neoforge/1.21.11/logs/latest.log
+
+=== logger 段分布（grep -aoE 后 sort|uniq -c）===
+     25 ] [net.minecraft.server.MinecraftServer/]:
+     11 ] [net.minecraft.server.rcon.thread.GenericThread/]:
+     11 ] [net.minecraft.server.dedicated.DedicatedServer/]:
+     10 ] [net.minecraft.server.rcon.thread.RconClient/]:
+      9 ] [net.neoforged.fml.loading.FMLLoader/]:
+      5 ] [net.minecraft.server.players.PlayerList/]:
+      5 ] [net.minecraft.server.network.ServerGamePacketListenerImpl/]:
+      4 ] [net.minecraft.server.level.progress.LoggingLevelLoadListener/]:
+      1 ] [net.neoforged.neoforge.server.permission.PermissionAPI/]:
+      1 ] [net.neoforged.neoforge.common.NeoForgeMod/NEOFORGE-MOD]:
+      1 ] [net.neoforged.neoforge.common.crafting.RecipePriorityManager/]:
+      1 ] [net.neoforged.fml.startup.Entrypoint/]:
+      1 ] [net.neoforged.fml.loading.moddiscovery.ModDiscoverer/]:
+      1 ] [net.neoforged.fml.loading.moddiscovery.locators.JarInJarDependencyLocator/]:
+      1 ] [net.neoforged.fml.loading.moddiscovery.locators.GameLocator/]:
+      1 ] [net.neoforged.fml.loading.ImmediateWindowHandler/]:
+      1 ] [net.neoforged.fml.loading.EarlyServiceDiscovery/]:
+      1 ] [net.minecraft.world.item.crafting.RecipeManager/]:
+      1 ] [net.minecraft.server.rcon.thread.RconThread/]:
+      1 ] [net.minecraft.server.Main/]:
+      1 ] [net.minecraft.network.Connection/]:
+      1 ] [net.minecraft.advancements.AdvancementTree/]:
+      1 ] [MixinExtras|Service/]:
+      1 ] [mixin/]:
+      1 ] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]:
+
+=== 加号前缀段（\[[^]]*\+[^]]*\]）计数 ===
+0
+
+=== [Not Secure] 计数 ===
+14

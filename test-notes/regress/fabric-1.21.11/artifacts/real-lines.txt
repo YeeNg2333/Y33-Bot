@@ -1,0 +1,4 @@
+JOIN=[20:06:16] [Server thread/INFO]: Steve joined the game
+CHAT=[20:06:19] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+PLAIN=[20:06:17] [Server thread/INFO]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+QUIT=[20:06:20] [Server thread/INFO]: Steve left the game

@@ -1,0 +1,5 @@
+=== vanilla 1.21.11 ===
+check(new) exit: 7 个 OK 行
+日志模板项(新): [日志模板 vanilla] OK 未找到可判定的样例行，跳过
+日志模板项(旧): [日志模板 vanilla] FAIL 4 条样例行中 2 条命中、2 条未命中：请按 README §13 调整 [log_patterns]
+MC→QQ 群消息行: 0 次

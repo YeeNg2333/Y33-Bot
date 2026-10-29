@@ -1,0 +1,4 @@
+JOIN=[2910月2026 20:28:31.611] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+CHAT=[2910月2026 20:28:34.500] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+PLAIN=[2910月2026 20:28:33.298] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+QUIT=[2910月2026 20:28:36.000] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game

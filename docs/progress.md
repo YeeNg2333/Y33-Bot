@@ -25,14 +25,73 @@
 | 覆盖率 | **99.33%**（门槛 70%） | 同上 |
 | lint | `ruff check .` 全过；`ruff format --check .` **46 文件**合规 | 同上 |
 | 日志模板真行 | **361/361 命中**（MISS 0；改前同一批行 101/361）；≤1.21.1 旧形态 **3/3** | `docs/acceptance.md` §10.1–§10.2 |
+| 真机回归 | **四族 1.21.11 全通过**（原版 / Fabric / Forge 61.2.0 / NeoForge 21.11.48）：新模板真事件行原版 8/8（在线）→18/18（补跑）、Fabric 4/4→14/14、Forge 4/4→14/14、NeoForge 4/4→**14/14（在线）**；同一批真行换旧模板四族全 `FAIL`；三类出站 404（预期）；看门狗单段 1 次 / Fabric 两段 2 次 | `docs/acceptance.md` §13–§17 |
+| 真机回归是否动了用例数/覆盖率 | **没有**：本批只改 `docs/`、`BUGS.md`、`test-notes/`，`src/` 与 `tests/` 零改动；2026-10-29 21:0x 在本机重跑 `pytest -q --cov=y33bot --cov-fail-under=70` → **453 passed in 50.04s**、`Total coverage: 99.33%`；`ruff check .` / `ruff format --check .` → `All checks passed!` / **46 files already formatted**（与上表逐项相同） | 本表 + `docs/acceptance.md` §17 |
 | 发布 | `v0.1.0` annotated tag（指向 `f0ddd4e`）；v0.2 功能已合入 main | 下表 2026-10-13 条目 |
 | 产品代码 | 2026-10-18 矩阵批**零改动**；2026-10-29 模板批同样**零改动**；2026-10-29 BUG-004 批改动 3 个 `src/` 文件（`mclog/patterns.py`、`mclog/watcher.py`、`service.py`）；2026-10-29 BUG-005 批改动 `qq/gateway.py`（超时文案可读化 + 去 `start()` 双前缀）、`qq/probe.py`（直连 opener）、`service.py`（`run` 启动前一次性探活，不重试） | `BUGS.md`「测试矩阵与证据来源」、`docs/acceptance.md` §10.5/§11/§12、`PLAN.md` §7.3/§7.4 |
 
 > 数字变了要同步三处：`README.md` §14、`docs/smoke.md` §7（粘贴块里的例数行 + 下方「覆盖度」行两处）、
-> `docs/acceptance.md` 的**最新一节**（当前是 §12），再回本表更新。
+> `docs/acceptance.md` 的**最新一节**（当前是 §17），再回本表更新。
 > 注意 `docs/acceptance.md` §1 总表与 §3 逐文件表是**变更前记录**（只加标注、不改写），不要再去改它们的数字。
 
 ---
+
+## 2026-10-29（四族真机回归汇总落盘：原版 / Fabric / NeoForge 补齐 + BUGS 状态收口 + 两处「说过没落盘」补证据）
+
+- 已完成：把这一轮**真机回归**的证据统一落到文档。原版与 Fabric 由本卡（`t_9e9040ed`）自己跑/采集，
+  Forge（`t_f4d69bba`）与 NeoForge（`t_0ee0c2ff`）由父卡执行、本卡回读原文后归档 —— **每一条数字都对着
+  `test-notes/regress/*/artifacts/` 原件核过**，没有照抄卡面摘要。
+- 已完成：`docs/acceptance.md` 新开 **§14（原版 1.21.11）/ §15（Fabric 1.21.11）/ §16（NeoForge 21.11.48）/
+  §17（四族汇总 + 证据分级口径 + harness 缺陷 + 未覆盖边界）**；§0–§13 正文未改写，只给 §13 追加
+  **13.9 补证据**（把「日志变长后 14 条全部命中」这一行的落盘补上）。
+- 已完成：`BUGS.md` —— BUG-002 / BUG-003 / BUG-004 的状态从「待真机回归」推进为
+  **「已修复（真机已回归）」**（汇总表 3 行 + 索引 3 行 + 三条「状态」行），并各补一节「真机回归」：
+  BUG-002 补原版/Fabric/NeoForge、BUG-003 补 NeoForge、BUG-004 补原版/Fabric/NeoForge（含 Fabric **2 次告警的定论**：
+  两个独立连续段被 `Alex left the game` 打断 ⇒ 符合设计，**不开 BUG-006**）。
+- 已完成：`test-notes/regress/vanilla-1.21.11/`、`fabric-1.21.11/`（README + `artifacts/` 全量逐字副本）新建；
+  `regress/log-slice-events.txt`（四族事件行切片）新建；`forge-1.21.11/`、`neoforge-1.21.11/` 各补
+  `check-new-latest.txt` / `check-old-latest.txt`。`test-notes/00-env.md` 补「实例目录跑完即清空 + 四族恢复配方」。
+- 实测（真机）：原版 `check` 新模板 8/8 → **18/18**、旧模板 `FAIL 18 条中 8 命中 / 10 未命中`（8 = join 4 + quit 4）；
+  Fabric 4/4 → **14/14**、旧模板 14 条中 6 命中 / 8 未命中；Forge 14/14、旧模板 14 条**全部未命中**；
+  NeoForge 4/4 → **14/14（服务端在线时落盘，整条 `check` = `OK`）**、旧模板 9 条全部未命中。
+  四族 E2E 均为 4 次真发送 = 3 类事件 + 1 条启动健康翻转，全部被 `api.sgroup.qq.com` 404 拒绝（预期）。
+  看门狗：原版单段 1 次、Fabric 两段 2 次、Forge/NeoForge 单段 1 次；NeoForge 另做真机两段实验（2 段 ⇒ 2 次）。
+- 已完成（口径）：新增 `docs/acceptance.md` §17.2 **证据分级表** —— 区分「服务端在线时的 `check`」「停服后补跑的
+  `check`（只 `[日志模板]` 项有效，RCON 必 FAIL）」「`simulate` 逐行判读」「真客户端 E2E」「明确标注的合成行」，
+  防止把补跑或合成行读成真机通过。
+- 数字基线**未变**：本批只改文档与 `test-notes/`，`src/`、`tests/` 零改动；21:0x 重跑 `pytest` →
+  **453 passed in 50.04s**、`Total coverage: 99.33%`、`ruff check .` 全过、`ruff format --check .` **46 文件**。
+- 阻塞/待办：① `online-mode=true` 的签名聊天行仍未取证（四族实例都是 `online-mode=false`）；
+  ② 四族各只打 1.21.11 一个点，Forge 1.21.3–26.3 / NeoForge 21.3–26.3 / 原版 26.2–26.3 / Fabric 其它组合仍只有格式取样；
+  ③ QQ 真实投递属 S5；④ harness 的 `regress_start.sh` 起服判定（`"0\n0"` 致 `[: 0：需要整数表达式`）**只登记未修**，
+  该行报成功/失败都不可信，真证据只看 `Done (…)` 行与端口。
+- 本轮**没有机制变化**：`[log_patterns]`、看门狗、`check` 的语义与 `PLAN.md` §7.3/§7.4 登记的一致，
+  故 `PLAN.md` 未动（无 §7.5 需要写）。
+- 收尾：四族服务端均已停服（端口无监听、无 tmux 会话），可用内存 1583 → 1569 MB，磁盘余量 884 MB 未缩水。
+- 载体：分支 `docs/regress-summary-four-families` → **PR #8**（https://github.com/YeeNg2333/Y33-Bot/pull/8），
+  未直推 `main`；PR 正文含验收清单与四族实测表。
+
+## 2026-10-29（真机回归 Forge 1.21.11：新出厂模板 14/14 命中 + `check` 三态 + 看门狗，BUG-002/003/004）
+
+- 已完成：在 **Forge 61.2.0 / MC 1.21.11**（BUG-003 核心场景：加载器 logger 段 + `[Not Secure]`）上跑完整真机回归。
+  被测副本 `~/Y33-Bot`＝main `8996a1d` 归档副本，`config.example.toml` / `src/y33bot/{service.py,mclog/watcher.py,mclog/patterns.py}` /
+  `tests/test_log_patterns_real_lines.py` 的 sha256 与本机 main 工作树**逐一相等**。产品代码**零改动**（`src/`、`tests/` 未碰，本卡为验证 + 文档卡）。
+  载体：`docs/acceptance.md` 新开 **§13**、`BUGS.md` BUG-002/003 各补「真机回归（Forge 1.21.11）」小节、
+  原件 `test-notes/regress/forge-1.21.11/`（README + `artifacts/` 10 个逐字副本）。看板卡 `t_f4d69bba`。
+- 实测（真机，20:15–20:31 +0800）：真行 `[2910月2026 20:28:31.611] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game`；
+  新模板 `check` = `[日志模板 forge] OK 样例行 4 条全部命中（join 1 / quit 1 / chat 2）`，日志变长后 `OK 样例行 14 条全部命中（join 3 / quit 3 / chat 8）`；
+  旧模板同一批行 `FAIL … 全部未命中` + `exit=1`；`simulate` join / `#` 聊天 / quit 均 `[群消息]`，普通聊天 `[忽略] 聊天非 # 开头，不转发`；
+  真客户端 E2E（mineflayer，协议协商 1.21.11）产生 3 类出站 + 1 条启动健康翻转共 **4 次**打到 `api.sgroup.qq.com`，
+  全部 404 `请求Query参数group_id无效`（假 `group_openid`，**预期成功信号**；归因实验 `run-healthonly.txt` 闭合差额）；
+  旧模板看门狗 `[警告] 疑似事件行连续 3 条未匹配 [log_patterns]（forge）…` **只报 1 次**（连续 9 / 13 条仍是 1 次，模板正确时 0 次）。
+- 已知：`check` 在「刚重启、日志里还没有事件行」时输出 `OK 未找到可判定的样例行，跳过` —— **跳过不算通过**，必须先把真客户端跑一遍。
+- 阻塞/待办：① NeoForge（卡 `t_0ee0c2ff`）、原版 / Fabric、`online-mode=true` 的签名聊天行仍未回归；
+  ② 看门狗「命中 → 重新武装 → 再报一段」的段间关系只有单测覆盖，真机没造出对齐点；
+  ③ harness 两个脚本缺陷：`e2e_family.sh` 的 `re.sub` 字符串替换体在 Python 3.9 抛 `bad escape \d`
+  （**已修**，服务器 `~/mc-test/harness/` 副本已更新，原件 `.bak-2026-10-29`）、`regress_start.sh` 的
+  `grep -ac … || echo 0` 产出 `"0\n0"` 致误报 `启动结果: 失败`（**只登记未修**）。
+- 收尾：**已停服**（端口 6 s 内消失、tmux 无会话、可用内存 747 → **1542 MB**、磁盘余量 1.1 GB 未缩水），NeoForge 卡可起服。
+- 数字基线**未变**：`453 passed` / 覆盖率 `99.33%` / ruff `46 文件` / 真行 `361/361`（本卡不加用例，四处基线无需改）。
 
 ## 2026-10-29（日志模板改「四族通吃」+ 三方相等回归锁 + 全部文档载体同步）
 

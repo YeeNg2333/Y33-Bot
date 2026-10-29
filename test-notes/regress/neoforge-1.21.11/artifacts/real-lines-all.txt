@@ -1,0 +1,24 @@
+56:[2910月2026 20:43:46.412] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+57:[2910月2026 20:43:48.311] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+58:[2910月2026 20:43:49.498] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+60:[2910月2026 20:43:51.053] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+68:[2910月2026 20:44:13.317] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Alex joined the game
+69:[2910月2026 20:44:14.852] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Alex> 普通聊天第 1 条（旧模板下应未命中）
+70:[2910月2026 20:44:15.748] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Alex> 普通聊天第 2 条（旧模板下应未命中）
+71:[2910月2026 20:44:16.650] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Alex> 普通聊天第 3 条（旧模板下应未命中）
+73:[2910月2026 20:44:18.358] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Alex left the game
+80:[2910月2026 20:44:47.179] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Zoe joined the game
+81:[2910月2026 20:44:48.622] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Zoe> 普通聊天第 1 条（旧模板下应未命中）
+82:[2910月2026 20:44:49.523] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Zoe> 普通聊天第 2 条（旧模板下应未命中）
+83:[2910月2026 20:44:50.424] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Zoe> 普通聊天第 3 条（旧模板下应未命中）
+85:[2910月2026 20:44:52.132] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Zoe left the game
+93:[2910月2026 20:50:17.817] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Rex joined the game
+94:[2910月2026 20:50:19.316] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Rex> 普通聊天第 1 条（旧模板下应未命中）
+95:[2910月2026 20:50:20.219] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Rex> 普通聊天第 2 条（旧模板下应未命中）
+96:[2910月2026 20:50:21.119] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Rex> 普通聊天第 3 条（旧模板下应未命中）
+98:[2910月2026 20:50:22.833] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Rex left the game
+100:[2910月2026 20:50:36.738] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Nia joined the game
+101:[2910月2026 20:50:38.173] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Nia> 普通聊天第 1 条（旧模板下应未命中）
+102:[2910月2026 20:50:39.075] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Nia> 普通聊天第 2 条（旧模板下应未命中）
+103:[2910月2026 20:50:39.983] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Nia> 普通聊天第 3 条（旧模板下应未命中）
+105:[2910月2026 20:50:41.687] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Nia left the game

@@ -506,3 +506,49 @@ rm -rf ~/mc-test/client/node_modules                              # 只在确实
 # 7) ~/mc-test/new-vanilla.sh 1.21.11 0       # 建实例（自动下 jar + 校验 sha1 + 写配置）
 # 8) bash ~/mc-test/smoke.sh                  # 冒烟全流程
 ```
+
+---
+
+## 11. 补记（2026-10-29 真机回归批）：实例目录「跑完即清空」+ 四族恢复配方
+
+> 本节由汇总卡 `t_9e9040ed` 补写。来源是**连续四族回归（原版 / Fabric / Forge / NeoForge @ MC 1.21.11）**
+> 中实际踩到的状态，不是模板。
+
+### 11.1 为什么实例目录总是「跑完即清空」
+
+§9 的清理模板（`rm -rf libraries world logs`）是每轮回归的收尾动作，跑完之后各实例会缺东西，
+下一张卡**必须先补再起服**，否则 `start.sh` 直接失败：
+
+| 族 | 清理后的残缺状态（本轮实测） | 恢复动作 |
+|---|---|---|
+| 原版 Vanilla | 缺 `server.jar` | 从 `piston-meta.mojang.com` 拉 manifest → `server.jar`；**sha1 `64bb6d763bed0a9f1d632ec347938594144943ed`**（本轮核过，NeoForge 卡复用的就是这一份） |
+| Fabric | `fabric-server-launch.jar` 只剩 **639 字节桩**（`.fabric/` 被删） | `java -jar ~/mc-test/tools/fabric-installer-1.1.2.jar server -mcversion 1.21.11 -loader 0.19.5 -downloadMinecraft -dir <实例目录>` |
+| Forge | 缺整个 `libraries/` | 官方安装器 `--installServer`；`maven.minecraftforge.net` **可达**（HTTP 200）。**注意**：`piston-data` 下 54 MB 那步会卡住 ⇒ 可复用已核的原版 jar 改名 `minecraft_server.1.21.11.jar`；被中断的安装会留**坏包** `server-1.21.11-bundled.jar`，用 `zipfile.testzip()` 扫出来删掉再重跑 |
+| NeoForge | 缺 `libraries/`，且 `maven.neoforged.net` **不可达**（443 超时） | 只能用**离线打补丁安装器**：先把已核原版 jar 命名为 `minecraft_server.1.21.11.jar`，再 `java -jar ~/mc-test/neoforge/tools/nf-21.11.48-installer-patched.jar --installServer <实例目录>`；成功标志是 `libraries/net/neoforged/neoforge/21.11.48/unix_args.txt`。本轮**一次过**，未触发坏包兜底（`libraries` 134 MB，实例其余约 65 MB） |
+
+### 11.2 本轮四族的实例坐标（照用即可）
+
+| 族 / 版本 | 实例目录 | 游戏 / RCON | tmux 会话 | 日志 |
+|---|---|---|---|---|
+| 原版 1.21.11 | `~/mc-test/vanilla/1.21.11` | `25600` / `25700` | `mc-vanilla-1_21_11` | `logs/latest.log`（布局 `[HH:MM:SS] [Server thread/INFO]:`） |
+| Fabric 1.21.11（loader 0.19.5） | `~/mc-test/fabric/1.21.11` | `25615` / `25715` | `mc-fabric-1_21_11` | 同上（无 logger 段） |
+| Forge 61.2.0 | `~/mc-test/forge/1.21.11` | `25628` / `25728` | `mc-forge-1_21_11` | `[2910月2026 20:28:31.611] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]:` |
+| NeoForge 21.11.48 | `~/mc-test/neoforge/1.21.11` | `25634` / `25734` | `mc-neoforge-1_21_11` | 同 Forge 族，加载器段是 `net.neoforged.*`（无 `cpw.mods.modlauncher`） |
+
+### 11.3 资源与收尾（本轮实测）
+
+- 起一个服务端约吃 700 MB；机器 2.6 GB 内存 ⇒ **四族必须串行**，一轮跑完就 `stop` + 收 tmux。
+- 本轮收尾状态：四族服务端全部停服（端口无监听、`tmux ls` 无会话），可用内存 1583 → **1569 MB**，
+  `/` 余量 **884 MB**（NeoForge 的 `libraries` 134 MB 与 Forge 的 173 MB 保留供后续回归，未删）。
+- 产物一律落 `~/mc-test/regress/<族>-<版本>/`（`-` 连接、版本号 `.`→`_`），本仓库的
+  `test-notes/regress/<族>-<版本>/artifacts/` 是**逐字副本**；`test-notes/regress/log-slice-events.txt`
+  是四族事件行切片（同一时间点一次性采出）。
+
+### 11.4 harness 的两个已知缺陷（脚本，不影响 `src/`）
+
+1. `regress_start.sh` 起服判定：`DONE_BEFORE=$(grep -ac 'Done (' … || echo 0)` 在空日志时得到 `"0\n0"`
+   → 打印 `[: 0：需要整数表达式`，判定行报「失败」而服务器其实起来了（Forge 那轮）或反过来报「成功」
+   （NeoForge 那轮）。**该行两个方向都不可信**，真证据只看 `Done (…)` 行 + `ss -tln` 端口。
+2. `e2e_family.sh` 的 `make_old_cfg`：Python 3.9 下 `re.sub` 传字符串替换体，旧模板里的 `\d` 被当组引用
+   → `re.error: bad escape \d`，旧模板配置根本没生成。**已修**（改 `lambda`，服务器副本更新，原件备份
+   `.bak-2026-10-29`）；`e2e_neg.sh` 早已是 `lambda` 写法。

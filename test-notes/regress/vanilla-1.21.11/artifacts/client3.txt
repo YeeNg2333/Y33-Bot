@@ -1,0 +1,2 @@
+[client3] 已 spawn: 1.21.11
+[client3] 已发 3 条普通聊天

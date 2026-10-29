@@ -1,0 +1,28 @@
+[启动] y33bot 0.1.0（1 个 MC 服）
+[启动] 日志监听已启动: vanilla
+[botpy] 登录机器人账号中...
+[botpy] access_token expires_in 6780
+[botpy] 程序启动...
+[启动] QQ 网关已连接
+[botpy] 最大并发连接数: 1, 启动会话数: 1
+[botpy] 会话启动中...
+[botpy] 启动中...
+[botpy] 鉴权中...
+[botpy] 机器人「y33-test」启动成功！
+[botpy] 心跳维持启动...
+[启动] QQ 网关就绪
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 404, 返回内容: {'message': '请求Query参数group_id无效', 'code': 11321, 'err_code': 40011036, 'trace_id': 'ddfb89c5af009b0e9228ca1e07a71e4a'}, trace_id:ddfb89c5af009b0e9228ca1e07a71e4a
+[错误] QQ 发送失败（不重试）: 请求Query参数group_id无效
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 404, 返回内容: {'message': '请求Query参数group_id无效', 'code': 11321, 'err_code': 40011036, 'trace_id': '246f06396a6cef1bae185c4fdf39b106'}, trace_id:246f06396a6cef1bae185c4fdf39b106
+[错误] QQ 发送失败（不重试）: 请求Query参数group_id无效
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 404, 返回内容: {'message': '请求Query参数group_id无效', 'code': 11321, 'err_code': 40011036, 'trace_id': '701e8f11464e1794640d24f8846f76bd'}, trace_id:701e8f11464e1794640d24f8846f76bd
+[错误] QQ 发送失败（不重试）: 请求Query参数group_id无效
+[RCON vanilla] /list
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 404, 返回内容: {'message': '请求Query参数group_id无效', 'code': 11321, 'err_code': 40011036, 'trace_id': 'e9f86d495bcfa7f39f06e92cf3ea9409'}, trace_id:e9f86d495bcfa7f39f06e92cf3ea9409
+[错误] QQ 发送失败（不重试）: 请求Query参数group_id无效
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 404, 返回内容: {'message': '请求Query参数group_id无效', 'code': 11321, 'err_code': 40011036, 'trace_id': '98abb2bc9a8d4face9106650a3692c80'}, trace_id:98abb2bc9a8d4face9106650a3692c80
+[错误] QQ 发送失败（不重试）: 请求Query参数group_id无效
+[RCON vanilla] /list
+[停止] 收到退出信号
+[停止] 正在关闭…
+[停止] 已退出

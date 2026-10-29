@@ -46,6 +46,7 @@
 > 最新实测是 **453 passed** / 总覆盖率 **99.33%**（门槛 70%）/ `ruff check .` 全过 + `ruff format --check .` **46 文件**；
 > 真日志复扫 **361/361**。上段与 §3 的 381 / 348 是**变更前记录**（数字不改写），
 > 最新证据依次见 **§10.4**（模板批）/ **§11.1**（BUG-004 批）/ **§12.1**（BUG-005 批，合并树）。
+> 真机回归（Forge 61.2.0 / MC 1.21.11，新出厂模板 + `check` 自检 + 看门狗）见 **§13**：14/14 真事件行命中、旧模板 `FAIL`、三类出站 404 是预期信号。
 
 ---
 
@@ -1362,3 +1363,518 @@ $ $BP -m ruff format --check .
 | 回归 | **无**：S1–S4/S6 的离线契约未改；正常退出仍是 `exit=0` 且无 `[错误]` |
 | 数字同步 | `README.md` §14、`docs/smoke.md` §7（粘贴块 + 覆盖度段）、本节与 §1/§3、`docs/progress.md` 「当前基线」表四处一致：**453 / 99.33% / 46 文件**（合并树口径） |
 | 未执行 | 上表三项真机场景 —— 原因见 §12.2，具备条件后按 `docs/smoke.md` 与 `PLAN.md` §5 回填 |
+
+---
+
+## 13. BUG-002 / BUG-003 / BUG-004 真机回归：Forge 1.21.11（2026-10-29，看板卡 `t_f4d69bba`）
+
+本节是**新出厂 `[log_patterns]`（四族通吃）+ `check` 模板自检 + 零事件看门狗**在真机上的第一次完整回归。
+证据原件在 [`test-notes/regress/forge-1.21.11/`](../test-notes/regress/forge-1.21.11/README.md)（含 `artifacts/` 逐字输出）。
+
+### 13.0 执行环境与前置
+
+| 项 | 值 |
+|---|---|
+| 日期 | 2026-10-29 20:15–20:31 +0800 |
+| 测试主机 | `hermes@10.1.1.4`（Rocky Linux 9；2.6 GB 内存、磁盘 95%）；本机（Windows + git-bash）用 paramiko harness `rsh.py` 驱动（本机无 `sshpass`/`plink`） |
+| 服务端 | **Forge 61.2.0 / MC 1.21.11**，目录 `~/mc-test/forge/1.21.11`，tmux `mc-forge-1_21_11`，游戏 `25628` / RCON `25728`，日志 `logs/latest.log`，Java `~/jdk-21`（21.0.12.1+1-LTS，日志首行自证） |
+| 被测副本 | `~/Y33-Bot`＝main `8996a1d` 的归档副本（非 git 仓库）。`config.example.toml`、`src/y33bot/{service.py,mclog/watcher.py,mclog/patterns.py}`、`tests/test_log_patterns_real_lines.py` 的 sha256 与本机 main 工作树**逐一相等** ⇒ 跑的是合并后 main 的代码 |
+| 真客户端 | mineflayer（`~/mc-test/client/client.js`、`client3.js`），Node v24.1.0，协议协商实测 `1.21.11` |
+| QQ 侧 | 真 `app_id`/`app_secret`；**假** `group_openid = E2E_DUMMY_GROUP_OPENID`（故意打真平台换 404，只证明「解析→格式化→发送」链路） |
+| 复现命令 | 见 `test-notes/regress/forge-1.21.11/README.md` §0（`regress_start.sh` → `e2e_family.sh` → `e2e_neg.sh` → 归因实验 → 停服） |
+
+### 13.1 BUG-003 布局取证（真行确实不吃 `HH:MM:SS` 模板）
+
+起服完成行（20:15）与重启后（20:24）：
+
+```
+[2910月2026 20:15:57.178] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (6.953s)! For help, type "help"
+[2910月2026 20:24:42.182] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer/]: Done (0.299s)! For help, type "help"
+```
+
+时间戳是 `[2910月2026 20:15:57.178]`（中文日期 + 毫秒），线程段后**多一段 logger**，冒号在 logger 之后 ——
+旧模板 `\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: …` 从第一个字符起就匹配不上，BUG-003 的根因复现。
+
+事件行四条原文（其余 10 条同类，见 `real-lines.txt` 与 `test-notes` §1）：
+
+```
+[2910月2026 20:28:31.611] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+[2910月2026 20:28:33.298] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[2910月2026 20:28:34.500] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[2910月2026 20:28:36.000] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+```
+
+> **措辞勘误（如实登记）**：`BUGS.md` BUG-003 正文把加载器段写成 `[+MinecraftServer/]`，
+> 本实例实测是 `[net.minecraft.server.MinecraftServer/]`（无 `+` 前缀；`grep -aoE '\[[^]]*\+[^]]*\]'` 在 70 行日志里零命中）。
+> 「`+` 前缀」不构成稳定形态，「线程段后跟一段 `[…]`」才是；现模板的 `(?: \[[^\]]+\])?` 两者都吃，结论不受影响。
+
+### 13.2 `check` 的三态真判定（跳过 ≠ 通过 ≠ 失败）
+
+| 时机 | `[日志模板 forge]` 实测输出 | 退出码 | 说明 |
+|---|---|---|---|
+| 刚重启、日志无事件行 | `OK 未找到可判定的样例行，跳过` | 0 | **不算通过**：模板再坏也是这个输出，必须先把真客户端跑一遍 |
+| 真客户端跑过一次（4 条事件行） | `OK 样例行 4 条全部命中（join 1 / quit 1 / chat 2）` | 0 | 新出厂模板全命中 |
+| 日志变长（14 条事件行） | `OK 样例行 14 条全部命中（join 3 / quit 3 / chat 8）` | 0 | 同上，含 `[Not Secure]` 聊天 8 条 |
+| 同一份真行 + **旧模板** | `FAIL 4 条样例行全部未命中：请按 README §13 调整 [log_patterns]` / `FAIL 9 条样例行全部未命中…` | **1** | 负向对照成立 |
+
+旧模板 `[log_patterns]`（`config-regress-forge-1_21_11-old.toml`，由 `old-config.example.toml` 生成）：
+
+```toml
+join = '\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) joined the game'
+quit = '\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) left the game'
+chat = '\[\d{2}:\d{2}:\d{2}\] \[Async Chat Thread - #\d+/INFO\]: <(?P<player>\w+)> (?P<message>.+)'
+```
+
+### 13.3 `simulate log-event --dry-run` 四类真行判读
+
+| 类别 | 输出 |
+|---|---|
+| join | `[群消息] Steve进入了forge` |
+| `[Not Secure] <玩家> #…` | `[群消息] Steve@forge: 大家好，这是带井号的聊天（应被转发）` |
+| 普通聊天（非 `#`） | `[忽略] 聊天非 # 开头，不转发` |
+| quit | `[群消息] Steve退出了forge` |
+
+`[Not Secure]` 前缀被模板里的 `(?:\[Not Secure\] )?` 吃掉，转发正文无残留 —— BUG-003 的两半（logger 段 + `[Not Secure]`）
+同时生效时仍然正确。
+
+### 13.4 E2E：真客户端 → 三类出站真打 `api.sgroup.qq.com`（404 为预期信号）
+
+客户端：`已 spawn（进服成功），版本协商: 1.21.11` → 发 1 条普通聊天 → 发 1 条 `#` 聊天 → 主动退出。
+
+机器人侧汇总：`QQ 发送调用次数: 4` / `忽略(非#)次数: 1` / `警告次数: 0`；4 条 botpy 原文均为：
+
+```
+[botpy] 接口请求异常，请求连接: https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages, 错误代码: 404, 返回内容: {'message': '请求Query参数group_id无效', 'code': 11321, 'err_code': 40011036, 'trace_id': '…'}
+[错误] QQ 发送失败（不重试）: 请求Query参数group_id无效
+```
+
+**4 = 3 类事件 + 1 条启动健康翻转 `[服务器状态] forge 上线`**（`state` 被脚本清空 ⇒ 首轮轮询必翻转）。
+归因实验：把 `log_path` 指向空文件（事件 0 条）+ 全新 `state` 跑 12 s ⇒ `QQ 发送调用次数: 1`、`/list` 1 次，
+差额闭合。普通聊天那 1 条在发送前即 `[忽略]`，未打平台。
+
+> 注意别在**同一份长日志**上看这个小计：本卡重启前第一次跑是 `发送=9 / 忽略=5`，差额来自 `state` 清空后
+> **历史事件行整体回放**。最终证据取「重启后干净日志」那一轮。
+
+### 13.5 看门狗：连续 3 条未命中，每段只报一次
+
+旧模板 + 全新 `state` + `client3.js`（进服 + 3 条普通聊天 + 退服）：
+
+```
+[警告] 疑似事件行连续 3 条未匹配 [log_patterns]（forge）：MC→QQ 方向可能失效，请按 README §13 调整模板
+警告次数: 1
+```
+
+同一有效期内累计未命中 9 条（另一次 13 条）时 `[警告]` 仍是 **1** ⇒ 按「段」报、不按「条」刷屏。
+反证：模板正确的那轮有 4 条事件行 + 1 条被忽略的普通聊天，`警告次数: 0` ⇒ 命中即不误报。
+**未实测**：「命中 → 重新武装 → 再连续 3 条未命中 → 第二次告警」的段间关系（旧模板下真实行一条都命不中，
+造不出对齐点）；该行为由单测覆盖，本节只声明「一段只报一次」。
+
+### 13.6 真机回归中发现的 harness 缺陷（脚本，非 `src/`）
+
+| # | 现象 | 根因 | 处置 |
+|---|---|---|---|
+| 1 | `e2e_family.sh` 生成旧模板配置时 `re.error: bad escape \d at position 10`，导致旧模板 `check` 报 `[配置] FAIL 配置文件不存在`（不是模板不匹配）、看门狗因缺配置没跑（`警告次数: 0`） | `make_old_cfg` 用 `re.sub(pat, f"{key} = {get(o,key)}", …)` 传字符串替换体，旧模板里的 `\d` 被当组引用，Python 3.9 直接抛错；`e2e_neg.sh` 早改成 `lambda` 了，`e2e_family.sh` 漏了 | 改为函数式替换（与 `e2e_neg.sh` 一致），服务器 `~/mc-test/harness/e2e_family.sh` 已更新（原件备份 `e2e_family.sh.bak-2026-10-29`），重跑后旧模板项才给出真正的 `FAIL` |
+| 2 | `regress_start.sh` 起服后打印 `[: 0\r\n0：需要整数表达式`（3 次）并给出 `启动结果: 失败`，但同段输出里 `Done (0.299s)` 与两个端口都在 | `DONE_BEFORE=$(grep -ac 'Done (' … \|\| echo 0)`：`latest.log` 被 JVM 重建为空时 `grep -c` 输出 `0` 且退出码 1，`\|\| echo 0` 再补一个 `0`，变量成 `"0\n0"`，`[ "$NOW" -gt "$DONE_BEFORE" ]` 报错，判据永不成立 | **只登记不修**（超出本卡最小交付面，且不影响结论）；建议改成 `grep -a … \| wc -l` 或 `${VAR:-0}` |
+
+### 13.7 结论
+
+| 项 | 结论 |
+|---|---|
+| BUG-003 复现 | **通过**：真行是 `[2910月2026 …] [Server thread/INFO] [<logger>/]: …`，旧模板全灭 |
+| 新出厂模板（真机） | **通过**：14/14 真事件行命中（含 8 条 `[Not Secure]` 聊天），`check` = `OK 样例行 N 条全部命中`、`exit=0` |
+| 旧模板对照 | **通过**（负向）：`FAIL N 条样例行全部未命中`、`exit=1` |
+| 三类事件解析/格式化 | **通过**：join / `#` 聊天 / quit 均 `[群消息]`，普通聊天 `[忽略] 聊天非 # 开头，不转发` |
+| E2E 出站链路 | **通过**：3 类出站 + 1 条健康翻转都到 `api.sgroup.qq.com`，被 404 `请求Query参数group_id无效` 拒绝（预期成功信号） |
+| BUG-004 看门狗 | **通过**：连续 3 条未命中打 1 次 `[警告]`；连续 9 / 13 条仍只 1 次；模板正确时 0 次 |
+| 产品代码 | **零改动**：本卡未碰 `src/`、`tests/`（验证 + 文档卡） |
+| 数字基线 | **未变**：`453 passed` / 覆盖率 `99.33%` / `ruff format --check` `46 文件` / 真行 `361/361`（本卡不加用例，四处基线无需改） |
+| 收尾 | **已停服**：端口 6 s 内消失、tmux 无会话、可用内存 747 → **1542 MB**、磁盘余量 1.1 GB 未缩水 |
+
+### 13.8 未覆盖的边界（不下结论）
+
+1. **NeoForge**：同族但布局未必完全一致 —— 由看板卡 `t_0ee0c2ff` 单独回归，本节不含其证据。
+2. **`online-mode=true` 的签名聊天行**：本实例 `online-mode=false`，`[Not Secure]` 是这一前提下的形态；正版服是否另有前缀未验。
+3. **段间重新武装**：见 §13.5 末条。
+4. **版本密度**：本卡只打 Forge 61.2.0 / MC 1.21.11 一个点；Forge 1.21.3–26.3 其余版本仍只有 `test-notes/03-forge.md` 的格式取样与外推。
+5. **QQ 真实投递**：`group_openid` 是假的，404 是预期结果；真群收不收得到属 S5，不在本卡范围。
+
+### 13.9 补证据：**「日志变长后 14 条全部命中」这一行的落盘**（2026-10-29 21:00，汇总卡 `t_9e9040ed`）
+
+§13.2 表里「日志变长（14 条事件行）→ `OK 样例行 14 条全部命中`」当时是**终端输出未落盘**（`e2e_neg.sh` 第 5 步那时还是
+`| grep` 直接打到终端）。本卡在**同一份真机日志**（`~/mc-test/forge/1.21.11/logs/latest.log`，82 行、14 条事件行，
+末次写入 20:31）上把 `check` 复跑并落盘：
+
+```
+$ python -m y33bot check --config ~/Y33-Bot/config-regress-forge-1_21_11-new.toml
+[配置] OK config-regress-forge-1_21_11-new.toml 解析成功，1 个 MC 服
+[QQ] OK access_token 获取成功…，app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
+[RCON forge] FAIL 无法连接 127.0.0.1:25728: … [Errno 111] Connect call failed
+[日志 forge] OK /home/hermes/mc-test/forge/1.21.11/logs/latest.log 可读，偏移 9798 字节
+[日志模板 forge] OK 样例行 14 条全部命中（join 3 / quit 3 / chat 8）
+[绑定] OK 0 条
+FAIL
+```
+
+**口径必须写清（这不是「又跑了一遍真机」）**：复跑发生在**停服之后**，所以 `[RCON forge]` 项必然 `FAIL`、整条 `check`
+以 `FAIL` 收尾（退出码 1）—— **这一行不代表服务器状态**，只证明「**同一份真机日志 + 新出厂模板** 下
+`[日志模板]` 项给出 14/14」。反向对照同批落盘：`check-old-latest.txt` = `FAIL 14 条样例行全部未命中`。
+两份原文在 `test-notes/regress/forge-1.21.11/artifacts/check-new-latest.txt` / `check-old-latest.txt`。
+
+---
+
+## 14. 原版 Vanilla 1.21.11 真机回归（2026-10-29，汇总卡 `t_9e9040ed`）
+
+本节补上 §13 未覆盖的**原版**一族：原版 1.21.11 的日志布局是 `[HH:MM:SS] [Server thread/INFO]: …`
+（**没有**加载器 logger 段），但聊天行自 1.21.2 起带 `[Not Secure] ` 前缀 —— 也就是说这里只有
+**BUG-002（chat 模板）** 会咬人，**BUG-003（加载器布局）** 不适用。证据原件在
+[`test-notes/regress/vanilla-1.21.11/`](../test-notes/regress/vanilla-1.21.11/README.md)（`artifacts/` 逐字输出）。
+
+### 14.0 执行环境与前置
+
+| 项 | 值 |
+|---|---|
+| 日期 | 2026-10-29 19:53–20:04 +0800（起服/E2E/看门狗），21:00 +0800（停服后补跑 `[日志模板]` 项） |
+| 测试主机 | `hermes@10.1.1.4`（Rocky Linux 9；2.6 GB 内存、磁盘 95%），本机 paramiko harness `rsh.py` 驱动 |
+| 服务端 | **原版 Vanilla 1.21.11**，目录 `~/mc-test/vanilla/1.21.11`，tmux `mc-vanilla-1_21_11`，游戏 `25600` / RCON `25700`，日志 `logs/latest.log`，Java `~/jdk-21`（21.0.12.1+1-LTS） |
+| 服务端 jar | 上一轮清理脚本 `rm -rf libraries world logs` 后缺失，本卡从 `piston-meta.mojang.com` 重拉：sha1 `64bb6d763bed0a9f1d632ec347938594144943ed`（NeoForge 卡复用的就是这一份，两份 sha1 在 `neoforge-1.21.11/artifacts/install.txt` 里并排核过） |
+| 被测副本 | `~/Y33-Bot`＝main `8996a1d` 归档副本（非 git 仓库） |
+| 真客户端 | mineflayer（`~/mc-test/client/client.js`、`client3.js`），协议协商实测 `1.21.11` |
+| QQ 侧 | 真 `app_id`/`app_secret`；**假** `group_openid = E2E_DUMMY_GROUP_OPENID`（故意打真平台换 404） |
+
+### 14.1 真行（原样，`artifacts/real-lines.txt`）
+
+```
+JOIN=[20:00:41] [Server thread/INFO]: Steve joined the game
+CHAT=[20:00:44] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+PLAIN=[20:00:43] [Server thread/INFO]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+QUIT=[20:00:46] [Server thread/INFO]: Steve left the game
+```
+
+布局结论：时间戳 `[HH:MM:SS]` + `[Server thread/INFO]` + **无 logger 段**，聊天行带 `[Not Secure] ` ——
+`[Not Secure]` 是 1.21.2+ 原版在 `online-mode=false` 下的形态，**正是 BUG-002 的现场**。
+
+### 14.2 `check` 判定（三态 + 负向对照）
+
+| 时机 | `[日志模板 vanilla]` 实测输出 | 整体 | 原文 |
+|---|---|---|---|
+| 刚起服、日志 0 事件行 | `OK 未找到可判定的样例行，跳过` | `OK` | `check-new.txt` |
+| 真客户端跑过一次（8 条事件行） | `OK 样例行 8 条全部命中（join 2 / quit 2 / chat 4）` | `OK` | `check-new2.txt` |
+| 停服后同一份日志（18 条事件行，**补跑**） | `OK 样例行 18 条全部命中（join 4 / quit 4 / chat 10）` | `FAIL`（**只因 RCON 项**，见 14.2 注） | `check-new-latest.txt` |
+| 同一批行 + **旧模板**（4 条时） | `FAIL 4 条样例行中 2 条命中、2 条未命中：请按 README §13 调整 [log_patterns]` | `FAIL` | `check-old.txt` |
+| 同上（8 条时） | `FAIL 8 条样例行中 4 条命中、4 条未命中…` | `FAIL` | `check-old2.txt` |
+| 同上（18 条时，**补跑**） | `FAIL 18 条样例行中 8 条命中、10 条未命中…` | `FAIL` | `check-old-latest.txt` |
+
+> **补跑口径（同 13.9）**：`check-*-latest.txt` 是 21:00 **停服后**在同一份真机日志上复跑的，`[RCON vanilla]` 必然
+> `FAIL 无法连接 127.0.0.1:25700`，因此整条 `check` 以 `FAIL` 收尾。**只有 `[日志模板]` 这一项是本节结论**，
+> 别把整条 `FAIL` 读成「模板不匹配」。
+
+**负向对照的数字本身就是结论**：旧模板 18 条里**命中 8 = join 4 + quit 4，未命中 10 = 全部 chat** ——
+旧 `chat` 模板（`[Async Chat Thread - #\d+/INFO]: <玩家> …`，且无 `[Not Secure] ` 可选前缀）在原版 1.21.11 上
+**一条都打不中**，而 `join`/`quit` 仍命中。这就是 BUG-002「只坏 chat、进出服通知照常」的现场证明，
+也是「负向用例必须靠连续聊天造未命中，不能指望 join/quit 失败」的依据（见 §17.2）。
+
+### 14.3 `simulate log-event --dry-run` 四类真行判读
+
+| 类别 | 输出（`artifacts/parse-*.txt`） |
+|---|---|
+| join | `[群消息] Steve进入了vanilla` |
+| `[Not Secure] <玩家> #…` | `[群消息] Steve@vanilla: 大家好，这是带井号的聊天（应被转发）` |
+| 普通聊天（非 `#`） | `[忽略] 聊天非 # 开头，不转发` |
+| quit | `[群消息] Steve退出了vanilla` |
+
+### 14.4 E2E：真客户端 → 真打 `api.sgroup.qq.com`（404 为预期信号）
+
+`artifacts/run-new.txt`（20:00–20:01，服务端运行中）：客户端 `已 spawn（进服成功），版本协商: 1.21.11` →
+普通聊天 → `#` 聊天 → 退服。机器人侧：`QQ 发送失败（不重试）` **4 次**、`[忽略] 聊天非 # 开头` **1 次**、`[警告]` **0 次**；
+4 次全部打到 `https://api.sgroup.qq.com/v2/groups/E2E_DUMMY_GROUP_OPENID/messages` 并被
+`404 / code 11321 / 请求Query参数group_id无效` 拒绝。**4 = 3 类事件（join / `#` 聊天 / quit）+ 1 条启动健康翻转**
+（`state` 被脚本清空 ⇒ 首轮轮询必翻转），与本轮其它三族完全同形。
+
+### 14.5 看门狗（BUG-004）
+
+| 轮次 | 模板 | 造法 | `[警告]` 次数 | 原文 |
+|---|---|---|---|---|
+| 旧模板 + `client3.js`（进服 + 3 条普通聊天 + 退服） | 旧 | 连续 3 条 chat 未命中 | **1** | `run-old-wd.txt` |
+| 新模板 + 同一套客户端 | 新 | 同样 3+ 条普通聊天 | **0** | `run-new-wd.txt` |
+
+旧模板那轮的原文：
+
+```
+[警告] 疑似事件行连续 3 条未匹配 [log_patterns]（vanilla）：MC→QQ 方向可能失效，请按 README §13 调整模板
+```
+
+该轮 `QQ 发送失败` 2 次（join + quit 命中）、`[忽略]` 0 次（旧 chat 模板打不中，连「忽略」都不打）；
+新模板那轮 `QQ 发送失败` 7 次 / `[忽略]` 7 次 / `[警告]` **0** 次 —— 命中即不误报。
+**原版是「单段」**：日志里只有一段连续未命中，所以 1 次告警即可；两段的情形见 §15.5。
+
+### 14.6 结论
+
+| 项 | 结论 |
+|---|---|
+| BUG-002（chat 模板 × `[Not Secure]`） | **复现并通过**：旧模板 18 条里 10 条 chat 全未命中、8 条 join/quit 照常命中 |
+| 新出厂模板（真机） | **通过**：8/8 → 18/18 真事件行全部命中，`[日志模板 vanilla] OK` |
+| 旧模板对照 | **通过**（负向）：`FAIL`，且命中/未命中数与「只坏 chat」一致 |
+| 三类事件解析/格式化 | **通过**：join / `#` 聊天 / quit 均 `[群消息]`，普通聊天 `[忽略]` |
+| E2E 出站链路 | **通过**：4 次真打 `api.sgroup.qq.com`（3 事件 + 1 健康翻转），404 为预期 |
+| BUG-004 看门狗 | **通过**：旧模板单段 3 条未命中 → 1 次告警；新模板 → 0 次 |
+| 产品代码 | **零改动**（验证 + 文档卡） |
+
+### 14.7 未覆盖边界
+
+1. **`online-mode=true` 的签名聊天行**：本实例 `online-mode=false`，`[Not Secure]` 是这一前提下的形态。
+2. **版本密度**：只打 1.21.11 一个点；原版 26.2 / 26.3 仍只有格式取样（`test-notes/01-vanilla.md`）。
+3. **QQ 真实投递**：`group_openid` 是假的，404 是预期结果，真群投递属 S5。
+
+---
+
+## 15. Fabric 1.21.11 真机回归（2026-10-29，汇总卡 `t_9e9040ed`）
+
+Fabric 的日志布局与原版同形（`[HH:MM:SS] [Server thread/INFO]: …`，无加载器 logger 段），所以与 §14 一样
+**只有 BUG-002 会咬人**；但它是本轮**唯一出现 2 次看门狗告警**的族，本节把那个疑点结清。
+证据原件在 [`test-notes/regress/fabric-1.21.11/`](../test-notes/regress/fabric-1.21.11/README.md)。
+
+### 15.0 执行环境与前置
+
+| 项 | 值 |
+|---|---|
+| 日期 | 2026-10-29 20:05–20:08 +0800（起服/E2E/看门狗），21:00 +0800（停服后补跑 `[日志模板]` 项 + 逐行重放） |
+| 服务端 | **Fabric 1.21.11**（loader 0.19.5），目录 `~/mc-test/fabric/1.21.11`，tmux `mc-fabric-1_21_11`，游戏 `25615` / RCON `25715` |
+| 环境恢复 | 清理脚本删掉 `.fabric/` 后 `fabric-server-launch.jar` 只剩 **639 字节桩**，用官方安装器重装：`java -jar ~/mc-test/tools/fabric-installer-1.1.2.jar server -mcversion 1.21.11 -loader 0.19.5 -downloadMinecraft -dir ~/mc-test/fabric/1.21.11` |
+| 真客户端 / QQ 侧 | 同 §14.0（mineflayer，协议协商 `1.21.11`；假 `group_openid`） |
+
+### 15.1 真行（原样，`artifacts/real-lines.txt`）
+
+```
+JOIN=[20:06:16] [Server thread/INFO]: Steve joined the game
+CHAT=[20:06:19] [Server thread/INFO]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+PLAIN=[20:06:17] [Server thread/INFO]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+QUIT=[20:06:20] [Server thread/INFO]: Steve left the game
+```
+
+### 15.2 `check` 判定
+
+| 时机 | `[日志模板 fabric]` 实测输出 | 整体 | 原文 |
+|---|---|---|---|
+| 真客户端跑过一次（4 条事件行，服务端运行中） | `OK 样例行 4 条全部命中（join 1 / quit 1 / chat 2）` | `OK` | `check-new.txt` |
+| 停服后同一份日志（14 条事件行，**补跑**） | `OK 样例行 14 条全部命中（join 3 / quit 3 / chat 8）` | `FAIL`（**只因 RCON 项**） | `check-new-latest.txt` |
+| 旧模板（9 条时，服务端运行中） | `FAIL 9 条样例行中 4 条命中、5 条未命中：请按 README §13 调整 [log_patterns]` | `FAIL` | `check-old.txt` |
+| 旧模板（14 条时，**补跑**） | `FAIL 14 条样例行中 6 条命中、8 条未命中…` | `FAIL` | `check-old-latest.txt` |
+
+同样：旧模板命中数 **6 = join 3 + quit 3**，未命中 **8 = 全部 chat** ⇒ 与 §14 一样的「只坏 chat」指纹。
+（补跑口径同 13.9 / 14.2：`[RCON fabric] FAIL 无法连接 127.0.0.1:25715` 是停服的必然结果，不读成模板失配。）
+
+### 15.3 `simulate` 四类判读（`artifacts/parse.txt`）
+
+```
+[群消息] Steve进入了fabric
+[群消息] Steve@fabric: 大家好，这是带井号的聊天（应被转发）
+[忽略] 聊天非 # 开头，不转发
+[群消息] Steve退出了fabric
+```
+
+### 15.4 E2E
+
+`artifacts/run-e2e.txt`：`QQ 发送失败（不重试）` **4 次** / `[忽略]` **1 次** / `[警告]` **0 次**，
+4 次均为 `api.sgroup.qq.com` 的 404 `请求Query参数group_id无效`；4 = 3 类事件 + 1 条启动健康翻转（同 §14.4）。
+
+### 15.5 看门狗：Fabric 的 **2 次**告警 = 两个独立连续段（**行为正确，不开 BUG**）
+
+`artifacts/run-wd.txt`（20:08，旧模板 + `client3.js` 两轮：Alex、Zoe）里 `[警告]` 出现 **2 次**，原文两次逐字相同：
+
+```
+[警告] 疑似事件行连续 3 条未匹配 [log_patterns]（fabric）：MC→QQ 方向可能失效，请按 README §13 调整模板
+```
+
+为判定「两段独立」还是「同一段被报两次」，用**旧模板 + `simulate log-event`** 对留存日志里的 14 条候选行
+按出现顺序逐条重放（`artifacts/replay-old-template.txt`，21:00 落盘）：
+
+```
+ 1  HIT             [20:06:16] … Steve joined the game
+ 2  MISS(连续第 1 条)  [20:06:17] … [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+ 3  MISS(连续第 2 条)  [20:06:19] … [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+ 4  HIT             [20:06:20] … Steve left the game
+ 5  HIT             [20:06:42] … Alex joined the game
+ 6  MISS(连续第 1 条)  [20:06:43] … [Not Secure] <Alex> 普通聊天第 1 条（旧模板下应未命中）
+ 7  MISS(连续第 2 条)  [20:06:44] … <Alex> 普通聊天第 2 条
+ 8  MISS(连续第 3 条)  [20:06:45] … <Alex> 普通聊天第 3 条
+   └─ 段 1 结束：连续未命中 3 条，起始行 = [20:06:43] … <Alex> 普通聊天第 1 条
+ 9  HIT             [20:06:47] … Alex left the game
+10  HIT             [20:07:55] … Zoe joined the game
+11  MISS(连续第 1 条)  [20:07:56] … <Zoe> 普通聊天第 1 条
+12  MISS(连续第 2 条)  [20:07:57] … <Zoe> 普通聊天第 2 条
+13  MISS(连续第 3 条)  [20:07:58] … <Zoe> 普通聊天第 3 条
+   └─ 段 2 结束：连续未命中 3 条，起始行 = [20:07:56] … <Zoe> 普通聊天第 1 条
+14  HIT             [20:08:00] … Zoe left the game
+
+候选行 14 条：命中 6 / 未命中 8；≥3 条的独立连续未命中段 = 2 段
+```
+
+**结论**：日志里有**两段**彼此独立的连续未命中（Alex 段 20:06:43–45、Zoe 段 20:07:56–58），中间被
+`[20:06:47] Alex left the game` 这条**命中行**打断 ⇒ 每段各报 1 次、共 2 次 = **符合设计**
+（命中任一事件即重新武装）。**不按缺陷处理，不开 BUG-006**；同批 NeoForge 的「段间重新武装」真机实验
+（§16.5，2 段 ⇒ 2 次）与此互相印证。
+
+> 别把两种输出混成一条：`simulate log-event` 里每条未命中都会**逐条**打印
+> `[警告] 日志行未匹配任何模板`（逐行判读提示，退出码 1）；`run` 里才是「连续 3 条 → 打**一次**」
+> `[警告] 疑似事件行连续 3 条未匹配 [log_patterns]（<服名>）…`。本节 2 次指的是后者。
+
+### 15.6 结论
+
+| 项 | 结论 |
+|---|---|
+| BUG-002 | **复现并通过**：旧模板 14 条里 8 条 chat 全未命中，join/quit 6 条照常 |
+| 新出厂模板（真机） | **通过**：4/4 → 14/14 全部命中 |
+| 旧模板对照 | **通过**（负向）：`FAIL` |
+| 三类事件解析/格式化 / E2E | **通过**（4 次出站 = 3 事件 + 1 健康翻转，404 预期） |
+| BUG-004 看门狗 | **通过**：2 次告警对应 2 个独立段，符合「命中即重新武装」 |
+
+### 15.7 未覆盖边界
+
+同 §14.7（`online-mode=true`、26.x 版本密度、QQ 真实投递），另加一条：Fabric 只打 loader 0.19.5 一个组合。
+
+---
+
+## 16. NeoForge 21.11.48 真机回归（2026-10-29，看板卡 `t_0ee0c2ff`，证据由汇总卡 `t_9e9040ed` 落盘归档）
+
+NeoForge 与 Forge **同族**（`[中文日期 时间.毫秒] [线程/级别] [logger/]: 载荷`），是 BUG-003 的第二个现场；
+本轮额外补上了 §13 缺的两块：**「日志变长后 14 条」的落盘**（且这次是**服务端运行中**跑出来的）与
+**看门狗「段间重新武装」的真机实验**。证据原件在
+[`test-notes/regress/neoforge-1.21.11/`](../test-notes/regress/neoforge-1.21.11/README.md)（`artifacts/` 18 个逐字副本）。
+
+### 16.0 执行环境与前置
+
+| 项 | 值 |
+|---|---|
+| 日期 | 2026-10-29 20:42–20:52 +0800 |
+| 服务端 | **NeoForge 21.11.48 / MC 1.21.11**（FancyModLoader 10.0.36），目录 `~/mc-test/neoforge/1.21.11`，tmux `mc-neoforge-1_21_11`，游戏 `25634` / RCON `25734` |
+| 环境恢复（本轮唯一一次「一次过」的修复） | `maven.neoforged.net` **不可达** ⇒ 用**离线打补丁安装器**：复用已核原版 jar 作 `minecraft_server.1.21.11.jar`（sha1 `64bb6d76…43ed`，`install.txt` 里两份 sha1 并排），再 `java -jar ~/mc-test/neoforge/tools/nf-21.11.48-installer-patched.jar --installServer …`；产出 `libraries/net/neoforged/neoforge/21.11.48/unix_args.txt`，`libraries` 134 MB；安装器尾部 `The server installed successfully`；**未**出现 `zip END header not found`（坏包兜底未触发） |
+| 被测副本 | `~/Y33-Bot`＝main `8996a1d` 归档副本，五个关键文件 sha256 与本机逐一相等 |
+| 真客户端 / QQ 侧 | 同 §14.0 |
+
+### 16.1 布局取证（`artifacts/layout.txt`、`real-lines.txt`）
+
+```
+[2910月2026 20:43:46.412] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve joined the game
+[2910月2026 20:43:48.311] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）
+[2910月2026 20:43:49.498] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）
+[2910月2026 20:43:51.053] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Steve left the game
+```
+
+logger 段与 Forge **不同名**（`net.neoforged.fml.loading.FMLLoader/`、`net.neoforged.fml.startup.Entrypoint/`、
+`net.neoforged.neoforge.common.NeoForgeMod/NEOFORGE-MOD` 等），**没有** `cpw.mods.modlauncher` 段；
+`+` 前缀段计数 **0**（`grep -aoE '\[[^]]*\+[^]]*\]'` 零命中），`[Not Secure]` 计数 14 —— 与 Forge 同形，
+所以现模板的 `(?: \[[^\]]+\])?` 通吃两族，不需要为 NeoForge 单独加规则。
+
+### 16.2 `check` 判定（本轮唯一「14 条是**服务端运行中**落盘」的一族）
+
+| 时机 | `[日志模板 neoforge]` 实测输出 | 整体 | 原文 |
+|---|---|---|---|
+| 刚起服、日志 0 事件行 | `OK 未找到可判定的样例行，跳过` | `OK`（**不算通过**） | `start-and-check-skip.txt` |
+| 真客户端跑过一次（4 条） | `OK 样例行 4 条全部命中（join 1 / quit 1 / chat 2）` | `OK` | `check-new.txt` |
+| 日志变长（14 条，**服务端仍在线**） | `OK 样例行 14 条全部命中（join 3 / quit 3 / chat 8）` | `OK` | `check-new-latest.txt` |
+| 旧模板（9 条，运行中） | `FAIL 9 条样例行全部未命中：请按 README §13 调整 [log_patterns]` | `FAIL` | `check-old.txt` |
+| 旧模板（早期 4 条时） | `FAIL 4 条样例行全部未命中…` | `FAIL` | `summary.txt`（早期快照） |
+
+旧模板 **9/9 全灭**（连 join/quit 都不命中）—— 这是 **BUG-003** 与 §14/§15 的 BUG-002 的判别点：
+加载器布局一换，三个模板同时死；而 BUG-002 只死 chat。
+
+### 16.3 `simulate` 四类判读（`artifacts/parse.txt`）
+
+```
+[群消息] Steve进入了neoforge
+[群消息] Steve@neoforge: 大家好，这是带井号的聊天（应被转发）
+[忽略] 聊天非 # 开头，不转发
+[群消息] Steve退出了neoforge
+```
+
+### 16.4 E2E + 归因实验
+
+`artifacts/run-e2e.txt`：`QQ 发送失败（不重试）` **4 次** / `[忽略]` **1 次** / `[警告]` **0** 次，4 次均 404。
+`artifacts/run-healthonly.txt`（`log_path` 指向空日志 + 全新 `state` 跑 12 s）：`QQ 发送失败` **1 次**、
+`/list` 1 次 ⇒ 差额 4 − 3 = **1 条启动健康翻转**，与 §13.4 / §14.4 / §15.4 同一归因。
+
+### 16.5 看门狗：单段 1 次；**段间重新武装 2 段 ⇒ 2 次**（真机，非单测）
+
+旧模板 + `client3.js`（Zoe，5 条未命中连成一段）→ `artifacts/run-wd.txt`：`[警告]` **1 次**、`QQ 发送失败` **0 次**
+（Forge/NeoForge 的旧模板连 join/quit 都不命中，所以这一段全是未命中，没有发送）。
+
+为补上 §13.5 只靠单测覆盖的边界，另做了一次**真机两段实验**（`artifacts/run-rearm.txt`）：副本日志（不污染
+`latest.log`）+ 真客户端两轮（Rex / Nia），两段之间插**一条合成命中行**
+`[20:45:00] [Server thread/INFO]: Tester joined the game`（**仅用于重新武装，不是真机证据，已在 README 标注**）：
+
+```
+警告次数: 2      ← 2 段各 1 次，段内 5 条未命中仍只 1 次
+发送次数: 2      ← 1 启动健康翻转 + 1 合成命中行
+```
+
+⇒ 「命中即重新武装、按**连续段**计数而非累计条数」在**真机进程内**已实测；Fabric 那 2 次告警（§15.5）是同一行为的
+自然结果，两处互相印证。
+
+### 16.6 结论
+
+| 项 | 结论 |
+|---|---|
+| BUG-003 | **复现并通过**：真行 `[2910月2026 …] [net.minecraft.server.MinecraftServer/]: …`，旧模板 9/9 全灭 |
+| 新出厂模板（真机） | **通过**：4/4 → 14/14 全部命中（14 条那次**服务端在线**、整条 `check` 为 `OK`） |
+| 旧模板对照 | **通过**（负向） |
+| 三类事件解析/格式化 / E2E | **通过**（4 = 3 事件 + 1 健康翻转；归因实验 1 次闭合） |
+| BUG-004 看门狗 | **通过**：单段 1 次；2 段 2 次（段内 5 条仍 1 次） |
+| 环境恢复 | **通过**：离线打补丁安装器一次成功，未触发坏包兜底 |
+
+### 16.7 未覆盖边界
+
+同 §14.7；另加：NeoForge 只打 21.11.48 一个点（21.3–26.3 其余版本仍只有格式取样与外推）。
+
+---
+
+## 17. 四族真机回归汇总（2026-10-29，汇总卡 `t_9e9040ed`）
+
+### 17.1 逐族对照（全部为真机实测；每格都能在 `test-notes/regress/` 里找到原文）
+
+| 族 / 版本 | 日志布局 | 新模板 `check` | 旧模板 `check` | 「只坏 chat」还是「三模板全灭」 | 看门狗 | E2E 出站 | 证据目录 |
+|---|---|---|---|---|---|---|---|
+| 原版 1.21.11 | `[HH:MM:SS] [Server thread/INFO]:`，聊天带 `[Not Secure] ` | `OK 8/8` → `OK 18/18` | `FAIL` 18 条中 8 命中 / 10 未命中 | **只坏 chat**（8 命中 = join 4 + quit 4） | 单段 3 条 → 1 次；新模板 0 次 | 4 次 = 3 事件 + 1 健康翻转 | §14 / `vanilla-1.21.11/` |
+| Fabric 1.21.11 | 同上（无 logger 段） | `OK 4/4` → `OK 14/14` | `FAIL` 14 条中 6 命中 / 8 未命中 | **只坏 chat**（6 命中 = join 3 + quit 3） | **2 段 → 2 次**（每段 1 次） | 4 次 = 3 + 1 | §15 / `fabric-1.21.11/` |
+| Forge 61.2.0 | `[2910月2026 …] [线程/级别] [logger/]:` | `OK 4/4` → `OK 14/14` | `FAIL 14 条全部未命中` | **三模板全灭**（BUG-003） | 单段 1 次（累计 9/13 条仍 1 次）；新模板 0 次 | 4 次 = 3 + 1 | §13 / `forge-1.21.11/` |
+| NeoForge 21.11.48 | 同 Forge 族，logger 段名不同（`net.neoforged.*`） | `OK 4/4` → `OK 14/14` | `FAIL 9 条全部未命中` | **三模板全灭**（BUG-003） | 单段 1 次；**2 段 → 2 次**（段内 5 条仍 1 次） | 4 次 = 3 + 1 | §16 / `neoforge-1.21.11/` |
+
+**跨族结论**：
+
+1. 新出厂 `[log_patterns]` 在**四族 1.21.11 一个横切面**上把真事件行**全部命中**（8 + 14 + 14 + 14 条，逐条原文在
+   `test-notes/regress/log-slice-events.txt` 与各族 `artifacts/real-lines*.txt`），旧模板在四族上**全部 `FAIL`**。
+2. 旧模板的失败指纹能把两个缺陷分开：原版/Fabric **只死 chat**（BUG-002），Forge/NeoForge **连 join/quit 一起死**（BUG-003）。
+3. 看门狗按**连续段**计数：单段 1 次（原版/Forge/NeoForge 单轮）、两段 2 次（Fabric 自然产生；NeoForge 合成命中行实验复现），
+   段内条数再涨也不重复报。
+
+### 17.2 证据分级口径（**读本节前必看**）
+
+| 证据类型 | 本轮实例 | 能证明什么 / 不能证明什么 |
+|---|---|---|
+| 服务端运行中的 `check`（整条 `OK`） | 各族的 4 条/8 条那次、NeoForge 的 14 条那次 | 能证明 `[日志模板]` + RCON + QQ 全链路；**是完整真机结论** |
+| **停服后**在同一份真机日志上补跑的 `check` | 21:00 的 `check-*-latest.txt`（原版 18 条、Fabric 14 条、Forge 14 条） | **只能证明 `[日志模板]` 这一项**；`[RCON]` 必然 `FAIL`、整条 `check` 以 `FAIL` 收尾，**不能**读成模板失配，也**不是**又一次真机回归 |
+| `simulate log-event --dry-run` 逐行判读 | 各族 `parse*.txt`、Fabric 的 `replay-old-template.txt` | 证明单行解析/格式化/命中；**不发**任何 QQ 请求 |
+| 真客户端 E2E（mineflayer 进服→聊天→退服） | 各族 `run-e2e.txt` / `run-new.txt` | 证明「日志→事件→格式化→真发送」；404 是假 `group_openid` 的**预期**结果 |
+| 合成行（明确标注） | NeoForge `run-rearm.txt` 里那 1 条 `Tester joined the game` | 只用来制造「重新武装」的对齐点，**不计入真机事件行** |
+
+### 17.3 本轮补齐的两处「说过但没落盘」
+
+| # | 问题 | 处置 |
+|---|---|---|
+| 1 | §13.2 的「日志变长后 14 条全部命中」当时只在终端上出现过 | 21:00 在同一份真机日志（Forge，82 行 / 14 条事件行）上补跑并落盘 `forge-1.21.11/artifacts/check-new-latest.txt`，口径见 §13.9 |
+| 2 | Fabric「新模板 14 条全部命中」在本卡 body 里被当成既有结论，但 20:06 的落盘只有 4 条 | 停服后补跑得 `fabric-1.21.11/artifacts/check-new-latest.txt`（14/14），并在 §15.2 注明是补跑 |
+
+### 17.4 harness 缺陷（脚本，不是 `src/`）
+
+| # | 脚本 | 现象 | 状态 |
+|---|---|---|---|
+| 1 | `e2e_family.sh` `make_old_cfg` | Python 3.9 下 `re.sub` 传字符串替换体，旧模板里的 `\d` 被当组引用 → `re.error: bad escape \d`，旧模板配置根本没生成（旧 `check` 报「配置文件不存在」、看门狗没跑） | **已修**（改 `lambda` 替换，服务器副本更新，原件备份 `e2e_family.sh.bak-2026-10-29`） |
+| 2 | `regress_start.sh` 起服判定 | `DONE_BEFORE=$(grep -ac 'Done (' … \|\| echo 0)` 在空日志时得到 `"0\n0"`（`grep -c` 输出 `0` 且退出码 1，`\|\| echo 0` 又补一个 `0`）→ 整数比较报 `[: 0：需要整数表达式`，`启动结果: 失败` 与事实相反 | **只登记未修**：该行**两个方向都不可信**（Forge 那轮误报「失败 210s」、NeoForge 那轮恰好报「成功 21s」），真证据只看 `Done (…)` 行与 `ss -tln` 端口 |
+| 3 | `e2e_neg.sh` 第 5 步 | 早期是 `| grep` 直接打终端、**没 tee**，导致「14 条」这条输出丢失 | **已修**（现写 `check-new-latest.txt`） |
+
+### 17.5 仍未覆盖（不下结论）
+
+1. **`online-mode=true` 的签名聊天行**：四族实例都是 `online-mode=false`，`[Not Secure]` 是这一前提下的形态。
+2. **版本密度**：四族各只打 1.21.11 一个点；Forge 1.21.3–26.3、NeoForge 21.3–26.3、原版 26.2/26.3、Fabric 其它组合
+   仍只有 `test-notes/0*.md` 的格式取样与外推。
+3. **QQ 真实投递**：`group_openid` 全是假值，404 是预期信号；真群收不收得到属 S5。
+4. **看门狗的时间维度**：只验「连续条数」这一段逻辑，没有验「长时间零事件」的告警（按用户拍板本来就不做，见 BUG-004「修复记录」）。
