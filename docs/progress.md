@@ -25,7 +25,7 @@
 | 覆盖率 | **99.33%**（门槛 70%） | 同上 |
 | lint | `ruff check .` 全过；`ruff format --check .` **46 文件**合规 | 同上 |
 | 日志模板真行 | **361/361 命中**（MISS 0；改前同一批行 101/361）；≤1.21.1 旧形态 **3/3** | `docs/acceptance.md` §10.1–§10.2 |
-| 真机回归 | **四族 1.21.11 全通过**（原版 / Fabric / Forge 61.2.0 / NeoForge 21.11.48）：真事件行 8/8、14/14、14/14、14/14 命中；同一批真行换旧模板四族全 `FAIL`；三类出站 404（预期）；看门狗单段 1 次 / Fabric 两段 2 次 | `docs/acceptance.md` §13–§17 |
+| 真机回归 | **四族 1.21.11 全通过**（原版 / Fabric / Forge 61.2.0 / NeoForge 21.11.48）：新模板真事件行原版 8/8（在线）→18/18（补跑）、Fabric 4/4→14/14、Forge 4/4→14/14、NeoForge 4/4→**14/14（在线）**；同一批真行换旧模板四族全 `FAIL`；三类出站 404（预期）；看门狗单段 1 次 / Fabric 两段 2 次 | `docs/acceptance.md` §13–§17 |
 | 真机回归是否动了用例数/覆盖率 | **没有**：本批只改 `docs/`、`BUGS.md`、`test-notes/`，`src/` 与 `tests/` 零改动；2026-10-29 21:0x 在本机重跑 `pytest -q --cov=y33bot --cov-fail-under=70` → **453 passed in 50.04s**、`Total coverage: 99.33%`；`ruff check .` / `ruff format --check .` → `All checks passed!` / **46 files already formatted**（与上表逐项相同） | 本表 + `docs/acceptance.md` §17 |
 | 发布 | `v0.1.0` annotated tag（指向 `f0ddd4e`）；v0.2 功能已合入 main | 下表 2026-10-13 条目 |
 | 产品代码 | 2026-10-18 矩阵批**零改动**；2026-10-29 模板批同样**零改动**；2026-10-29 BUG-004 批改动 3 个 `src/` 文件（`mclog/patterns.py`、`mclog/watcher.py`、`service.py`）；2026-10-29 BUG-005 批改动 `qq/gateway.py`（超时文案可读化 + 去 `start()` 双前缀）、`qq/probe.py`（直连 opener）、`service.py`（`run` 启动前一次性探活，不重试） | `BUGS.md`「测试矩阵与证据来源」、`docs/acceptance.md` §10.5/§11/§12、`PLAN.md` §7.3/§7.4 |
