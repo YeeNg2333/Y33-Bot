@@ -48,6 +48,12 @@
   不用 `pytest.skip` / `xfail` 掩盖用例，需要真机的场景写进文档，而不是写成会绿的测试。
 - 改完代码要跑 `make test`；用例数或覆盖率变了就同步更新 `README.md` §14 与 `docs/acceptance.md`，
   并回填 `docs/progress.md` 顶部的「当前基线」表，避免文档与实测脱节。
+- **多批修复抢同一个「追加点」时用 stack PR**（后一批的分支 base 指向前一批，PR 的 base 同理）。
+  本仓每批修复都会往同一批文档的同一位置追加：`docs/acceptance.md` 的 `## N.`、`PLAN.md` 的 `### 7.x`、
+  `README.md` §13 的下一条，以及四处数字基线（`README.md` §14 / `docs/smoke.md` §7 / `docs/acceptance.md`
+  §1+§3 / `docs/progress.md` 基线表）。三批各从 main 切实测撞号 3 次（2026-10-29），每次都要重排编号、
+  改交叉引用、重填四处数字。**不共享追加点时不要 stack**：各写各的目录（如 `test-notes/<族>/`）时并行合并
+  0 冲突（2026-10-18 六卡实证），串成链只会强制造串行合并与 review 顺序耦合。
 - 结论落文件：口头结论不算交付，写进 `README.md` / `docs/*.md` / `BUGS.md` / `docs/progress.md` 才算。
 
 ## 常用命令
