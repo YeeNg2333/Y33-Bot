@@ -13,6 +13,7 @@ import asyncio
 import logging
 import re
 import time
+import traceback
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
@@ -28,6 +29,15 @@ logger = logging.getLogger("y33bot.qq.gateway")
 
 _MENTION_RE = re.compile(r"^(?:<@!?\d+>\s*)+")
 
+# BUG-005：QQ 平台接口超时被 SDK 吞成 `None` 之后，抛出来的是 `NoneType` 内部异常
+# （`botpy/http.py:181-195` 的 `except asyncio.TimeoutError` 隐式 `return None`，
+# 随后在 `botpy/robot.py:16-19` / `botpy/client.py:171` 被当 dict 用）。这两条文本对运维不可读，
+# 命中即翻译成「平台接口无响应」；不改行为、不加任何重试（PLAN.md:85 N7 / PLAN.md:498）。
+_TIMEOUT_HINTS = (
+    "'NoneType' object is not subscriptable",
+    "'NoneType' object has no attribute 'get'",
+)
+
 try:  # pragma: no cover - 取决于环境是否安装了 qq-botpy
     import botpy  # type: ignore[import-not-found]
 except Exception:  # noqa: BLE001 - 缺依赖不是致命错误，run 时才需要
@@ -36,6 +46,19 @@ except Exception:  # noqa: BLE001 - 缺依赖不是致命错误，run 时才需�
 
 class QQGatewayError(RuntimeError):
     """QQ 网关不可用（缺少依赖、凭据错误、启动超时……）。"""
+
+
+def _describe_gateway_error(exc: BaseException) -> str:
+    """把网关异常翻译成给运维看的文案（BUG-005 修复方向 2：可读化）。
+
+    只改文案，不改控制流：命中 `_TIMEOUT_HINTS` 时补一句「SDK 把超时吞成 None」，
+    其余异常原样 `str(exc)`，避免把真正的凭据/网络错误也套上「超时」的帽子。
+    """
+
+    text = str(exc)
+    if any(hint in text for hint in _TIMEOUT_HINTS):
+        return "QQ 平台接口无响应（SDK 把超时吞成 None，多为 /users/@me 或 /gateway/bot 超时）：" + text
+    return text
 
 
 MessageHandler = Callable[[MCGroupMessage], Awaitable[str | None]]
@@ -113,7 +136,9 @@ class BotpyGateway:
         except TimeoutError as exc:
             raise QQGatewayError(f"QQ 网关 {self._startup_timeout:g}s 内未就绪") from exc
         if self._up_error is not None:
-            raise QQGatewayError(f"QQ 网关启动失败: {self._up_error}") from self._up_error
+            # BUG-005：这里不再自己加「QQ 网关启动失败」前缀 —— service.py 已经打了一层，
+            # 加两次会出现 `QQ 网关启动失败: QQ 网关启动失败: …`。
+            raise QQGatewayError(_describe_gateway_error(self._up_error)) from self._up_error
 
     def _build_client(self):
         gateway = self
@@ -143,7 +168,11 @@ class BotpyGateway:
         except asyncio.CancelledError:
             raise
         except Exception as exc:  # noqa: BLE001 - SDK 内部异常必须留痕且不能拖垮服务
-            self._logger.error("[错误] QQ 网关异常退出: %s", exc)
+            # BUG-005：日志给运维看可读文案；原始异常（含完整 traceback）降到 DEBUG 保留。
+            # traceback 必须拼进消息：`cli._PlainFormatter` 只输出 `record.getMessage()`，
+            # 只挂 `exc_info=` 的堆栈在 `run --verbose` 下根本打不出来（离线实跑验证过）。
+            self._logger.error("[错误] QQ 网关异常退出: %s", _describe_gateway_error(exc))
+            self._logger.debug("[调试] QQ 网关异常原始堆栈:\n%s", "".join(traceback.format_exception(exc)))
             self._signal_up(exc)
 
     def _signal_up(self, error: BaseException | None = None) -> None:

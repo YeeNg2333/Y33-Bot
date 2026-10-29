@@ -9,7 +9,8 @@ import signal
 import pytest
 
 from conftest import App
-from y33bot.qq.gateway import QQGatewayError
+from y33bot.qq import gateway as gateway_module
+from y33bot.qq.gateway import BotpyGateway, QQGatewayError
 from y33bot.qq.probe import QQProbeError
 from y33bot.service import Service
 from y33bot.state import StateStore
@@ -182,6 +183,56 @@ async def test_run_returns_1_when_gateway_fails(app: App) -> None:
     assert broken.closed is True
 
 
+async def test_gateway_startup_failure_logs_single_readable_prefix(
+    app: App, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """BUG-005：启动期失败只留**一层**前缀，且原因是可读文案（真机曾是 `QQ 网关启动失败: QQ 网关启动失败: …`）。
+
+    整链用真 `BotpyGateway` + 假 `botpy.Client`（只把 SDK 那两条 `NoneType` 异常离线复刻出来），
+    不连 QQ；`Service.run()` 的最终输出就是运维真正看到的那两行。
+    """
+
+    class NoneTypeFailingClient:
+        """复刻 SDK 吞掉超时后返回 `None` 的那一步（`botpy/http.py:181-195` / `botpy/client.py:171`）。"""
+
+        def __init__(self, **_kwargs) -> None:
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_exc) -> None:
+            return None
+
+        async def start(self, *_args, **_kwargs):
+            raise TypeError("'NoneType' object is not subscriptable")
+
+    monkeypatch.setattr(
+        gateway_module,
+        "botpy",
+        type("B", (), {"Client": NoneTypeFailingClient, "Intents": lambda **kwargs: kwargs}),
+    )
+    gateway = BotpyGateway(
+        app.config,
+        ("app-id", "app-secret"),
+        StateStore.load(app.config.state_path),
+        handler=lambda message: None,  # type: ignore[arg-type,return-value]
+        startup_timeout=1.0,
+    )
+    service = make_service(app, gateway=gateway, pool=app.make_pool())
+
+    with caplog.at_level(logging.INFO):
+        assert await asyncio.wait_for(service.run(), timeout=10) == 1
+
+    reason = (
+        "QQ 平台接口无响应（SDK 把超时吞成 None，多为 /users/@me 或 /gateway/bot 超时）："
+        "'NoneType' object is not subscriptable"
+    )
+    startup_errors = [record.getMessage() for record in caplog.records if "QQ 网关启动失败" in record.getMessage()]
+    assert startup_errors == ["[错误] QQ 网关启动失败: " + reason]  # 一层前缀 + 可读原因
+    assert gateway._task is None  # shutdown() 真的关掉了网关
+
+
 async def test_run_returns_1_without_credentials(app: App) -> None:
     service = make_service(app, pool=app.make_pool(), env={"MC_RCON_PASSWORD_MAIN": "x"})
     assert await asyncio.wait_for(service.run(), timeout=10) == 1
@@ -323,3 +374,83 @@ async def test_run_returns_0_when_stopped_by_signal(app: App, caplog: pytest.Log
     assert code == 0
     assert [record.getMessage() for record in caplog.records if record.levelno >= logging.ERROR] == []
     assert gateway.started is False  # shutdown 关掉了网关
+
+
+# ------------------------------------------- 启动前探活（issue #3 / BUG-005 方向 3）
+async def test_run_probes_once_and_exits_nonzero_when_credentials_rejected(
+    app: App, caplog: pytest.LogCaptureFixture
+) -> None:
+    """探活失败 → 一次即退出（非 0），日志首行说清「凭据/配置问题」，且根本没起网关。
+
+    `gateway` 不注入 = 走真网关分支，探活就在它前面；探活是注入的替身（`failing_probe`），全程离线。
+    """
+
+    service = make_service(app, pool=app.make_pool(), probe=failing_probe)
+    with caplog.at_level(logging.DEBUG):
+        code = await asyncio.wait_for(service.run(), timeout=10)
+
+    assert code == 1
+    errors = [record.getMessage() for record in caplog.records if record.levelno >= logging.ERROR]
+    assert len(errors) == 1  # 只尝试一次：没有第二次探活、没有网关启动失败的第二条 [错误]
+    assert errors[0].startswith("[错误] QQ 凭据探活失败（启动前一次性检查，不重试，未启动网关）: ")
+    assert "code=100007" in errors[0] and "appid or secret invalid" in errors[0]  # 原文不吞
+    assert "凭据/配置问题" in errors[0]
+    assert service._gateway is None  # 探活失败就没构造真网关
+
+
+async def test_run_skips_startup_probe_when_gateway_is_injected(app: App) -> None:
+    """注入替身网关（单测/离线路径）时不触网：探活只服务于真实 SDK 登录。"""
+
+    called: list[tuple[str, str]] = []
+
+    async def probe(_app_id: str, _app_secret: str) -> int:
+        called.append((_app_id, _app_secret))
+        raise AssertionError("注入网关时不该走启动前探活")
+
+    gateway = app.make_gateway()
+    service = make_service(app, gateway=gateway, pool=app.make_pool(), probe=probe)
+    original = {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
+    try:
+        task = asyncio.create_task(service.run())
+        for _ in range(50):
+            if gateway.started:
+                break
+            await asyncio.sleep(0.02)
+        service._signal_flag.set()
+        assert await asyncio.wait_for(task, timeout=10) == 0
+    finally:
+        for sig, handler in original.items():
+            signal.signal(sig, handler)
+
+    assert called == []
+
+
+async def test_probe_before_gateway_reports_expiry_on_success(app: App, caplog: pytest.LogCaptureFixture) -> None:
+    """成功路径：拿到的有效期只进 DEBUG，不改变 `run` 的 INFO 级输出。"""
+
+    service = make_service(app, pool=app.make_pool())
+    with caplog.at_level(logging.DEBUG):
+        assert await service._probe_before_gateway(("app-id", "secret")) is True
+    messages = [record.getMessage() for record in caplog.records]
+    assert any("QQ 凭据探活通过（access_token 有效期 7200s）" in message for message in messages)
+    infos = [record.getMessage() for record in caplog.records if record.levelno >= logging.INFO]
+    assert [message for message in infos if "QQ 凭据探活" in message] == []  # INFO 级输出不变
+
+
+@pytest.mark.parametrize(
+    ("exc", "expected"),
+    [
+        (QQProbeError("平台返回错误: code=100007 message=appid or secret invalid"), "凭据/配置问题"),
+        (QQProbeError("平台返回错误: code=10004 message=机器人不存在"), "凭据/配置问题"),  # 本机实测原文
+        (QQProbeError("无法连接 https://bots.qq.com: <urlopen error [SSL: UNEXPECTED_EOF]>"), "网络不可达"),
+        (QQProbeError("HTTP 503 Service Unavailable: <html>502 Bad Gateway</html>"), "接口抖动"),
+    ],
+)
+def test_describe_probe_error_separates_causes(exc: BaseException, expected: str) -> None:
+    """归因文案要能把「凭据错 / 网络不通 / 平台抖动」分开，且保留原文。"""
+
+    from y33bot.service import _describe_probe_error
+
+    described = _describe_probe_error(exc)
+    assert described.startswith(str(exc))  # 原文不吞
+    assert expected in described
