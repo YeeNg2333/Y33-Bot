@@ -748,3 +748,30 @@ B1 也**没有**新增重试（明确不重启）。`IDEA.md`、`需求1.txt` �
 `[错误] QQ 网关已断开…` 并 `exit=1`；`check` 也在真网络下实测（假凭据 → `[QQ] FAIL access_token 获取失败: 平台返回错误: code=10004 message=机器人不存在`）。
 原始输出见 `docs/acceptance.md` §9。**真机触发链路（Q1 静默时的日志尾部 / Q3 QQ 侧关码）仍未验证** ——
 本机没有真实 QQ 凭据与真 MC 服，按仓库规则「未执行就如实写未执行」，不用推断代替证据。
+
+### 7.3 日志模板改为「四族通吃」出厂默认（2026-10-29，BUG-002/003 修复批）
+
+来源：`BUGS.md` 的 **BUG-002**（Forge 行不匹配）与 **BUG-003**（≥1.21.2 起聊天行前缀变化）——两条都出自
+2026-10-18 实机测试矩阵的真日志。修复分布在看板卡 `t_2a31fd67`（出厂模板与测试夹具）、
+`t_739a0487`（三方逐字相等回归锁 + 真行用例）；本节由文档卡 `t_33baa9bb` 登记并同步全部文档载体。
+
+| # | 变更 | 原状 | 现行为 | 涉及位置 |
+|---|---|---|---|---|
+| P1 | `[log_patterns]` 出厂默认三模板统一为「四族通吃」形态 | 三模板是 vanilla 1.20.x 窄形态：时间戳必须 `\d{2}:\d{2}:\d{2}`、logger 必须逐字 `[Server thread/INFO]`、`chat` 只认 `[Async Chat Thread - #\d+/INFO]`。后果：Forge 全族（时间戳 `[1810月2026 …]` + 多一段 `[net.minecraft.server.MinecraftServer/]`）**0 命中**；≥1.21.2 起 vanilla / Fabric / NeoForge 的聊天行（`[Not Secure] <player> msg`，聊天回到主线程）**全部漏判**。全量真行 **101/361** | 时间戳 `\[[^\]]+\]`（不再限 `HH:MM:SS`）；logger 段 `\[(?:Server thread|Async Chat Thread - #\d+)/INFO\]`（主线程 / 旧聊天线程二选一）；可选模组加载器段 `(?: \[[^\]]+\])?`（带 `/` 与不带 `/` 两种 logger 形态都吃）；`chat` 可选 `(?:\[Not Secure\] )?`；`encoding = "utf-8"` 显式声明。全量真行 **361/361**（MISS 0）；≤1.21.1 旧形态（`Async Chat Thread - #0/#12`）**3/3** 仍命中 | `config.example.toml`；`tests/conftest.py`（三条夹具常量）；`PLAN.md` §3.5 样板块；新增 `tests/test_log_patterns_real_lines.py`（28 例：三方逐字相等锁 + 16 条内联行（13 条真机真行 + 3 条 ≤1.21.1 旧形态样例行）+ 非事件行不误判 + 语义不变）；`README.md` §5/§13/§14；`docs/smoke.md` §3/§7；`docs/acceptance.md` §10；`docs/progress.md` 基线表；缺陷侧 `BUGS.md` BUG-002/003（卡 `t_e014c230`）。**`src/` 零改动** |
+
+**对 IDEA 的偏离（登记）**：本变更**偏离 `IDEA.md:170` 冻结的 chat 模板形态**。`IDEA.md:170` 把 chat 冻结为单形态
+`\[(?P<time>\d{2}:\d{2}:\d{2})\] \[Async Chat Thread - #\d+/INFO\]: <(?P<player>\w+)> (?P<message>.+)`；
+本变更**不再保留 `time` 命名组**（改成匿名 `\[[^\]]+\]`）、把 logger 段改成二选一、并新增可选加载器段与可选 `[Not Secure] ` 前缀，
+因此出厂默认已**不是** IDEA 原文的逐字形态，而是「一条模板吃四族」。按本文件开头的效力条款在此登记；
+`IDEA.md` 与 `需求1.txt` 按仓库规则**不修改**，偏离只落在本计划与它的实现载体上（`需求1.txt` 的「版本升级只改 TOML 模板」意图不变）。
+
+**签名冻结条款核对**：§3.3 一行未改；`config.LogPatterns` 的字段语义不变 —— `join`/`quit` 仍必须有 `player` 命名组，
+`chat` 仍必须有 `player` 与 `message` 命名组，本次只换**默认值**，未增删任何公开签名。
+
+**回归锁（文档与出厂默认的三方相等）**：`PLAN.md` §3.5 的样板代码块、`config.example.toml`、`tests/conftest.py` 的三条夹具常量
+必须**逐字相等**，由 `tests/test_log_patterns_real_lines.py::test_plan_section_equals_factory_defaults` /
+`::test_fixture_templates_equal_factory_defaults` 锁住（§3.5 用 `tomllib` 解析，顺带验证样板是合法 TOML）。
+改任一处而不同步另外两处，这三条用例立红——红锁验证：把 §3.5 回退成旧模板后 3 条全红，恢复后 28 例全绿。
+
+**验证**：本轮实测表见 `docs/acceptance.md` §10（361/361 逐族命中 + 改前 101/361 对照 + 409 例 pytest 数字）。
+**真机回归未执行**：本机没有可用的四族 MC 服，真行取自 `test-notes/artifacts/` 的矩阵制品，不是本轮新采的真机日志。
