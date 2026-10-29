@@ -442,8 +442,12 @@ async def test_probe_before_gateway_reports_expiry_on_success(app: App, caplog: 
     [
         (QQProbeError("平台返回错误: code=100007 message=appid or secret invalid"), "凭据/配置问题"),
         (QQProbeError("平台返回错误: code=10004 message=机器人不存在"), "凭据/配置问题"),  # 本机实测原文
+        (QQProbeError("HTTP 401 Unauthorized: <html>invalid appid</html>"), "凭据/配置问题"),
         (QQProbeError("无法连接 https://bots.qq.com: <urlopen error [SSL: UNEXPECTED_EOF]>"), "网络不可达"),
         (QQProbeError("HTTP 503 Service Unavailable: <html>502 Bad Gateway</html>"), "接口抖动"),
+        # 限流/请求超时用的是**合法凭据**：判成凭据错会让运维去改 app_id（review r4408692195）
+        (QQProbeError("HTTP 429 Too Many Requests: <html>rate limited</html>"), "接口抖动"),
+        (QQProbeError("HTTP 408 Request Timeout: <html>timeout</html>"), "接口抖动"),
     ],
 )
 def test_describe_probe_error_separates_causes(exc: BaseException, expected: str) -> None:

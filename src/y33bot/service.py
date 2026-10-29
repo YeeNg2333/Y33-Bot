@@ -63,6 +63,15 @@ _NETWORK_HINTS = (
     "unreachable",
     "network",
 )
+#: 平台侧抖动（限流 / 请求超时 / 5xx）：**不是**凭据错，也不是本机网络问题。
+#: 这几个必须先于 `_NETWORK_HINTS` 判，否则 `HTTP 408 Request Timeout` 会被 "timeout" 抢走。
+_PLATFORM_HINTS = (
+    "http 408",
+    "http 429",
+    "too many requests",
+    "rate limit",
+    "http 5",
+)
 
 
 def _describe_probe_error(exc: BaseException) -> str:
@@ -70,15 +79,21 @@ def _describe_probe_error(exc: BaseException) -> str:
 
     三类归因（顺序即优先级）：
 
-    - 平台明确说凭据/机器人不对（`code=100007`、`code=10004 机器人不存在`、HTTP 4xx）→ 凭据/配置问题；
+    - 平台明确说凭据/机器人不对（`code=100007`、`code=10004 机器人不存在`、HTTP 401/403）→ 凭据/配置问题；
+    - 平台限流/超时/5xx（HTTP 408、429、5xx、`too many requests`）→ 平台侧抖动，**不是**凭据错；
     - 连接层报错（SSL EOF / 超时 / DNS）→ 网络不可达，**不是**凭据错；
-    - 其余（HTTP 5xx、响应不是 JSON……）→ 平台侧抖动。
+    - 其余（响应不是 JSON……）→ 平台侧抖动。
+
+    注意：**绝不能把「HTTP 4xx」整体判成凭据问题** —— `408 Request Timeout` / `429 Too Many Requests`
+    用的是合法凭据，误判会让运维去改 app_id/app_secret，而启动策略是失败即退出，等于领错方向。
     """
 
     text = str(exc).strip() or exc.__class__.__name__
     lowered = text.lower()
-    if any(hint in lowered for hint in _CREDENTIAL_HINTS) or "http 4" in lowered:
+    if any(hint in lowered for hint in _CREDENTIAL_HINTS):
         advice = "凭据/配置问题：app_id 或 app_secret 无效，不是平台抖动"
+    elif any(hint in lowered for hint in _PLATFORM_HINTS):
+        advice = "平台接口报错（接口抖动）：稍后重跑即可，本进程不重试"
     elif any(hint in lowered for hint in _NETWORK_HINTS):
         advice = "网络不可达（不是凭据错）：检查本机网络/代理后重跑"
     else:

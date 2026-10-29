@@ -194,6 +194,7 @@ async def test_run_logs_gateway_startup_failure_with_single_prefix(app: App, cap
     ("exc", "advice"),
     [
         (QQProbeError("平台返回错误: code=100007 message=appid or secret invalid"), "凭据/配置问题"),
+        (QQProbeError("HTTP 429 Too Many Requests: <html>rate limited</html>"), "接口抖动"),
         (
             QQProbeError("无法连接 https://bots.qq.com: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING]>"),
             "网络不可达",
