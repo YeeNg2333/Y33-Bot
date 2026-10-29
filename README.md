@@ -244,12 +244,16 @@ python -m y33bot run   --config config.toml             # 常驻：QQ 网关 + �
 [QQ] OK access_token 获取成功（有效期 7200s），app_id 已设置 (env QQ_BOT_APP_ID)，group_openid 已配置
 [RCON main] OK /list -> There are 0 of a max of 20 players online:
 [日志 main] OK .../logs/latest.log 可读，偏移 0 字节
+[日志模板 main] OK 未找到可判定的样例行，跳过
 [绑定] OK 1 条
 OK
 ```
 
 > `[QQ] OK` 那一行是本节唯一**不是**逐字实测粘贴的输出 —— 它要求真实有效的机器人凭据（本机没有）。
 > 其余行都是本机实跑粘贴；探活失败那一行见下面「凭据无效」的实测输出。
+> `[日志模板 main]` 那行取自 2026-10-29 本机实跑（空日志 + `--no-probe` + 内存假 RCON，逐字输出见
+> [`docs/acceptance.md`](docs/acceptance.md) §10）；它**逐服紧跟**在 `[日志 <name>]` 之后，多服就多行。
+
 
 `check` 的 QQ 项会**真的**去平台取一次 `access_token`（不再只是看看环境变量填没填）。拿「格式像真的、但从未签发」的假凭据实测（2026-10-15 03:08 +0800）：
 
@@ -259,6 +263,7 @@ $ python -m y33bot check --config config.toml
 [QQ] FAIL access_token 获取失败: 平台返回错误: code=10004 message=机器人不存在
 [RCON main] FAIL 无法连接 127.0.0.1:34567: 连接 127.0.0.1:34567 失败: [WinError 1225] 远程计算机拒绝网络连接。
 [日志 main] OK .../logs/latest.log 可读，偏移 0 字节
+[日志模板 main] OK 未找到可判定的样例行，跳过
 [绑定] OK 0 条
 FAIL
 ```
@@ -632,17 +637,18 @@ QQ 官方约束：被动回复只在收到事件后的短窗口内有效（本�
 
 **15）`check` 里 `[日志模板 main]` 这一行是什么 / `FAIL` 了怎么办**
 
-它紧跟在 `[日志 <name>]` 之后，是「**模板 × 本服真实日志**」的自检：读 `latest.log` 末尾 200 行，挑出候选行（含 `joined the game` / `left the game` / `<玩家> `），逐条喂给 `join` / `quit` / `chat` 三个模板。三种结果：
+它紧跟在 `[日志 <name>]` 之后，是「**模板 × 本服真实日志**」的自检：读 `latest.log` 末尾 200 行，挑出候选行（含 `joined the game` / `left the game` / `<玩家> `），逐条喂给 `join` / `quit` / `chat` 三个模板。四种结果：
 
 | 输出 | 含义 | 对退出码的影响 |
 |---|---|---|
 | `[日志模板 main] OK 样例行 N 条全部命中（join a / quit b / chat c）` | 候选行**全部**命中 —— 模板与本服日志布局一致（括号里是按类别分组的命中条数） | 不影响，仍为 0 |
 | `[日志模板 main] FAIL N 条样例行全部未命中：请按 README §13 调整 [log_patterns]` | 候选行**一条都没命中** —— 正是 BUG-002 / BUG-003 那种「MC→QQ 全哑」的前兆；`check` 末行是 `FAIL`、**退出码 1** | 1 |
+| `[日志模板 main] FAIL N 条样例行中 M 条命中、K 条未命中：请按 README §13 调整 [log_patterns]` | **部分命中**：比如 `join`/`quit` 对了、`chat` 那条布局没覆盖 —— 同样说明有一类事件正在被丢，不能只看「有几条命中了」就放过 | 1 |
 | `[日志模板 main] OK 未找到可判定的样例行，跳过` | 日志里没有候选行（刚轮转 / 清空，或这段时间确实没有进出服与聊天），**跳过、不 FAIL** | 不影响，仍为 0 |
 
 看到 `FAIL` 就按上面第 4 条的排查顺序处理：先 `run --verbose` 看 `[忽略]` 行属于哪一类，再只改对应的那条模板，最后重跑 `check`。
 
-**刻意不做的事**：不会因为「日志里一条事件都没有」就判 `FAIL` 或非 0 退出。真·安静的服务器（没人上下线、没人说话）本来就可能长时间零事件，按「零事件」判失败**必然误报**；所以 `check` 只在「**有**候选行、但一条都匹配不上」时才判 `FAIL`。这是用户已拍板的口径。
+**刻意不做的事**：不会因为「日志里一条事件都没有」就判 `FAIL` 或非 0 退出。真·安静的服务器（没人上下线、没人说话）本来就可能长时间零事件，按「零事件」判失败**必然误报**；所以 `check` 只在「**有**候选行、且有候选行没被任何模板命中」时才判 `FAIL`（**全部未命中**与**部分命中**都算）。这是用户已拍板的口径。
 
 ## 14. 测试、检查与验收记录
 
@@ -654,10 +660,16 @@ python -m ruff check . && python -m ruff format --check .  # 静态检查与格�
 
 在 BUG-001 修复落地后（2026-10-15）实测：`381 passed`、覆盖率 `TOTAL 99%`（`--cov-fail-under=70` 门槛通过，实测 `99.33%`）、`ruff check .` 与 `ruff format --check .` 全过（43 文件）。作为对照：BUG-001 取证用例合入后是 `357 passed` / `99.30%`，v0.2 变更（真机反馈三项）后是 `352 passed`，v0.1.0 时是 `214 passed` / `TOTAL 90%`——数字随后续新增测试变大。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件，`check` 的真探活也在单测里被替身替换（真机/CI 用 `--no-probe` 保离线）。
 
-> **待回填：本轮（BUG-004 修复：日志看门狗 + `check` 模板自检）的数字。** 新增用例会改变 `passed` 数与 `ruff` 文件数，
-> 上面那段的数字是 BUG-001 那批的历史值。四处同步点（`README.md` §14、`docs/smoke.md` 的例数/覆盖度两处、
-> `docs/acceptance.md` §1 与 §3、`docs/progress.md` 的「当前基线」表）由**收口卡统一回填**；
-> 回填前一律以上一段的历史数字为准，**不要引用没跑过的数字**。
+在 BUG-004 修复落地后（2026-10-29）本机实跑：**`398 passed`**、覆盖率 **`99.36%`**（`--cov-fail-under=70` 门槛通过）、
+`ruff check .` 与 `ruff format --check .` 全过（**44 文件**），`tests/` 无 `skip` / `xfail`。
+用例数 381 → 398（**+17**）：`tests/test_mclog_patterns.py` +7（`looks_like_event` 参数化：join / quit / chat×2 / 噪声×2 / 空行）、
+`tests/test_mclog_watcher.py` +3（看门狗只报一次 / 启动噪声 100 行不报 / 命中后重新武装）、
+`tests/test_smoke.py` +6（`[日志模板]` 全命中、全未命中、部分命中、无候选、日志缺失、只读末 200 行窗口）、
+`tests/test_service.py` +1（多服时模板项逐服相邻、不串位）。覆盖率 99.33% → 99.36%。
+命令与逐条真实输出见 [`docs/acceptance.md`](docs/acceptance.md) §10。
+
+> 上面那段的 `381 passed` / `99.33%` / `43 文件` 是 BUG-001 那批的**历史值**，保留作对照，不是当前基线。
+> 当前基线以本段为准，四处同步点（本段、`docs/smoke.md` §7 两处、`docs/acceptance.md` §1+§3、`docs/progress.md` 基线表）已全部回填。
 
 - 逐条手工自测（S1–S4、S6 的真机输出）：[`docs/smoke.md`](docs/smoke.md)
 - 端到端验收记录（每条含命令 / 实际输出 / 结论）：`docs/acceptance.md`

@@ -278,12 +278,12 @@ $ python -m pytest tests/test_bug001_reconnect.py tests/test_gateway.py -q -k "w
 
 ```bash
 $ make test                              # 或 .venv/Scripts/python -m pytest -q
-381 passed
+398 passed
 $ make test PYTEST_ARGS="-q --cov=y33bot --cov-report=term-missing --cov-fail-under=70"
-TOTAL 99%（CI 门槛 --cov-fail-under=70；这条就是 CI 里跑的那一行）
+TOTAL 99%（term 报告精度 0 位；实测 99.36%，CI 门槛 --cov-fail-under=70；这条就是 CI 里跑的那一行）
 $ make lint                              # ruff check src tests + ruff format --check src tests
 All checks passed!
-43 files already formatted
+44 files already formatted
 ```
 
 > `make` 只是便捷入口：Windows 上可能只有 `mingw32-make`，Linux/CI 上就是 `make`；
@@ -296,7 +296,7 @@ mclog/rcon/commands/bridge/gateway/service/cli/**qq.probe**）、`tests/test_bou
 `tests/e2e/test_entrypoint.py`（**真子进程**跑 `python -m y33bot`，逐条断言 S1-S4 的 stdout 与退出码）、
 `tests/test_bug001_reconnect.py`（BUG-001 回归：网关协程结束 → 报警并非 0 退出）。
 
-覆盖度（2026-10-15 BUG-001 修复后实测，381 例；取证轮为 357 例、v0.2 回归时为 352 例）：总覆盖 99%（实测 99.33%），
+覆盖度（2026-10-29 BUG-004 修复后实测，398 例；BUG-001 修复后为 381 例、取证轮为 357 例、v0.2 回归时为 352 例）：总覆盖 99%（实测 99.36%），
 `binding`/`config`/`state`/`mclog`/`commands`/`rcon`/`models`/`qq.fakes`/`qq.probe`/`__main__` 为 100%，
 `bridge`/`cli`/`rcon.client` 99%，`qq.gateway` 98%、`service` 98%。
 逐条验收记录（命令 + 真实输出 + 结论）见 `docs/acceptance.md`。

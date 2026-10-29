@@ -21,14 +21,35 @@
 
 | 项 | 值 | 出处 |
 |---|---|---|
-| 用例 | **381 passed**，`tests/` 无 skip/xfail | `docs/acceptance.md` §9、`BUGS.md`「根卡复核记录」复核三 |
-| 覆盖率 | **99.33%**（门槛 70%） | 同上 |
-| lint | `ruff check .` 全过；`ruff format --check .` **44 文件**合规 | `BUGS.md`「根卡复核记录」复核三 |
+| 用例 | **398 passed**，`tests/` 无 skip/xfail | `docs/acceptance.md` §10.1、§10.4 |
+| 覆盖率 | **99.36%**（门槛 70%） | 同上 |
+| lint | `ruff check .` 全过；`ruff format --check .` **44 文件**合规 | 同上 |
 | 发布 | `v0.1.0` annotated tag（指向 `f0ddd4e`）；v0.2 功能已合入 main | 下表 2026-10-13 条目 |
-| 产品代码 | 2026-10-18 矩阵批**零改动**（`src/` 一行未动） | `BUGS.md`「测试矩阵与证据来源」 |
+| 产品代码 | 2026-10-29 BUG-004 批改动 3 个 `src/` 文件（`mclog/patterns.py`、`mclog/watcher.py`、`service.py`）；2026-10-18 矩阵批为**零改动** | `docs/acceptance.md` §10、`BUGS.md`「测试矩阵与证据来源」 |
 
 > 数字变了要同步四处：`README.md` §14、`docs/smoke.md` §7（粘贴块里的例数行 + 下方「覆盖度」行两处）、
 > `docs/acceptance.md` §1 总表与 §3 逐文件表，再回本表更新。
+
+---
+
+## 2026-10-29（BUG-004 修复：日志零事件看门狗 + `check` 模板自检，issue #2）
+
+- 已完成：issue #2 的四处改动全部落地（分支 `wt/t_5ce7f4af`，收口卡合并 3 个父分支）：
+  - `src/y33bot/mclog/patterns.py` 新增与日志布局无关的 `looks_like_event`（`t_e2371cdc` / `a5d306b`）；
+  - `src/y33bot/mclog/watcher.py` 零事件看门狗：只对**候选行**计数，连续 3 条未命中打**一次** `[警告]`，命中即清零重新武装；
+  - `src/y33bot/service.py` `check` 新增 `[日志模板 <name>]`（`t_500f7787` / `19cbfef`）：全命中 OK、全未命中 FAIL、**部分命中 FAIL**、无候选 OK 跳过；
+  - 契约与既有断言同步（`t_bf20a97b`：`PLAN.md` §3.4/§5 与 6 个测试文件）、新增 17 例（`t_ce82d1a3`）、文档（`t_c5c71e6c`：`README.md` / `BUGS.md`）。
+- 已完成：本机实跑 —— `pytest` **398 passed**（381 → +17）、覆盖率 **99.36%**（99.33% → +0.03pp）、
+  `ruff check .` / `ruff format --check .` 全绿（**44 文件**），`tests/` 无 skip/xfail；逐条输出见 `docs/acceptance.md` §10.1。
+- 已完成：数字同步四处（`README.md` §14、`docs/smoke.md` §7 两处、`docs/acceptance.md` §1+§3、本文件基线表）；
+  顺手补齐 `README.md` §7 两处旧 `check` 样例缺的 `[日志模板 main]` 行，并把 §13 第 15 条从「三种结果」改成实现真正的**四种结果**。
+- 已完成：`BUGS.md` BUG-004「修复记录」按实际实现校对（三分支 → 四分支、新增用例数 5 → 17），原文与原始日志未改写。
+- 真机对照（Forge 1.21.11）：**未执行** —— 测试机 `hermes@10.1.1.4` ping 通但 SSH 公钥认证全被拒
+  （`~/.ssh` 下 4 把 key × `hermes`/`root` 均 `Permission denied`），本机只有 `.minecraft` 客户端、无 Forge 服务端。
+  替代证据（Forge 真机逐字真行 + 离线真 CLI：旧模板 FAIL/exit=1 → 新模板 OK/exit=0）见 `docs/acceptance.md` §10.2 B/C，**不当作真机结论**。
+- 进行中：无。
+- 阻塞 / 待办：① issue #1 的出厂模板改动仍在独立分支 `wt/t_2a31fd67`（未合 main），本 PR 不含它；
+  ② 真机对照需具备 `10.1.1.4` 凭据的会话补跑一次。
 
 ---
 
