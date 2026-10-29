@@ -120,22 +120,46 @@ $ python -m y33bot commands --config config.toml
 ## 3. MC → QQ：聊天转发与回环防护（S3）
 
 ```bash
+# 原版 ≥ 1.21.2：聊天回到主线程，并多一段 [Not Secure] 前缀（真机日志原文）
+$ python -m y33bot simulate log-event --server main \
+    --line '[15:18:30] [Server thread/INFO]: [Not Secure] <Steve> #矩阵测试：带井号聊天（应被转发）' --dry-run --config config.toml
+[群消息] Steve@main: 矩阵测试：带井号聊天（应被转发）
+```
+
+```bash
+# Forge：时间戳是中文日期时间，logger 段后还多一段 [net.minecraft.server.MinecraftServer/]（真机日志原文）
+$ python -m y33bot simulate log-event --server main \
+    --line '[1810月2026 16:17:10.022] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Not Secure] <Steve> #大家好，这是带井号的聊天（应被转发）' --dry-run --config config.toml
+[群消息] Steve@main: 大家好，这是带井号的聊天（应被转发）
+```
+
+```bash
+# 旧形态 ≤ 1.21.1（聊天走 Async Chat Thread）仍然认得（文档样例行）
 $ python -m y33bot simulate log-event --server main \
     --line '[12:00:01] [Async Chat Thread - #0/INFO]: <Steve> #大家好' --dry-run --config config.toml
 [群消息] Steve@main: 大家好
+```
 
+```bash
+# 非 # 聊天与回环防护（Fabric 真行 / 在其基础上改写的 [QQ] 行）
 $ python -m y33bot simulate log-event --server main \
-    --line '[12:00:02] [Async Chat Thread - #0/INFO]: <Steve> 普通聊天' --dry-run --config config.toml
+    --line '[15:22:30] [Server thread/INFO]: [Not Secure] <Steve> 大家好，这是普通聊天（不该被转发）' --dry-run --config config.toml
 [忽略] 聊天非 # 开头，不转发
 
 $ python -m y33bot simulate log-event --server main \
-    --line '[12:00:03] [Async Chat Thread - #0/INFO]: <Steve> [QQ] Steve: 大家好' --dry-run --config config.toml
+    --line '[15:22:32] [Server thread/INFO]: [Not Secure] <Steve> [QQ] Steve: 大家好' --dry-run --config config.toml
 [忽略] 回环防护：命中 ignored_chat_prefixes
 ```
 
+- **模板认不出聊天行时是这样**（`chat` 模板与当前 MC 版本不符，例如拿旧模板去跑 ≥ 1.21.2 / Forge 的行）：
+  `[警告] 日志行未匹配任何模板`，退出码 1。此时**进服/退服通知照常**（走的是另外两条模板），群里却彻底收不到 `#` 聊天 ——
+  排查口径见 `README.md` §13 第 15 条。
 - **v0.2 起游戏内不再回显**：命中 `#` 只有 `[群消息] Steve@main: 大家好` 一行，不再出现 `[RCON main] tellraw @a {"text":"[→QQ] …"}`。
 - 前缀 `main` 是**来源服名**（`[[mc_servers]].name`）：一群对多服时用它区分是谁在说话。
 - 回环防护现在只针对服务注入的那一个标记 `[QQ]`（`ignored_chat_prefixes` 默认 `["[QQ]"]`，可覆盖）。
+- **行来源**：前两条是 `test-notes/artifacts/` 的**真机日志原文**（vanilla ≥1.21.2 / Forge）；≤1.21.1 那条是文档样例行
+  （制品矩阵里没有该形态的真行）；最后两条分别是 Fabric 真行与其改写的 `[QQ]` 版本。
+  出厂默认模板对四族共 361 条真行**全部命中**，明细见 `docs/acceptance.md` §10。
 
 `--kind join|quit --player <名字>` 可以不经日志模板直接造事件，用来查通知链路：
 
@@ -278,12 +302,12 @@ $ python -m pytest tests/test_bug001_reconnect.py tests/test_gateway.py -q -k "w
 
 ```bash
 $ make test                              # 或 .venv/Scripts/python -m pytest -q
-398 passed
+427 passed
 $ make test PYTEST_ARGS="-q --cov=y33bot --cov-report=term-missing --cov-fail-under=70"
-TOTAL 99%（term 报告精度 0 位；实测 99.36%，CI 门槛 --cov-fail-under=70；这条就是 CI 里跑的那一行）
+TOTAL 99%（CI 门槛 --cov-fail-under=70；这条就是 CI 里跑的那一行；实测 99.36%）
 $ make lint                              # ruff check src tests + ruff format --check src tests
 All checks passed!
-44 files already formatted
+45 files already formatted
 ```
 
 > `make` 只是便捷入口：Windows 上可能只有 `mingw32-make`，Linux/CI 上就是 `make`；
@@ -296,10 +320,11 @@ mclog/rcon/commands/bridge/gateway/service/cli/**qq.probe**）、`tests/test_bou
 `tests/e2e/test_entrypoint.py`（**真子进程**跑 `python -m y33bot`，逐条断言 S1-S4 的 stdout 与退出码）、
 `tests/test_bug001_reconnect.py`（BUG-001 回归：网关协程结束 → 报警并非 0 退出）。
 
-覆盖度（2026-10-29 BUG-004 修复后实测，398 例；BUG-001 修复后为 381 例、取证轮为 357 例、v0.2 回归时为 352 例）：总覆盖 99%（实测 99.36%），
+覆盖度（2026-10-29 两批合并后实测，427 例：模板批 409 + BUG-004 批 18；此前 2026-10-15 BUG-001 修复后为 381 例、
+取证轮 357 例、v0.2 回归时为 352 例）：总覆盖 99%（实测 99.36%），
 `binding`/`config`/`state`/`mclog`/`commands`/`rcon`/`models`/`qq.fakes`/`qq.probe`/`__main__` 为 100%，
 `bridge`/`cli`/`rcon.client` 99%，`qq.gateway` 98%、`service` 98%。
-逐条验收记录（命令 + 真实输出 + 结论）见 `docs/acceptance.md`。
+逐条验收记录（命令 + 真实输出 + 结论）见 `docs/acceptance.md`；本轮模板变更的实测表在 §10。
 
 ---
 

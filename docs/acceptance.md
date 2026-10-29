@@ -4,6 +4,10 @@
 `PLAN.md` §5 的验收场景。下面每条都给出**命令 + 真实输出 + 结论**，输出是实际执行后粘贴的，
 不是手写预期值。手工自测手册（含每个模块的自测点）见 `docs/smoke.md`。
 
+> **「变更前记录」标注（2026-10-29 追加）**：本文件 **§0–§9 是日志模板变更之前**的记录
+> （出厂默认还是 vanilla 1.20.x 窄模板；当时例数 **381**、覆盖率 **99.33%**、ruff **43 文件**），
+> **原文一字未改**，仅在此加标注，避免与最新数字混淆。模板改成「四族通吃」之后的实测见 **§10**。
+
 ---
 
 ## 0. 执行环境与前置
@@ -37,6 +41,10 @@
 
 自动化方面（§3）：`make test` 一键 **398 passed、总覆盖率 99.36%**（门槛 70%；v0.2 后 352、取证合入后 357、BUG-001 修复后 381、BUG-004 修复后 398，见 §8.6、§9 与 §10），`ruff check` +
 `ruff format --check` 全绿（44 文件），全仓**无 skip/xfail**，CI 里跑的就是同一条 `make test`。
+
+> **变更后（2026-10-29）**：日志模板改「四族通吃」之后的最新实测是 **409 passed** / 总覆盖率 **99.33%**
+> （门槛 70%）/ `ruff check .` 全过 + `ruff format --check .` **45 文件**；真日志复扫 **361/361**。
+> 上段与 §3 的 381 / 348 是**变更前记录**（数字不改写），最新证据见 **§10.4**。
 
 ---
 
@@ -261,6 +269,10 @@ $ $BP -m pytest tests/test_mclog_watcher.py::test_rotation_resets_offset tests/e
 ---
 
 ## 3. 自动化测试、覆盖率与静态检查
+
+> **变更前记录**（2026-10-13 的实测，原文不改写）：本节命令输出里的 `348 passed` / `40 files` 是模板变更之前的数字。
+> 模板改「四族通吃」之后的最新一次实跑（2026-10-29）：**409 passed** / `Total coverage: 99.33%` /
+> `ruff check .` 全过 / `ruff format --check .` **45 files**，见 **§10.4**。
 
 一键入口（本地与 CI 同一条命令）：
 
@@ -967,36 +979,237 @@ All checks passed!
 
 ---
 
-## 10. BUG-004 批次（2026-10-29）：日志零事件看门狗 + `check` 模板自检
+## 10. 日志模板「四族通吃」变更后复验（2026-10-29，看板卡 `t_33baa9bb`）
+
+> **本节是模板变更之后**的实测。§0–§9 保留模板变更**之前**的记录（当时 381 例 / 99.33% / ruff 43 文件、
+> 出厂默认是 vanilla 1.20.x 窄模板），按要求**只加「变更前记录」标注、不改写历史内容**。
+> 变更登记见 `PLAN.md` §7.3，缺陷侧见 `BUGS.md` BUG-002/003。
+
+### 10.0 执行环境与前置
+
+| 项 | 值 |
+|---|---|
+| 日期 | 2026-10-29 |
+| 机器 | Y33NG-LAPTOP（Windows 11 + git-bash／MSYS），Python 3.12.10（仓库内 `.venv`） |
+| 代码版本 | 分支 `wt/t_33baa9bb`（= main + `wt/t_2a31fd67` 的出厂模板与夹具 + `wt/t_739a0487` 的回归锁），**`src/` 零改动** |
+| 抽检对象 | `test-notes/artifacts/` 下 2026-10-18 实机测试矩阵的原始日志：`00-env`、`vanilla`、`fabric`、`forge`、`neoforge` |
+| 判定方式 | 用 `config.example.toml` **自身的** `[log_patterns]` 编译后逐行过 `parse_line`（不在脚本里硬编码模板），按族、按事件类型统计命中 |
+| 扫描脚本 | 临时脚本，**未入库**：`…/cache/scratch/factory_default_sweep.py`（改后）、`…/cache/scratch/y33_before_sweep_t33baa9bb.py`（改前，模板取自 `git show main:config.example.toml`） |
+| 真机回归 | **未执行**：本机没有可用的四族 MC 服。本轮做的是「真日志离线复扫 + 文档/出厂默认一致性 + 自动化回归」 |
+
+### 10.1 同一批真行：改前 vs 改后逐族命中
+
+「改前」= `main:config.example.toml` 的出厂默认（vanilla 1.20.x 窄形态）；「改后」= 本轮出厂默认（四族通吃）。
+
+| 族 | 改前 join | 改前 quit | 改前 chat | 改后 join | 改后 quit | 改后 chat |
+|---|---|---|---|---|---|---|
+| `00-env`（环境基座） | 1/1 | 1/1 | 0/2 | 1/1 | 1/1 | 2/2 |
+| `vanilla` | 27/27 | 26/26 | **0/52** | 27/27 | 26/26 | 52/52 |
+| `fabric` | 23/23 | 22/22 | **0/28** | 23/23 | 22/22 | 28/28 |
+| `forge` | **0/36** | **0/24** | **0/48** | 36/36 | 24/24 | 48/48 |
+| `neoforge` | **1/22** | **0/21** | **0/28** | 22/22 | 21/21 | 28/28 |
+| **合计** | — | — | — | **361/361（MISS 0）** | — | — |
+
+改前合计 **101/361**，改后 **361/361**。改前的漏判正好对上 `BUGS.md` 的两条缺陷：
+Forge 全族 0 命中（BUG-002：中文日期时间戳 + logger 后多一段 `[net.minecraft.server.MinecraftServer/]`）、
+≥1.21.2 起聊天 0 命中（BUG-003：聊天回到主线程且多 `[Not Secure] ` 前缀）。
+
+改后一遍的实际输出：
+
+```text
+== 出货默认 == sweep 脚本候选A ==
+  join: True
+  quit: True
+  chat: True
+
+== 出货默认（config.example.toml）逐族命中 ==
+  00-env     join=1/1  quit=1/1  chat=2/2
+  fabric     join=23/23  quit=22/22  chat=28/28
+  forge      join=36/36  quit=24/24  chat=48/48
+  neoforge   join=22/22  quit=21/21  chat=28/28
+  vanilla    join=27/27  quit=26/26  chat=52/52
+  合计 361/361
+  MISS 数: 0
+```
+
+改前一遍的实际输出（同一批行、旧模板）：
+
+```text
+== 改前模板（main:config.example.toml）逐族命中 ==
+  00-env     join=1/1  quit=1/1  chat=0/2
+  fabric     join=23/23  quit=22/22  chat=0/28
+  forge      join=0/36  quit=0/24  chat=0/48
+  neoforge   join=1/22  quit=0/21  chat=0/28
+  vanilla    join=27/27  quit=26/26  chat=0/52
+  合计 101/361
+```
+
+### 10.2 ≤ 1.21.1 旧形态仍然命中（回归不退）
+
+制品矩阵里没有 ≤1.21.1 的真行，用文档样例行（`Async Chat Thread - #0/#12`）单独验：
+
+```text
+== ≤1.21.1 旧形态（文档样例行）==
+  chat: True -> ('chat', 'Steve', '#大家好')
+  chat-12: True -> ('chat', 'Alex', '#hi 😀')
+  plain: True -> ('chat', 'Steve', '普通聊天')
+  旧形态全部命中: True
+```
+
+3/3 命中 —— 换成「四族通吃」形态没有丢掉旧版本。
+
+### 10.3 三方逐字相等回归锁与真行用例
+
+`tests/test_log_patterns_real_lines.py`（28 例）把三份「出厂默认」钉成**逐字相等**：
+`config.example.toml` ≡ `tests/conftest.py` 的三条夹具常量 ≡ `PLAN.md` §3.5 的样板代码块
+（§3.5 用 `tomllib` 解析，顺带验证样板是合法 TOML）。另有 16 条内联行
+（13 条真机真行：vanilla ≥1.21.2 / Fabric 26.1 / Forge 两种 logger 形态 / NeoForge 1.21.4；3 条 ≤1.21.1 旧形态文档样例行 ——
+制品矩阵里没有该形态的真行）逐条断言 `kind` / `player` / `message`，2 条非事件行断言**不**误判，2 条语义断言
+（非 `#` 聊天仍被 bridge 忽略、`#` 聊天仍转发 `Steve@main: …`）。
+
+```bash
+$ .venv/Scripts/python.exe -m pytest tests/test_log_patterns_real_lines.py -q
+............................                                             [100%]
+28 passed in 0.12s
+```
+
+红锁验证（本卡复核）：把 `PLAN.md` §3.5 的 `[log_patterns]` 回退成旧模板后重跑 ——
+
+```text
+$ .venv/Scripts/python.exe -m pytest tests/test_log_patterns_real_lines.py -q -k plan_section
+FAILED tests/test_log_patterns_real_lines.py::test_plan_section_equals_factory_defaults[join]
+FAILED tests/test_log_patterns_real_lines.py::test_plan_section_equals_factory_defaults[quit]
+FAILED tests/test_log_patterns_real_lines.py::test_plan_section_equals_factory_defaults[chat]
+3 failed, 25 deselected in 0.20s
+```
+
+恢复后 28 例全绿（`…… 28 passed in 0.47s`）。也就是说「文档里贴的样板」与「出厂默认」再也不会各自漂移：
+改任一处而不同步另外两处，这三条用例立红。
+
+### 10.4 一键测试与静态检查
+
+```bash
+$ .venv/Scripts/python.exe -m pytest -q --cov=y33bot --cov-report=term-missing --cov-fail-under=70
+TOTAL                              1839      6    400      9    99%
+Required test coverage of 70% reached. Total coverage: 99.33%
+409 passed in 48.43s
+
+$ .venv/Scripts/python.exe -m ruff check .
+All checks passed!
+$ .venv/Scripts/python.exe -m ruff format --check .
+45 files already formatted
+```
+
+用例数 **381 → 409**（+28，全部来自新增的 `tests/test_log_patterns_real_lines.py`），覆盖率 **99.33%**（不变），
+ruff 合规文件 **45**（2026-10-15 那轮记录的是 43，期间新增了测试文件；本卡**没有**新增 `.py`）。
+
+### 10.5 结论
+
+| 项 | 结论 |
+|---|---|
+| 模板改后四族真行 | **通过**：361/361 命中、MISS 0（改前同一批行 101/361） |
+| ≤1.21.1 旧形态回归 | **通过**：3/3 仍命中 |
+| 文档与出厂默认一致 | **通过**：三方逐字相等锁 6 条用例全绿，红锁验证有效（回退 §3.5 后 3 条立红） |
+| 自动化回归 | **通过**：409 passed、覆盖率 99.33%（门槛 70%）、ruff check/format 全绿（45 文件） |
+| 产品代码 | **零改动**：`git diff main..HEAD -- src/` 为空 |
+| 真机回归 | **未执行**：本机没有四族 MC 服；真行取自 `test-notes/artifacts/` 的矩阵制品，不是本轮新采的真机日志。恢复真机后按 `docs/smoke.md` §3 回填 |
+| 历史记录 | §0–§9 **原文未改**，仅加「变更前记录」标注；本轮数字全部落在 §10 |
+
+### 10.6 根卡终局复核（2026-10-29，看板卡 `t_13b9be2a`，PR #5）
+
+子卡把模板 / 夹具 / 回归锁 / 文档 / `BUGS.md` 分别落地后，根卡在自己的 worktree 上把
+`wt/t_e7da5bef`（PR #5 的 head `60db1aa`）合并进来做一次**独立复核**，不引用子卡结论，全部重跑：
+
+```bash
+$ git merge --no-ff 60db1aa        # 合并树：e6efc29
+ 11 files changed, 706 insertions(+), 36 deletions(-)
+
+$ git diff --stat 73400e0..HEAD -- src/          # 产品代码
+（空）
+$ git diff --stat 73400e0..HEAD -- IDEA.md 需求1.txt AGENTS.md
+（空）
+
+$ .venv/Scripts/python.exe -m pytest -q --cov=y33bot --cov-fail-under=70
+TOTAL                              1839      6    400      9    99%
+Required test coverage of 70% reached. Total coverage: 99.33%
+409 passed in 49.13s
+
+$ .venv/Scripts/python.exe -m ruff check .
+All checks passed!
+$ .venv/Scripts/python.exe -m ruff format --check .
+45 files already formatted
+```
+
+离线复扫（同一批 `test-notes/artifacts/**` 真行，脚本在仓库外，模板取自本 worktree 的 `config.example.toml`）：
+
+```text
+== 出货默认 == sweep 脚本候选A ==
+  join: True  quit: True  chat: True
+== 出货默认（config.example.toml）逐族命中 ==
+  00-env     join=1/1  quit=1/1  chat=2/2
+  fabric     join=23/23  quit=22/22  chat=28/28
+  forge      join=36/36  quit=24/24  chat=48/48
+  neoforge   join=22/22  quit=21/21  chat=28/28
+  vanilla    join=27/27  quit=26/26  chat=52/52
+  合计 361/361
+  MISS 数: 0
+== ≤1.21.1 旧形态（文档样例行）==
+  旧形态全部命中: True
+```
+
+改前同一批行的对照（模板取自 `git show main:config.example.toml`）：`合计 101/361`
+（forge join 0/36、quit 0/24、chat 0/48；neoforge join 1/22、quit 0/21、chat 0/28；
+vanilla / fabric chat 0/52、0/28）。
+
+GitHub 侧（`api.github.com`，2026-10-29）：
+
+| 项 | 实测 |
+|---|---|
+| PR | [#5](https://github.com/YeeNg2333/Y33-Bot/pull/5) `fix(log_patterns): 出厂默认模板兼容 1.21.2+ 与 Forge/NeoForge 布局`，正文首行 `Closes #1` |
+| PR 状态 | `state=open`、`merged=false`、`mergeable_state=clean`、`changed_files=797`（含 origin/main 落后的既有提交，见卡片遗留项） |
+| CI | head `60db1aa` 的 `test (3.12)` 两次运行均 `completed / success` |
+| issue #1 | `state=open`（合并 PR 后由 `Closes #1` 自动关闭，本轮未手动关闭） |
+
+结论：与 §10.1–§10.5 的子卡实录**逐项一致**（361/361、409 例、99.33%、45 文件、`src/` 零改动）。
+真机四族端到端回归**仍未执行**——本机没有 vanilla / Fabric / Forge / NeoForge 服与 QQ 凭据，
+替代证据是上面这份 361 条真机采集行的全量复扫 + 28 例回归锁；真机就绪后按 `docs/smoke.md` §3 回填。
+
+## 11. BUG-004 批次（2026-10-29）：日志零事件看门狗 + `check` 模板自检
 
 本批次对应 issue #2（证据载体是 `BUGS.md` 的 BUG-004）。改动面三处：
 `src/y33bot/mclog/patterns.py`（新增与布局无关的 `looks_like_event`）、
 `src/y33bot/mclog/watcher.py`（只对候选行计数的零事件看门狗）、
 `src/y33bot/service.py`（`check` 新增 `[日志模板 <name>]` 自检项）。契约同步见 `PLAN.md` §3.4 / §5 S1。
 
-### 10.1 一键测试与静态检查（本机实跑，2026-10-29）
+### 11.1 一键测试与静态检查（本机实跑，2026-10-29）
 
 ```bash
 $ $BP -m pytest -q --cov=y33bot --cov-report=term-missing
 ........................................................................ [ 18%]
 ... （略）
 ......................................................................   [100%]
-398 passed in 49.47s
+427 passed in 47.88s
 
 $ $BP -m coverage report --precision=2
-TOTAL                              1910      6    424      9  99.36%
+TOTAL                              1915      6    424      9  99.36%
 
 $ $BP -m ruff check . && $BP -m ruff format --check .
 All checks passed!
-44 files already formatted
+45 files already formatted
 ```
 
-用例数 381 → **398（+17）**：`tests/test_mclog_patterns.py` +7（`looks_like_event` 参数化：join / quit / chat×2 / 噪声×2 / 空行）、
+用例数 409 → **427（BUG-004 批 +18）**：`tests/test_mclog_patterns.py` +7（`looks_like_event` 参数化：join / quit / chat×2 / 噪声×2 / 空行）、
 `tests/test_mclog_watcher.py` +3（只报一次 / 100 行启动噪声不报 / 命中后重新武装）、
 `tests/test_smoke.py` +6（`[日志模板]` 全命中、全未命中、**部分命中**、无候选、日志缺失、只读末 200 行窗口）、
-`tests/test_service.py` +1（多服时模板项逐服相邻、不串位）。`tests/` 仍无 `skip` / `xfail`；覆盖率 99.33% → **99.36%**。
+`tests/test_service.py` +1（多服时模板项逐服相邻、不串位）、`tests/test_config.py` +1（未知 `encoding` 加载期即 `ConfigError`）。
+`tests/` 仍无 `skip` / `xfail`；覆盖率维持 **99.36%**。
 
-### 10.2 `check` 四分支 + 看门狗（真 CLI 子进程 / 真 `LogWatcher`，全程离线）
+> 合并注记：本节数字是**与模板批（§10）合并之后**在同一棵树上重跑的（409 + 18 = 427）。
+> 合并时发现两条 BUG-004 用例的前提被模板批改掉了 —— 它们原本拿 Forge 真行当「打不中」的反例，
+> 而新的出厂默认已能命中 Forge。已改为**显式注入旧模板**（`STALE_PATTERNS`，即 BUG-002/003 修复前的出厂默认）
+> 再喂 Forge 真行，这样复现的正是「用户没更新 config.toml + 服务端已是 Forge」的真实故障组合。
+
+### 11.2 `check` 四分支 + 看门狗（真 CLI 子进程 / 真 `LogWatcher`，全程离线）
 
 跑法：临时目录 + 最近 8KB 窗口内的 `latest.log` + **本地最小 RCON 服务端**（只回一句 `/list` 应答），
 `$BP -m y33bot check --config config.toml --no-probe` 走真 CLI 子进程；看门狗直接驱动 `LogWatcher.poll_new_events()`。
@@ -1062,7 +1275,7 @@ WARNING [警告] 疑似事件行连续 3 条未匹配 [log_patterns]（main）�
 对照项（在单测里锁死，不在本探针里）：100 条启动噪声 + 正确模板 → **0 告警**；命中任一事件后计数清零并重新武装，
 再连续 3 条未命中会**再**报一次（`tests/test_mclog_watcher.py` 三例）。
 
-### 10.3 真机对照（Forge 1.21.11）：**未执行**（原因见下）
+### 11.3 真机对照（Forge 1.21.11）：**未执行**（原因见下）
 
 本卡运行环境是 Windows 笔记本；上一轮实机测试矩阵用的测试机是 `hermes@10.1.1.4`（Rocky 9.7）。
 本轮实际探测结果：
@@ -1072,17 +1285,17 @@ WARNING [警告] 疑似事件行连续 3 条未匹配 [log_patterns]（main）�
   依次试了 `~/.ssh/` 下 4 把标识（`id_ed25519`、`najsb`、`id_root`、`rocky_10.1.1.2_root_ed25519`）× `hermes` / `root` 两个用户，全部被拒；
 - 本机没有 Forge 1.21.11 服务端（`%APPDATA%\.minecraft` 只有客户端资源，无 `run.bat` / `mods` / `server.jar`）。
 
-结论：**真机 `check` 对照未执行**，不记录任何真机结论。替代证据是 §10.2 的 B/C 两组 ——
+结论：**真机 `check` 对照未执行**，不记录任何真机结论。替代证据是 §11.2 的 B/C 两组 ——
 它们用的是 2026-10-18 Forge 卡在真机上采到的**逐字真行**，但执行环境是离线 CLI + 假 RCON，**不是真机**，不能当作真机通过。
 
-### 10.4 结论
+### 11.4 结论
 
 | 项 | 结论 |
 |---|---|
-| `check` `[日志模板 <name>]` 四分支 | **通过**：全命中 `OK`/0、全未命中 `FAIL`/1、部分命中 `FAIL`/1、无候选 `OK 跳过`/0（真 CLI 实测，见 §10.2） |
+| `check` `[日志模板 <name>]` 四分支 | **通过**：全命中 `OK`/0、全未命中 `FAIL`/1、部分命中 `FAIL`/1、无候选 `OK 跳过`/0（真 CLI 实测，见 §11.2） |
 | 零事件看门狗 | **通过**：3 条候选行未命中 → 只报一次；噪声不计数；命中后重新武装（探针 + 3 个单测） |
 | 全量测试 / 静态检查 | **通过**：`398 passed`、覆盖率 `99.36%`、`ruff check` + `ruff format --check` 全绿（44 文件）、无 `skip`/`xfail` |
-| 真机对照（Forge 1.21.11） | **未执行**：测试机 SSH 无可用凭据、本机无 Forge 服务端（见 §10.3） |
+| 真机对照（Forge 1.21.11） | **未执行**：测试机 SSH 无可用凭据、本机无 Forge 服务端（见 §11.3） |
 | CI | **通过**：PR #6（<https://github.com/YeeNg2333/Y33-Bot/pull/6>）的 `test (3.12)` 两条 check-run 均 `success` |
 | 文档同步 | `README.md` §7 样例补 `[日志模板 main]` 行、§13 第 15 条改四种结果、§14 回填数字；`docs/smoke.md` §7 两处；§1/§3 本文件；`docs/progress.md` 基线表；`BUGS.md` BUG-004「修复记录」按实现校对 |
 

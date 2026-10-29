@@ -21,14 +21,55 @@
 
 | 项 | 值 | 出处 |
 |---|---|---|
-| 用例 | **398 passed**，`tests/` 无 skip/xfail | `docs/acceptance.md` §10.1、§10.4 |
+| 用例 | **427 passed**，`tests/` 无 skip/xfail | `docs/acceptance.md` §10.4/§11.1、`docs/smoke.md` §7 |
 | 覆盖率 | **99.36%**（门槛 70%） | 同上 |
-| lint | `ruff check .` 全过；`ruff format --check .` **44 文件**合规 | 同上 |
+| lint | `ruff check .` 全过；`ruff format --check .` **45 文件**合规 | 同上 |
+| 日志模板真行 | **361/361 命中**（MISS 0；改前同一批行 101/361）；≤1.21.1 旧形态 **3/3** | `docs/acceptance.md` §10.1–§10.2 |
 | 发布 | `v0.1.0` annotated tag（指向 `f0ddd4e`）；v0.2 功能已合入 main | 下表 2026-10-13 条目 |
-| 产品代码 | 2026-10-29 BUG-004 批改动 3 个 `src/` 文件（`mclog/patterns.py`、`mclog/watcher.py`、`service.py`）；2026-10-18 矩阵批为**零改动** | `docs/acceptance.md` §10、`BUGS.md`「测试矩阵与证据来源」 |
+| 产品代码 | 2026-10-18 矩阵批**零改动**；2026-10-29 模板批同样**零改动**；2026-10-29 BUG-004 批改动 3 个 `src/` 文件（`mclog/patterns.py`、`mclog/watcher.py`、`service.py`） | `BUGS.md`「测试矩阵与证据来源」、`docs/acceptance.md` §10.5/§11 |
 
-> 数字变了要同步四处：`README.md` §14、`docs/smoke.md` §7（粘贴块里的例数行 + 下方「覆盖度」行两处）、
-> `docs/acceptance.md` §1 总表与 §3 逐文件表，再回本表更新。
+> 数字变了要同步三处：`README.md` §14、`docs/smoke.md` §7（粘贴块里的例数行 + 下方「覆盖度」行两处）、
+> `docs/acceptance.md` 的**最新一节**（当前是 §11），再回本表更新。
+> 注意 `docs/acceptance.md` §1 总表与 §3 逐文件表是**变更前记录**（只加标注、不改写），不要再去改它们的数字。
+
+---
+
+## 2026-10-29（日志模板改「四族通吃」+ 三方相等回归锁 + 全部文档载体同步）
+
+- 已完成：出厂默认 `[log_patterns]` 三条模板换成「四族通吃」形态 —— 时间戳不再限 `HH:MM:SS`（吃 Forge 的
+  `[1810月2026 …]`）、logger 段 `Server thread` / 旧版 `Async Chat Thread - #N` 二选一、可选模组加载器段
+  `[…]`、`chat` 可选 `[Not Secure] ` 前缀；`encoding = "utf-8"` 显式声明。`config.example.toml`、
+  `tests/conftest.py` 夹具常量、`PLAN.md` §3.5 样板三处**逐字同步**（卡 `t_2a31fd67` 出模板、`t_739a0487` 上锁）。
+- 已完成：新增 `tests/test_log_patterns_real_lines.py`（28 例）= 三方逐字相等锁（6 例，§3.5 用 `tomllib` 解析）
+  + 16 条内联行（13 条四族真机真行 + 3 条 ≤1.21.1 旧形态文档样例行）逐条断言 `kind`/`player`/`message`
+  + 2 条非事件行不误判 + 2 条语义不变断言（卡 `t_739a0487`）。
+- 已完成：`PLAN.md` §7.3 变更登记（原状 → 现行为 → 涉及文件），并明确登记「对 `IDEA.md:170` 冻结形态的偏离」
+  （去 `time` 命名组、logger 二选一、新增可选 loader 段与 `[Not Secure] `）；§3.3 既有签名一行未动（卡 `t_33baa9bb`）。
+- 已完成：`README.md` §5.1（三模板 + `encoding` 说明）/ §13 新增第 15 条 FAQ（群里收不到游戏内 `#` 聊天但进服
+  通知正常 → 先看 `[log_patterns].chat`，含三种 dry-run 输出的处置表）/ §14 数字；`docs/smoke.md` S3 改为四族
+  样例行并补「模板失配」表现、§7 两处数字；`docs/acceptance.md` 新开 §10（361/361 逐族命中表 + 改前 101/361
+  对照 + pytest 数字），历史 §0–§9 只加「变更前记录」标注、原文未改写；本文件顶部基线表已更新。
+- 实测（本机实跑）：`409 passed`、覆盖率 `99.33%`（门槛 70%）、`ruff check .` 与 `ruff format --check .` 全过
+  （45 文件）；四族真行 **361/361** 命中（MISS 0，改前 101/361）；≤1.21.1 旧形态 **3/3**；红锁验证：回退
+  `PLAN.md` §3.5 后三方相等 3 条全红，恢复后 28 例全绿。`src/` 零改动（`git diff main..HEAD -- src/` 为空）。
+- 已完成：终局校验后推分支 `wt/t_e7da5bef` 并用 API 建 PR —— **PR #5**
+  https://github.com/YeeNg2333/Y33-Bot/pull/5（标题 `fix(log_patterns): 出厂默认模板兼容 1.21.2+ 与
+  Forge/NeoForge 布局`，正文首行 `Closes #1`，含「改前 101/361 → 改后 361/361」逐族对照表与真机「未执行 +
+  原因 + 替代证据」）。推前在本卡工作树实跑：`409 passed` / `99.33%` / ruff 45 文件全过；`git diff main..HEAD
+  -- src/` 与 `git diff main..HEAD -- IDEA.md 需求1.txt AGENTS.md` 均空。（卡 `t_e7da5bef`）
+- 已完成：根卡 `t_13b9be2a` 终局复核（不引用子卡结论，全部重跑）：worktree 上 `git merge --no-ff 60db1aa`
+  → 合并树 `e6efc29`（11 文件 / +706 −36），实跑 `409 passed` / 覆盖率 `99.33%`（门槛 70%）/ ruff check 全过 +
+  format `45 files`；离线复扫出厂默认 **361/361**（MISS 0，改前同一批行 **101/361**）、≤1.21.1 旧形态 **3/3**；
+  `git diff 73400e0..HEAD -- src/` 与 `-- IDEA.md 需求1.txt AGENTS.md` 均空。GitHub 侧：PR #5 `state=open`、
+  `mergeable_state=clean`，head `60db1aa` 的 `test (3.12)` 两次运行 `success`；issue #1 仍 `open`（合并后由
+  `Closes #1` 自动关闭）。`docs/acceptance.md` 增 §10.6 贴本轮复核实录，§1/§3 只加「变更后」指针标注
+  （历史数字未改写）。
+- 进行中：无。
+- 阻塞 / 待办：**真机回归未执行** —— 本机没有四族 MC 服，真行取自 `test-notes/artifacts/` 的 2026-10-18 矩阵
+  制品，不是本轮新采；有服环境后按 `docs/smoke.md` §3 回填。`docs/acceptance.md` §1/§3 保留「变更前记录」
+  原文数字，只在旁边加指向 §10.4 的「变更后」标注；`IDEA.md` / `需求1.txt` 未改（偏离已在 `PLAN.md` §7.3 登记）。
+- 遗留（需人工拍板）：`origin/main` 落后本地 main 20 个提交，PR #5 的 diff 因此含这些既有提交（797 文件，
+  与 #4 同构）；是否 / 如何推 main 未擅自执行。`PLAN.md` §7.3 与 PR #4（BUG-005）撞号，后合并者顺延 §7.4。
 
 ---
 

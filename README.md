@@ -114,9 +114,9 @@ connect_timeout = 5.0
 command_timeout = 5.0
 
 [log_patterns]
-join = '\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) joined the game'
-quit = '\[\d{2}:\d{2}:\d{2}\] \[Server thread/INFO\]: (?P<player>\w+) left the game'
-chat = '\[\d{2}:\d{2}:\d{2}\] \[Async Chat Thread - #\d+/INFO\]: <(?P<player>\w+)> (?P<message>.+)'
+join = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?P<player>\w+) joined the game'
+quit = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?P<player>\w+) left the game'
+chat = '\[[^\]]+\] \[(?:Server thread|Async Chat Thread - #\d+)/INFO\](?: \[[^\]]+\])?: (?:\[Not Secure\] )?<(?P<player>\w+)> (?P<message>.+)'
 encoding = "utf-8"
 ```
 
@@ -124,7 +124,7 @@ encoding = "utf-8"
 
 - **`paths.*` 与 `mc_servers[].log_path` 的相对路径按 `config.toml` 所在目录解析**，不是按当前工作目录（实测：从父目录用 `--config repo/config.toml` 运行，日志路径仍是 `repo/logs/latest.log`）。绝对路径原样使用。
 - 多台 MC 服就多写一个 `[[mc_servers]]`：QQ→MC 的消息会**广播到所有服**；MC→QQ 的事件都发到同一个群，但文案带来源服名（`Steve@main: 你好`），一眼能看出是哪个服。
-- `[log_patterns]` 是为了兼容 MC 版本差异：日志格式变了只改这里，不用改代码（`join`/`quit` 必须有 `player` 命名组，`chat` 必须有 `player` 与 `message`）。改完要**重启 y33bot**（无热重载）；配错模板不用等真事件暴露 —— `check` 的 `[日志模板 <name>]` 项会拿 `latest.log` 末尾的候选行先试匹配一遍（见 §13 第 15 条），运行期还有一次性的 `[警告] 疑似事件行连续 3 条未匹配 …` 看门狗（见 §13 第 4 条）。
+- `[log_patterns]` 是为了兼容 MC 版本差异：日志格式变了只改这里，不用改代码（`join`/`quit` 必须有 `player` 命名组，`chat` 必须有 `player` 与 `message`）。**出厂默认的三条模板是「一条吃四族」的形态**（原版 ≥1.21.2 / Fabric / Forge / NeoForge）：时间戳不再限定 `HH:MM:SS`（Forge 是 `[1810月2026 15:35:33.486]`）、logger 段在 `Server thread` 与旧版 `Async Chat Thread - #N` 之间二选一、可选一段模组加载器 `[…]`、聊天行可选 `[Not Secure] ` 前缀；四族真日志实测 **361/361 命中**（明细见 `docs/acceptance.md` §10）。`encoding` 是读日志文件用的编码（加载时会校验，未知名直接 `[配置] FAIL`），默认 `utf-8`。改完要**重启 y33bot**（无热重载）；配错模板不用等真事件暴露 —— `check` 的 `[日志模板 <name>]` 项会拿 `latest.log` 末尾的候选行先试匹配一遍（见 §13 第 16 条），运行期还有一次性的 `[警告] 疑似事件行连续 3 条未匹配 …` 看门狗（见 §13 第 4 条）。该形态偏离 `IDEA.md:170` 冻结的单形态模板，偏离已登记在 `PLAN.md` §7.3。
 - `log_poll_interval` 决定事件延迟（默认 0.5 秒）；`health_poll_interval` 决定离线/上线提示的及时性（默认 30 秒）。
 - **没有热重载**：改完配置要重启进程。
 
@@ -567,7 +567,7 @@ MC 没开 RCON、端口不对或被防火墙挡了。确认 `server.properties` 
 4. **再改 `[log_patterns]`**：`join`/`quit` 必须保留 `(?P<player>…)`，`chat` 必须保留 `(?P<player>…)` 与 `(?P<message>…)`；
    改模板不用改代码，但要**重启 y33bot**（无热重载）。四族布局（vanilla / Fabric / Forge / NeoForge）实测可用的模板、
    以及「可选段前面的空格必须放进可选组内」这类陷阱，见 `BUGS.md` 的 BUG-002 / BUG-003。
-5. **用 `check` 离线自检一遍**：`[日志模板 main]` 会拿 `latest.log` 末尾的候选行试匹配三个模板（见下面第 15 条），不用等真事件发生。
+5. **用 `check` 离线自检一遍**：`[日志模板 main]` 会拿 `latest.log` 末尾的候选行试匹配三个模板（见下面第 16 条），不用等真事件发生。
 6. **其他可能**：聊天不是以 `#` 开头（设计上不转发）；命中回环防护前缀（默认忽略以 `[QQ]` 开头的聊天）；
    群里那条带了服名（`Steve@main: 你好`）—— 带服名说明转发其实是成功的，只是你在游戏里找不到 `[→QQ]` 回显，那是 v0.2 故意去掉的。
 
@@ -635,7 +635,27 @@ QQ 官方约束：被动回复只在收到事件后的短窗口内有效（本�
 想进一步定位「为什么断」：`run --verbose` 看 `[botpy]` 行（`ws关闭，停止接收消息!`、`鉴权失败，重置token...`、`获取token失败…`），
 排查顺序与离线取证结论都写在 `BUGS.md` 的 BUG-001 里；重启不会重推历史消息（`data/state.json` 的日志偏移续读）。
 
-**15）`check` 里 `[日志模板 main]` 这一行是什么 / `FAIL` 了怎么办**
+**15）群里收不到游戏内的 `#` 聊天，但进服 / 退服通知是正常的**
+
+典型症状是「一半对、一半不对」：进出通知走 `join`/`quit` 两条模板，`#` 聊天走的是**另一条** `chat` 模板，
+所以通知正常不能推出聊天也正常 —— 先单独验 `[log_patterns].chat`。拿 `latest.log` 里那条聊天原文做一次 dry-run：
+
+```bash
+$ python -m y33bot simulate log-event --server main \
+    --line '[15:18:30] [Server thread/INFO]: [Not Secure] <Steve> #大家好' --dry-run --config config.toml
+[群消息] Steve@main: 大家好
+```
+
+| dry-run 输出 | 含义 | 怎么办 |
+|---|---|---|
+| `[警告] 日志行未匹配任何模板`（退出码 1） | `chat` 模板认不出这一行 | 你这份 `config.toml` 大概还是**旧模板**：MC 1.21.2 起聊天回到主线程并带 `[Not Secure] ` 前缀（`[Server thread/INFO]: [Not Secure] <player> msg`），Forge 还会在 logger 后多一段 `[net.minecraft.server.MinecraftServer/]`。把 §5.1 的 `[log_patterns]` 三条整段换成**出厂默认**（一条吃四族，见 `PLAN.md` §7.3），改完重启进程（没有热重载） |
+| `[忽略] 聊天非 # 开头，不转发` | 模板没问题 | 这条聊天本身不以 `#` 开头，设计上不转发（要转发就在游戏里加 `#`） |
+| `[群消息] Steve@main: …` | 模板没问题 | 问题在 QQ 侧：`[qq] group_openid` 为空（MC→QQ 方向禁用，见第 4 条）、主动消息频控或网关断开（见第 9、14 条） |
+
+> 顺带一句：`simulate log-event` 与 `run` 用的是同一个 `parse_line`，所以这里的判定就是线上判定。
+> 四条模板（`join`/`quit`/`chat` + 可选 `encoding`）改任一条都只影响它自己，不会连带其它两条。
+
+**16）`check` 里 `[日志模板 main]` 这一行是什么 / `FAIL` 了怎么办**
 
 它紧跟在 `[日志 <name>]` 之后，是「**模板 × 本服真实日志**」的自检：读 `latest.log` 末尾 200 行，挑出候选行（含 `joined the game` / `left the game` / `<玩家> `），逐条喂给 `join` / `quit` / `chat` 三个模板。四种结果：
 
@@ -658,15 +678,17 @@ python -m pytest -q --cov=y33bot --cov-report=term-missing # 带覆盖率
 python -m ruff check . && python -m ruff format --check .  # 静态检查与格式
 ```
 
-在 BUG-001 修复落地后（2026-10-15）实测：`381 passed`、覆盖率 `TOTAL 99%`（`--cov-fail-under=70` 门槛通过，实测 `99.33%`）、`ruff check .` 与 `ruff format --check .` 全过（43 文件）。作为对照：BUG-001 取证用例合入后是 `357 passed` / `99.30%`，v0.2 变更（真机反馈三项）后是 `352 passed`，v0.1.0 时是 `214 passed` / `TOTAL 90%`——数字随后续新增测试变大。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件，`check` 的真探活也在单测里被替身替换（真机/CI 用 `--no-probe` 保离线）。
+最近一次实测（2026-10-29，两批同日落地：日志模板改为「四族通吃」出厂默认 + 三方相等回归锁，以及 BUG-004 的零事件看门狗 + `check` 模板自检）：**`427 passed`**、覆盖率 `TOTAL 99%`（`--cov-fail-under=70` 门槛通过，实测 **`99.36%`**）、`ruff check .` 与 `ruff format --check .` 全过（**45 文件**），`tests/` 无 `skip` / `xfail`；另做了一次真日志全量复扫：`test-notes/artifacts/` 下 vanilla / Fabric / Forge / NeoForge 四族共 **361/361** 条真行全部命中（改前同一批行是 101/361，逐族明细见 `docs/acceptance.md` §10）。
 
-在 BUG-004 修复落地后（2026-10-29）本机实跑：**`398 passed`**、覆盖率 **`99.36%`**（`--cov-fail-under=70` 门槛通过）、
-`ruff check .` 与 `ruff format --check .` 全过（**44 文件**），`tests/` 无 `skip` / `xfail`。
-用例数 381 → 398（**+17**）：`tests/test_mclog_patterns.py` +7（`looks_like_event` 参数化：join / quit / chat×2 / 噪声×2 / 空行）、
+历史对照（当时各自的实测值，保留原样）：BUG-001 修复落地后（2026-10-15）`381 passed` / `99.33%` / ruff 43 文件；BUG-001 取证用例合入后 `357 passed` / `99.30%`；v0.2 变更（真机反馈三项）后 `352 passed`；v0.1.0 时 `214 passed` / `TOTAL 90%`——数字随后续新增测试变大。测试全程离线：RCON 用内存假服务端、QQ 用假网关、日志用临时文件，`check` 的真探活也在单测里被替身替换（真机/CI 用 `--no-probe` 保离线）。
+
+BUG-004 批在合并树上（2026-10-29，与模板批合并后）本机实跑：**`427 passed`**、覆盖率 **`99.36%`**（`--cov-fail-under=70` 门槛通过）、
+`ruff check .` 与 `ruff format --check .` 全过（**45 文件**），`tests/` 无 `skip` / `xfail`。
+用例数 409 → 427（BUG-004 批 **+18**）：`tests/test_mclog_patterns.py` +7（`looks_like_event` 参数化：join / quit / chat×2 / 噪声×2 / 空行）、
 `tests/test_mclog_watcher.py` +3（看门狗只报一次 / 启动噪声 100 行不报 / 命中后重新武装）、
 `tests/test_smoke.py` +6（`[日志模板]` 全命中、全未命中、部分命中、无候选、日志缺失、只读末 200 行窗口）、
-`tests/test_service.py` +1（多服时模板项逐服相邻、不串位）。覆盖率 99.33% → 99.36%。
-命令与逐条真实输出见 [`docs/acceptance.md`](docs/acceptance.md) §10。
+`tests/test_service.py` +1（多服时模板项逐服相邻、不串位）、`tests/test_config.py` +1（未知 `encoding` 加载期即 `ConfigError`）。
+命令与逐条真实输出见 [`docs/acceptance.md`](docs/acceptance.md) §11。
 
 > 上面那段的 `381 passed` / `99.33%` / `43 文件` 是 BUG-001 那批的**历史值**，保留作对照，不是当前基线。
 > 当前基线以本段为准，四处同步点（本段、`docs/smoke.md` §7 两处、`docs/acceptance.md` §1+§3、`docs/progress.md` 基线表）已全部回填。

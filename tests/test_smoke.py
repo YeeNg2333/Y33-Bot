@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 import y33bot
-from conftest import check_item, check_items
+from conftest import CHAT_TEMPLATE, JOIN_TEMPLATE, QUIT_TEMPLATE, check_item, check_items
 from y33bot import cli
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -61,6 +61,16 @@ def _free_port() -> int:
         return int(probe.getsockname()[1])
 
 
+# 出厂默认的三条模板**不再在这里另存一份**：直接复用 `tests/conftest.py` 的常量，
+# 而 conftest 的常量由 `tests/test_log_patterns_real_lines.py` 的一致性锁钉死在
+# `config.example.toml` 与 `PLAN.md` §3.5 上。早先这里有一份独立副本，默认模板更新时
+# 它会静默过期、冒烟测试继续用旧布局（review r4408694215）。
+# TOML 单引号字面量原样保留反斜杠，所以 raw 字符串插进 f-string 即可。
+_TOML_JOIN = JOIN_TEMPLATE
+_TOML_QUIT = QUIT_TEMPLATE
+_TOML_CHAT = CHAT_TEMPLATE
+
+
 def _write_config(tmp_path: Path, *, port: int, log_path: Path) -> Path:
     """按 PLAN.md §3.5 的结构生成一份临时 config.toml（模板带命名组，符合 §4.1）。"""
 
@@ -91,9 +101,9 @@ connect_timeout = 1.0
 command_timeout = 1.0
 
 [log_patterns]
-join = '\\[\\d{{2}}:\\d{{2}}:\\d{{2}}\\] \\[Server thread/INFO\\]: (?P<player>\\w+) joined the game'
-quit = '\\[\\d{{2}}:\\d{{2}}:\\d{{2}}\\] \\[Server thread/INFO\\]: (?P<player>\\w+) left the game'
-chat = '\\[\\d{{2}}:\\d{{2}}:\\d{{2}}\\] \\[Async Chat Thread - #\\d+/INFO\\]: <(?P<player>\\w+)> (?P<message>.+)'
+join = '{_TOML_JOIN}'
+quit = '{_TOML_QUIT}'
+chat = '{_TOML_CHAT}'
 encoding = "utf-8"
 """
     path = tmp_path / "config.toml"
@@ -341,9 +351,8 @@ async def test_check_template_item_partial_hit_fails(
     log_path.write_text(
         "[12:00:04] [Server thread/INFO]: Steve joined the game\n"
         "[12:00:05] [Server thread/INFO]: Steve left the game\n"
-        # 加载器换了布局：载荷还是 join，但 vanilla 模板打不中
-        "[1810月2026 15:35:33.486] [Server thread/INFO] "
-        "[net.minecraft.server.MinecraftServer/]: Alex joined the game\n",
+        # 尚未覆盖的布局：模组把事件挪到自己的线程，线程名不在模板枚举内（载荷仍是 join）
+        "[12:00:06] [Mod Chat Thread/INFO]: Alex joined the game\n",
         encoding="utf-8",
     )
 
