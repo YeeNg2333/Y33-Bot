@@ -52,6 +52,11 @@
 - 实测（本机实跑）：`409 passed`、覆盖率 `99.33%`（门槛 70%）、`ruff check .` 与 `ruff format --check .` 全过
   （45 文件）；四族真行 **361/361** 命中（MISS 0，改前 101/361）；≤1.21.1 旧形态 **3/3**；红锁验证：回退
   `PLAN.md` §3.5 后三方相等 3 条全红，恢复后 28 例全绿。`src/` 零改动（`git diff main..HEAD -- src/` 为空）。
+- 已完成：终局校验后推分支 `wt/t_e7da5bef` 并用 API 建 PR —— **PR #5**
+  https://github.com/YeeNg2333/Y33-Bot/pull/5（标题 `fix(log_patterns): 出厂默认模板兼容 1.21.2+ 与
+  Forge/NeoForge 布局`，正文首行 `Closes #1`，含「改前 101/361 → 改后 361/361」逐族对照表与真机「未执行 +
+  原因 + 替代证据」）。推前在本卡工作树实跑：`409 passed` / `99.33%` / ruff 45 文件全过；`git diff main..HEAD
+  -- src/` 与 `git diff main..HEAD -- IDEA.md 需求1.txt AGENTS.md` 均空。（卡 `t_e7da5bef`）
 - 进行中：无。
 - 阻塞 / 待办：**真机回归未执行** —— 本机没有四族 MC 服，真行取自 `test-notes/artifacts/` 的 2026-10-18 矩阵
   制品，不是本轮新采；有服环境后按 `docs/smoke.md` §3 回填。`docs/acceptance.md` §1/§3 按卡要求保持
