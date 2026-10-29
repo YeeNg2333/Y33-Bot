@@ -81,6 +81,17 @@ async def test_startup_checks_all_green(app: App) -> None:
     )
     assert labels["RCON main"].detail == "/list -> There are 1 of a max of 20 players online: Steve"
     assert labels["日志 main"].detail == f"{app.log_path} 可读，偏移 0 字节"
+    # 日志模板项逐服紧跟在日志项之后（空日志 → 没有可判定的样例行，OK 跳过）
+    assert [item.label for item in results] == [
+        "配置",
+        "QQ",
+        "RCON main",
+        "日志 main",
+        "日志模板 main",
+        "绑定",
+    ]
+    assert labels["日志模板 main"].ok is True
+    assert labels["日志模板 main"].detail == "未找到可判定的样例行，跳过"
     assert labels["绑定"].detail == "1 条"
     assert all(item.ok for item in results)
 
